@@ -58,6 +58,7 @@ PRODUCT_COPY_FILES := \
     packages/wallpapers/LivePicker/android.software.live_wallpaper.xml:system/etc/permissions/android.software.live_wallpaper.xml \
     device/androVM/vbox86/audio_policy.conf:system/etc/audio_policy.conf \
     device/androVM/vbox86/androVM_Virtual_Input.idc:system/usr/idc/androVM_Virtual_Input.idc \
+    device/androVM/vbox86/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     device/androVM/vbox86/libicuuc_46.so:system/lib/libicuuc_46.so \
     device/androVM/vbox86/libicui18n_46.so:system/lib/libicui18n_46.so \
     #device/androVM/common/google/com.google.android.maps.jar:system/framework/com.google.android.maps.jar \
@@ -89,8 +90,10 @@ PRODUCT_PACKAGES += \
     GestureBuilder \
     CubeLiveWallpapers \
     androVM-prop \
+    androVM-vbox-sf \
     vmconfig \
     vinput \
+    vinput_seamless \
     get_androVM_host \
     local_opengl \
     netperf \

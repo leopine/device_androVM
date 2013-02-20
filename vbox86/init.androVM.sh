@@ -36,7 +36,6 @@ else
 fi
 
 # Load parameters from virtualbox guest properties
-chown system /dev/vboxguest
 prop_vbox_graph_mode=`/system/bin/androVM-prop get vbox_graph_mode`
 if [ $prop_vbox_graph_mode ]; then
   vbox_graph_mode=$prop_vbox_graph_mode

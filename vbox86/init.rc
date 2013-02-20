@@ -12,6 +12,7 @@ on early-init
     mkdir /mnt 0775 root system
     mkdir /mnt/sdcard 0000 system system
     mkdir /mnt/USB 0000 system system
+    mkdir /mnt/shared 0775 root system
 
 on init
 
@@ -103,6 +104,14 @@ on fs
     mount_all /fstab.vbox86
 
 on post-fs
+    # load vbox modules
+    insmod /system/lib/vboxguest.ko
+    insmod /system/lib/vboxsf.ko
+    insmod /system/lib/vboxvideo.ko
+    chown system system /dev/vboxguest
+    # Mount Virtualbox shared folders
+    exec /system/bin/androVM-vbox-sf /mnt/shared
+
     # once everything is setup, no need to modify /
     mount rootfs rootfs / ro remount
 
@@ -265,10 +274,6 @@ on boot
     # Set this property so surfaceflinger is not started by system_init
     setprop system_init.startsurfaceflinger 0
 
-    # load vbox modules
-    insmod /system/lib/vboxguest.ko
-    insmod /system/lib/vboxsf.ko
-    insmod /system/lib/vboxvideo.ko
     class_start very-first
 
 on property:androVM.inited=1
@@ -466,6 +471,9 @@ service vbox86-setup /system/etc/init.androVM.sh
     class very-first
 
 service vinput /system/bin/vinput
+    class core
+
+service vinput_seamless /system/bin/vinput_seamless
     class core
 
 service local_opengl /system/bin/local_opengl
