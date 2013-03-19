@@ -106,6 +106,7 @@ PRODUCT_PACKAGES += \
     make_ext4fs \
     Superuser \
     busybox \
+    genyd \
 
 
 $(call inherit-product-if-exists,frameworks/base/build/tablet-dalvik-heap.mk)
