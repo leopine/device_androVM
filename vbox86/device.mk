@@ -49,9 +49,6 @@ PRODUCT_COPY_FILES := \
     device/androVM/vbox86/vbox/vboxsf.ko:system/lib/vboxsf.ko \
     device/androVM/vbox86/vbox/vboxvideo.ko:system/lib/vboxvideo.ko \
     device/androVM/vbox86/uvesafb.ko:system/lib/uvesafb.ko \
-    device/androVM/vbox86/cfbcopyarea.ko:system/lib/cfbcopyarea.ko \
-    device/androVM/vbox86/cfbfillrect.ko:system/lib/cfbfillrect.ko \
-    device/androVM/vbox86/cfbimgblt.ko:system/lib/cfbimgblt.ko \
     frameworks/base/data/keyboards/qwerty.kl:system/usr/keylayout/AT_Translated_Set_2_keyboard.kl \
     device/androVM/vbox86/androVM_Virtual_Input.kl:system/usr/keylayout/androVM_Virtual_Input.kl \
     device/androVM/vbox86/wpa_supplicant.conf:data/misc/wifi/wpa_supplicant.conf \
@@ -61,6 +58,7 @@ PRODUCT_COPY_FILES := \
     device/androVM/vbox86/excluded-input-devices.xml:system/etc/excluded-input-devices.xml \
     device/androVM/vbox86/libicuuc_46.so:system/lib/libicuuc_46.so \
     device/androVM/vbox86/libicui18n_46.so:system/lib/libicui18n_46.so \
+    device/androVM/common/gps.conf:system/etc/gps.conf \
     #device/androVM/common/google/com.google.android.maps.jar:system/framework/com.google.android.maps.jar \
     #device/androVM/common/google/com.google.android.maps.xml:system/etc/permissions/com.google.android.maps.xml \
     #device/androVM/common/google/com.android.location.provider.jar:system/framework/com.android.location.provider.jar \
@@ -106,6 +104,8 @@ PRODUCT_PACKAGES += \
     make_ext4fs \
     Superuser \
     busybox \
+    gps.vbox86 \
+    local.gps \
 
 
 $(call inherit-product-if-exists,frameworks/base/build/tablet-dalvik-heap.mk)
