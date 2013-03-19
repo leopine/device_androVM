@@ -478,3 +478,6 @@ service vinput_seamless /system/bin/vinput_seamless
 
 service local_opengl /system/bin/local_opengl
     class core
+
+service local_gps /system/bin/local_gps
+    class core
