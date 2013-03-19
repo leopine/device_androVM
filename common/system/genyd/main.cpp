@@ -2,6 +2,6 @@
 
 int main(int argc, char**argv)
 {
-    ALOGD("Coucou");
+    SLOGI("Coucou");
     return 0;
 }

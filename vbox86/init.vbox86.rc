@@ -19,6 +19,10 @@ on boot
 # like NetworkLocationProvider and LocationCollector
     setprop ro.com.google.locationfeatures 1
 
+    service genyd /system/bin/genyd
+    disabled
+    oneshot
+
 # For the emulator, which bypasses Setup Wizard, you can specify
 # account info for the device via these two properties.  Google
 # Login Service will insert these accounts into the database when
