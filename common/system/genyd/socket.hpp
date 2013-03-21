@@ -1,6 +1,7 @@
 #ifndef SOCKET_HPP_
 #define SOCKET_HPP_
 
+#include <queue>
 #include <sstream>
 
 #include "global.hpp"
@@ -9,9 +10,14 @@ class Socket {
 
 public:
   enum ReadStatus {
-    Error,
+    ReadError,
     NoMessage,
     NewMessage
+  };
+  enum WriteStatus {
+    WriteError,
+    BadSerialize,
+    WriteSuccess
   };
 
   Socket(int socket);
@@ -25,15 +31,18 @@ private:
 private:
   int socket;
   Request request;
-
   std::stringstream istream;
   std::stringstream ostream;
+  std::queue<Reply *> replies;
 
 public:
   ReadStatus read(void);
+  bool hasReplies(void) const;
+  WriteStatus reply(void);
   void write(const char *data);
   int getFD(void) const;
   const Request &getRequest(void) const;
+  void addReply(Reply *reply);
 };
 
 

@@ -24,7 +24,7 @@ private:
   Dispatcher dispatcher;
   std::map<int, Socket *> clients;
 
-  int setFS(fd_set *readfs, fd_set *writefs, fd_set *exceptfs) const;
+  int setFS(fd_set *readfs, fd_set *writefs) const;
   void acceptNewClient(void);
   void treatMessage(Socket::ReadStatus status, Socket *client);
 

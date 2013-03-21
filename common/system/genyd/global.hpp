@@ -10,6 +10,8 @@
 #include "device/androVM/common/system/genyd/requests.pb.h"
 
 using Genymotion::Request;
+using Genymotion::Status;
 using Genymotion::Reply;
+using Genymotion::Value;
 
 #endif
