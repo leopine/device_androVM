@@ -1,9 +1,19 @@
 #ifndef SOCKET_HPP_
 #define SOCKET_HPP_
 
+#include <sstream>
+
+#include "global.hpp"
+
 class Socket {
 
 public:
+  enum ReadStatus {
+    Error,
+    NoMessage,
+    NewMessage
+  };
+
   Socket(int socket);
   ~Socket(void);
 
@@ -14,12 +24,16 @@ private:
 
 private:
   int socket;
+  Request request;
+
+  std::stringstream istream;
+  std::stringstream ostream;
 
 public:
-  char *read(void);
+  ReadStatus read(void);
   void write(const char *data);
   int getFD(void) const;
-
+  const Request &getRequest(void) const;
 };
 
 

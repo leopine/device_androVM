@@ -1,7 +1,5 @@
 package Genymotion;
 
-option optimize_for = LITE_RUNTIME;
-
 message Status {
   enum Code {
     Ok             = 0;
