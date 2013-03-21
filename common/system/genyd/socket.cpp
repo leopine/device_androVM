@@ -35,7 +35,7 @@ Socket::ReadStatus Socket::read(void)
   istream.write(buffer, len);
 
   if (request.ParseFromIstream(&istream)) {
-    return (Socket::NewMessage);
+    return Socket::NewMessage;
   } else {
     return Socket::NoMessage;
   }

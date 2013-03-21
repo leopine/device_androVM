@@ -132,6 +132,8 @@ void Genyd::run(void)
 
         Socket::ReadStatus status = begin->second->read();
 
+        SLOGD("ReadStatus: %d", status);
+
         if (status == Socket::ReadError) {
           delete begin->second;
           clients.erase(begin++);

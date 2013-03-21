@@ -32,7 +32,6 @@ private:
   int socket;
   Request request;
   std::stringstream istream;
-  std::stringstream ostream;
   std::queue<Reply *> replies;
 
 public:

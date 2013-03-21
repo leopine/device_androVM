@@ -11,20 +11,33 @@ Dispatcher::~Dispatcher(void)
 
 }
 
+void Dispatcher::treatePing(const Request &request, Reply *reply)
+{
+  (void)request;
+  reply->set_type(Reply::Pong);
+  Status *status = reply->mutable_status();
+  status->set_code(Status::Ok);
+}
+
+void Dispatcher::unknownRequest(const Request &request, Reply *reply)
+{
+  (void)request;
+  reply->set_type(Reply::Error);
+}
+
 Reply *Dispatcher::dispatchRequest(const Request &request)
 {
   (void)request;
 
-  Reply *reply = NULL;
+  Reply *reply = new Reply();;
   // Test
-  reply = new Reply();
-  reply->set_type(Reply::Value);
-  Status *status = reply->mutable_status();
-  status->set_code(Status::Ok);
-  Value *value = reply->mutable_value();
-  value->set_type(Value::String);
-  value->set_stringvalue("Android 4.1.1");
-  // End test
+
+  switch (request.type()) {
+  case Request::Ping:
+    treatePing(request, reply);
+  default:
+    unknownRequest(request, reply);
+  }
 
   return (reply);
 }
