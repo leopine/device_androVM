@@ -4,8 +4,13 @@
 
 #include "genyd.hpp"
 
+#include "device/androVM/common/system/genyd/requests.pb.h"
+
+using Genymotion::Request;
+
 int main(int argc, char**argv)
 {
+  Request r;
   SLOGI("Starting genyd...");
 
   Genyd deamon;

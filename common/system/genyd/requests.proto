@@ -1,0 +1,71 @@
+package Genymotion;
+
+option optimize_for = LITE_RUNTIME;
+
+message Status {
+  enum Code {
+    Ok             = 0;
+    GenericError   = 1;
+    InvalidRequest = 2;
+  }
+
+  required Code code = 2;
+  optional string description = 3 [default = ""];
+}
+
+message Value {
+  enum Type {
+    Bool   = 1;
+    Uint   = 2;
+    Float  = 3;
+    String = 3;
+    Bytes  = 4;
+  }
+
+   required Type    type        = 1;
+
+   optional bool    boolValue   = 2;
+   optional uint32  uintValue   = 3;
+   optional float   floatValue  = 4;
+   optional string  stringValue = 5;
+   optional bytes   bytesValue  = 6;
+}
+
+
+message Parameter {
+ enum Type {
+    AndroidVersion     = 1; // string
+    BuildNumber        = 2; // string
+    BatteryManualMode  = 3; // bool : Kind of battery setting (ACPI mode or manual get/set mode)
+    BatteryValue       = 4; // uint in [0;100]
+  }
+
+  required Type  type = 1;
+  required Value value = 2;
+}
+
+message Request {
+  enum Type {
+    None      = 0;
+    Ping      = 1;
+    GetParam  = 2;
+    SetParam  = 2;
+  }
+
+  required  Type       type        = 1;
+  optional  Parameter  parameter   = 2;
+}
+
+message Reply {
+  enum Type {
+    None   = 0;
+    Error  = 1;
+    Pong   = 2;
+    Value  = 3;
+  }
+
+  required  Type    type    = 1;
+  required  Status  status  = 2;
+  optional  Value   value   = 3;
+}
+
