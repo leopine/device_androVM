@@ -11,7 +11,7 @@ Dispatcher::~Dispatcher(void)
 
 }
 
-void Dispatcher::treatePing(const Request &request, Reply *reply)
+void Dispatcher::treatPing(const Request &request, Reply *reply)
 {
   (void)request;
   reply->set_type(Reply::Pong);
@@ -29,14 +29,15 @@ Reply *Dispatcher::dispatchRequest(const Request &request)
 {
   (void)request;
 
-  Reply *reply = new Reply();;
-  // Test
+  Reply *reply = new Reply();
 
   switch (request.type()) {
   case Request::Ping:
-    treatePing(request, reply);
+    treatPing(request, reply);
+    break;
   default:
     unknownRequest(request, reply);
+    break;
   }
 
   return (reply);

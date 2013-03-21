@@ -13,7 +13,7 @@ private:
   Dispatcher(const Dispatcher &);
   Dispatcher operator=(const Dispatcher &);
 
-  void treatePing(const Request &request, Reply *reply);
+  void treatPing(const Request &request, Reply *reply);
   void unknownRequest(const Request &request, Reply *reply);
 
 public:
