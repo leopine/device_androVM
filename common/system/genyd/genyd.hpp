@@ -5,7 +5,9 @@
 
 #include <unistd.h>
 
+#include "global.hpp"
 #include "socket.hpp"
+#include "dispatcher.hpp"
 
 class Genyd {
 
@@ -19,10 +21,12 @@ private:
 
 private:
   Socket *server;
+  Dispatcher dispatcher;
   std::map<int, Socket *> clients;
 
   int setFS(fd_set *readfs, fd_set *writefs, fd_set *exceptfs) const;
   void acceptNewClient(void);
+  void treatMessage(Socket::ReadStatus status, Socket *client);
 
 public:
   void run(void);

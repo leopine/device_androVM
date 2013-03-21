@@ -1,6 +1,4 @@
 
-#include <cutils/log.h>
-
 #include <algorithm>
 
 #include <sys/socket.h>
@@ -98,6 +96,15 @@ void Genyd::acceptNewClient(void)
   SLOGI("New client connected", clients.size());
 }
 
+void Genyd::treatMessage(Socket::ReadStatus status, Socket *client)
+{
+  if (status == Socket::NoMessage) {
+    return;
+  }
+  const Request &request = client->getRequest();
+  SLOGD("Request type is %d", request.type());
+}
+
 void Genyd::run(void)
 {
   fd_set readfs, writefs, exceptfs;
@@ -122,15 +129,15 @@ void Genyd::run(void)
       if (FD_ISSET(begin->first, &readfs)) {
 	SLOGD("Client %d id ready-read", begin->first);
 
-	char *line = begin->second->read();
+	Socket::ReadStatus status = begin->second->read();
 
-	if (!line) {
+	if (status == Socket::Error) {
 	  delete begin->second;
 	  clients.erase(begin++);
 	  continue;
+	} else {
+	  treatMessage(status, begin->second);
 	}
-
-	delete[] line;
       }
 
       if (FD_ISSET(begin->first, &writefs)) {
