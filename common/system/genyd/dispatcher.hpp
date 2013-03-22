@@ -13,13 +13,20 @@ private:
   Dispatcher(const Dispatcher &);
   Dispatcher operator=(const Dispatcher &);
 
+  // Answer "Ping" request
   void treatPing(const Request &request, Reply *reply);
+
+  // Answer "GetParam" requests
   void treatGetParam(const Request &request, Reply *reply);
+
+  // Fallback for unknown requests
   void unknownRequest(const Request &request, Reply *reply);
 
+  // Answer "GetParam AndroidVersion" requests
   void getAndroidVersion(const Request &request, Reply *reply);
 
 public:
+  // Switch among requests
   Reply *dispatchRequest(const Request &request);
 
 };

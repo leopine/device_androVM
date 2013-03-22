@@ -24,12 +24,20 @@ private:
   Dispatcher dispatcher;
   std::map<int, Socket *> clients;
 
+  // Initialize fd_set for select() monitoring
   int setFS(fd_set *readfs, fd_set *writefs) const;
+
+  // Accept a new connection
   void acceptNewClient(void);
+
+  // Handle Socket::read status for a given client
   void treatMessage(Socket::ReadStatus status, Socket *client);
 
 public:
+  // Start server
   void run(void);
+
+  // Check if the server is well initialized
   bool isInit(void) const;
 
 };
