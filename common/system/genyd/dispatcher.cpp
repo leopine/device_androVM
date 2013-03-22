@@ -38,6 +38,13 @@ void Dispatcher::treatGetParam(const Request &request, Reply *reply)
 {
   Parameter param = request.parameter();
 
+  if (!request.has_parameter()) {
+    reply->set_type(Reply::Error);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::GenericError);
+    return;
+  }
+
   switch (param.type()) {
   case Parameter::AndroidVersion:
     getAndroidVersion(request, reply);
