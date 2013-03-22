@@ -16,8 +16,8 @@ message Value {
     Bool   = 1;
     Uint   = 2;
     Float  = 3;
-    String = 3;
-    Bytes  = 4;
+    String = 4;
+    Bytes  = 5;
   }
 
    required Type    type        = 1;
@@ -39,7 +39,7 @@ message Parameter {
   }
 
   required Type  type = 1;
-  required Value value = 2;
+  optional Value value = 2;
 }
 
 message Request {
@@ -47,7 +47,7 @@ message Request {
     None      = 0;
     Ping      = 1;
     GetParam  = 2;
-    SetParam  = 2;
+    SetParam  = 3;
   }
 
   required  Type       type        = 1;
