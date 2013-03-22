@@ -32,11 +32,13 @@ Socket::ReadStatus Socket::read(void)
     return Socket::ReadError;
   }
 
+  ALOGD("%d bytes read", len);
   istream.write(buffer, len);
 
   if (request.ParseFromIstream(&istream)) {
     return Socket::NewMessage;
   } else {
+    ALOGE("Can't parse request");
     return Socket::NoMessage;
   }
 }
