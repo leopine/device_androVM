@@ -51,6 +51,7 @@ bool Socket::hasReplies(void) const
 Socket::WriteStatus Socket::reply(void)
 {
   std::string data;
+  int len = 0;
 
   Reply *reply = replies.front();
   replies.pop();
@@ -60,11 +61,12 @@ Socket::WriteStatus Socket::reply(void)
     delete reply;
     return Socket::BadSerialize;
   }
-  if (send(socket, data.c_str(), data.size(), MSG_NOSIGNAL) < 0) {
+  if ((len = send(socket, data.c_str(), data.size(), MSG_NOSIGNAL)) < 0) {
     ALOGE("Can't send reply");
     delete reply;
     return Socket::WriteError;
   }
+  ALOGD("%d bytes written", len);
   delete reply;
   return Socket::WriteSuccess;
 }

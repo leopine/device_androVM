@@ -14,7 +14,10 @@ private:
   Dispatcher operator=(const Dispatcher &);
 
   void treatPing(const Request &request, Reply *reply);
+  void treatGetParam(const Request &request, Reply *reply);
   void unknownRequest(const Request &request, Reply *reply);
+
+  void getAndroidVersion(const Request &request, Reply *reply);
 
 public:
   Reply *dispatchRequest(const Request &request);
