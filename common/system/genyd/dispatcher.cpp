@@ -1,4 +1,6 @@
 
+#include <cutils/properties.h>
+
 #include "dispatcher.hpp"
 
 Dispatcher::Dispatcher(void)
@@ -26,7 +28,10 @@ void Dispatcher::getAndroidVersion(const Request &request, Reply *reply)
   status->set_code(Status::Ok);
   Value *value = reply->mutable_value();
   value->set_type(Value::String);
-  value->set_stringvalue("Android 4.1.1");
+
+  char property[PROPERTY_VALUE_MAX];
+  property_get("ro.build.version.release", property, "Unknown");
+  value->set_stringvalue(property);
 }
 
 void Dispatcher::treatGetParam(const Request &request, Reply *reply)
