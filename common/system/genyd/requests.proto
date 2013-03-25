@@ -32,6 +32,7 @@ message Value {
 
 message Parameter {
  enum Type {
+    None               = 0;
     AndroidVersion     = 1; // string
     BuildNumber        = 2; // string
     BatteryManualMode  = 3; // bool : Kind of battery setting (ACPI mode or manual get/set mode)
