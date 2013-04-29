@@ -44,7 +44,7 @@ LOCAL_C_INCLUDES        := $(LOCAL_PATH) \
                            bionic \
                            external/stlport/stlport
 
-LOCAL_SRC_FILES         := genymotion.cpp
+LOCAL_SRC_FILES         := lib/genymotion.cpp
 
 LOCAL_MODULE_TAGS       := optional
 LOCAL_SHARED_LIBRARIES  := liblog libcutils libstlport
