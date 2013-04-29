@@ -6,28 +6,38 @@
 class Dispatcher {
 
 public:
-  Dispatcher(void);
-  ~Dispatcher(void);
+    Dispatcher(void);
+    ~Dispatcher(void);
 
 private:
-  Dispatcher(const Dispatcher &);
-  Dispatcher operator=(const Dispatcher &);
+    Dispatcher(const Dispatcher &);
+    Dispatcher operator=(const Dispatcher &);
 
-  // Answer "Ping" request
-  void treatPing(const Request &request, Reply *reply);
+    // Answer "Ping" request
+    void treatPing(const Request &request, Reply *reply);
 
-  // Answer "GetParam" requests
-  void treatGetParam(const Request &request, Reply *reply);
+    // Answer "GetParam" requests
+    void treatGetParam(const Request &request, Reply *reply);
 
-  // Fallback for unknown requests
-  void unknownRequest(const Request &request, Reply *reply);
+    // Answer "SetParam" requests
+    void treatSetParam(const Request &request, Reply *reply);
 
-  // Answer "GetParam AndroidVersion" requests
-  void getAndroidVersion(const Request &request, Reply *reply);
+    // Fallback for unknown requests
+    void unknownRequest(const Request &request, Reply *reply);
+
+    // Answer "GetParam AndroidVersion" requests
+    void getAndroidVersion(const Request &request, Reply *reply);
+
+    /********************\
+    // Battery requests \\
+    \********************/
+
+    // Answer "SetParam Battery Status"
+    void setBatteryStatus(const Request &request, Reply *reply);
 
 public:
-  // Switch among requests
-  Reply *dispatchRequest(const Request &request);
+    // Switch among requests
+    Reply *dispatchRequest(const Request &request);
 
 };
 

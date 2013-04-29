@@ -15,73 +15,106 @@ Dispatcher::~Dispatcher(void)
 
 void Dispatcher::treatPing(const Request &request, Reply *reply)
 {
-  (void)request;
-  reply->set_type(Reply::Pong);
-  Status *status = reply->mutable_status();
-  status->set_code(Status::Ok);
+    (void)request;
+    reply->set_type(Reply::Pong);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
 }
 
 void Dispatcher::getAndroidVersion(const Request &request, Reply *reply)
 {
-  reply->set_type(Reply::Value);
-  Status *status = reply->mutable_status();
-  status->set_code(Status::Ok);
-  Value *value = reply->mutable_value();
-  value->set_type(Value::String);
+    reply->set_type(Reply::Value);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+    Value *value = reply->mutable_value();
+    value->set_type(Value::String);
 
-  char property[PROPERTY_VALUE_MAX];
-  property_get("ro.build.version.release", property, "Unknown");
-  value->set_stringvalue(property);
+    char property[PROPERTY_VALUE_MAX];
+    property_get("ro.build.version.release", property, "Unknown");
+    value->set_stringvalue(property);
 }
 
 void Dispatcher::treatGetParam(const Request &request, Reply *reply)
 {
-  Parameter param = request.parameter();
+    if (!request.has_parameter()) {
+	reply->set_type(Reply::Error);
+	Status *status = reply->mutable_status();
+	status->set_code(Status::GenericError);
+	return;
+    }
 
-  if (!request.has_parameter()) {
-    reply->set_type(Reply::Error);
-    Status *status = reply->mutable_status();
-    status->set_code(Status::GenericError);
-    return;
-  }
+    Parameter param = request.parameter();
 
-  switch (param.type()) {
-  case Parameter::AndroidVersion:
-    getAndroidVersion(request, reply);
-    break;
-  default:
-    reply->set_type(Reply::Error);
-    Status *status = reply->mutable_status();
-    status->set_code(Status::GenericError);
-    break;
-  }
+    switch (param.type()) {
+    case Parameter::AndroidVersion:
+	getAndroidVersion(request, reply);
+	break;
+    default:
+	reply->set_type(Reply::Error);
+	Status *status = reply->mutable_status();
+	status->set_code(Status::GenericError);
+	break;
+    }
+}
+
+void Dispatcher::treatSetParam(const Request &request, Reply *reply)
+{
+    if (!request.has_parameter()) {
+	reply->set_type(Reply::Error);
+	Status *status = reply->mutable_status();
+	status->set_code(Status::GenericError);
+	return;
+    }
+
+    Parameter param = request.parameter();
+
+    if (!param.has_value()) {
+	reply->set_type(Reply::Error);
+	Status *status = reply->mutable_status();
+	status->set_code(Status::GenericError);
+	return;
+    }
+
+    switch (param.type()) {
+    case Parameter::BatteryStatus:
+	setBatteryStatus(request, reply);
+	break;
+    default:
+	reply->set_type(Reply::Error);
+	Status *status = reply->mutable_status();
+	status->set_code(Status::GenericError);
+	break;
+    }
 }
 
 void Dispatcher::unknownRequest(const Request &request, Reply *reply)
 {
-  (void)request;
-  reply->set_type(Reply::Error);
-  Status *status = reply->mutable_status();
-  status->set_code(Status::InvalidRequest);
+    (void)request;
+    reply->set_type(Reply::Error);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::InvalidRequest);
 }
 
 Reply *Dispatcher::dispatchRequest(const Request &request)
 {
-  (void)request;
+    (void)request;
 
-  Reply *reply = new Reply();
+    Reply *reply = new Reply();
 
-  switch (request.type()) {
-  case Request::Ping:
-    treatPing(request, reply);
-    break;
-  case Request::GetParam:
-    treatGetParam(request, reply);
-    break;
-  default:
-    unknownRequest(request, reply);
-    break;
-  }
+    switch (request.type()) {
+    case Request::Ping:
+	treatPing(request, reply);
+	break;
+    case Request::SetParam:
+	treatSetParam(request, reply);
+	break;
+    case Request::GetParam:
+	treatGetParam(request, reply);
+	break;
+    default:
+	unknownRequest(request, reply);
+	break;
+    }
 
-  return (reply);
+    return (reply);
 }

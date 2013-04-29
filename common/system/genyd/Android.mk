@@ -34,7 +34,7 @@ LOCAL_SRC_FILES		:= main.cpp				\
 			   genyd.cpp				\
 			   socket.cpp           		\
 			   dispatcher.cpp			\
-			   genymotion.cpp			\
+			   battery_handler.cpp			\
 		           $(call all-proto-files-under, .)
 
 LOCAL_MODULE		:= genyd
