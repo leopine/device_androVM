@@ -31,11 +31,18 @@ private:
     // Global dispatcher
     t_dispatcher_member getCallback(const char *path);
 
+    // =================
     // Battery callbacks
+    // =================
+
     // Battery dispatcher
     int batteryCallback(const char *path, char *buff, size_t size);
-    // Battery status
-    int batteryStatus(char *buff, size_t size);
+
+    // Get battery value when full
+    int batteryFull(char *buff, size_t size);
+
+    // Get current battery value
+    int batteryValue(char *buff, size_t size);
 };
 
 #endif // #define LIB_GENYMOTION_HPP_GENYD_READ_PROC_HPP_

@@ -1,4 +1,4 @@
-
+#include <cutils/log.h>
 #include "genymotion.hpp"
 
 static Genymotion __instance;
@@ -13,7 +13,8 @@ Genymotion::Genymotion(void)
 {
     callbacks["/sys/class/power_supply"] = &Genymotion::batteryCallback;
 
-    battery_callbacks["/health"] = &Genymotion::batteryStatus;
+    battery_callbacks["/energy_full"] = &Genymotion::batteryFull;
+    battery_callbacks["/energy_now"] = &Genymotion::batteryValue;
 }
 
 // dTor
@@ -25,12 +26,19 @@ Genymotion::~Genymotion(void)
 // Overload /proc values with genymotion configuration
 int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
 {
+    SLOGI("Retrieving value from %s", path);
+
     Genymotion &instance = Genymotion::getInstance();
 
     Genymotion::t_dispatcher_member callback = instance.getCallback(path);
 
-    if (callback)
-	return (instance.*callback)(path, buf, size);
+    if (callback) {
+	int result = (instance.*callback)(path, buf, size);
+	SLOGI("%s Callback returned %d for key %s with content = %s",
+	      __FUNCTION__, result, path, buf);
+	return result;
+    }
+    SLOGI("%s No callback found. Returning", __FUNCTION__);
     return -1;
 }
 
@@ -61,15 +69,27 @@ int Genymotion::batteryCallback(const char *path, char *buff, size_t size)
     while (begin != end) {
 	size_t pos = haystack.rfind(begin->first);
 	// if haystack ends with
-	if (pos != std::string::npos && pos + begin->first.size() == haystack.size())
+	if (pos != std::string::npos && pos + begin->first.size() == haystack.size()) {
 	    return (this->*(begin->second))(buff, size);
+	}
 	++begin;
     }
 
     return -1;
 }
 
-int Genymotion::batteryStatus(char *buff, size_t size)
+// Get battery value when full
+int Genymotion::batteryFull(char *buff, size_t size)
 {
-    return -1;
+    unsigned long int val = 50000000UL;
+    int sz = snprintf(buff, size, "%lu\n", val);
+    return sz;
+}
+
+// Get current battery value
+int Genymotion::batteryValue(char *buff, size_t size)
+{
+    unsigned long int val = 47500000UL;
+    int sz = snprintf(buff, size, "%lu\n", val);
+    return sz;
 }
