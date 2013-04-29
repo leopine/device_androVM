@@ -34,20 +34,26 @@ LOCAL_SRC_FILES		:= main.cpp				\
 			   genyd.cpp				\
 			   socket.cpp           		\
 			   dispatcher.cpp			\
+			   genymotion.cpp			\
 		           $(call all-proto-files-under, .)
 
 LOCAL_MODULE		:= genyd
 
-LOCAL_C_INCLUDES	:= $(KERNEL_HEADERS)       		\
-			   bionic                  		\
-			   external/stlport/stlport		\
-			   external/protobuf/src
+LOCAL_C_INCLUDES	:= $(KERNEL_HEADERS)       		  \
+			   bionic                  		  \
+			   external/stlport/stlport		  \
+			   external/protobuf/src		  \
+			   device/androVM/common/system/genyd/lib
 
 LOCAL_MODULE_TAGS	:= optional
 
 LOCAL_CFLAGS		:= -Werror=format
 
-LOCAL_SHARED_LIBRARIES	:= libcutils libnetutils liblog libstlport libgenyd
+LOCAL_SHARED_LIBRARIES	:= libcutils	\
+			   libnetutils	\
+			   liblog	\
+			   libstlport	\
+			   libgenyd
 
 LOCAL_PROTOC_OPTIMIZE_TYPE := full
 
