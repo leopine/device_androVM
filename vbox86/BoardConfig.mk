@@ -2,6 +2,7 @@
 # IA target for VitualBox
 #
 
+PRODUCT_MANUFACTURER := Genymotion
 TARGET_ARCH=x86
 TARGET_ARCH_VARIANT=x86
 BUILDROID_X86_NOSSE2 := true
