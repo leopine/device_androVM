@@ -15,4 +15,11 @@ using Genymotion::Status;
 using Genymotion::Reply;
 using Genymotion::Value;
 
+// Properties keys
+
+// Battery
+#define BATTERY_VALUE    "genyd.battery.value"
+#define BATTERY_STATUS   "genyd.battery.status"
+#define BATTERY_LOADTYPE "genyd.battery.load_type"
+
 #endif
