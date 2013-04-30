@@ -46,10 +46,11 @@ message Parameter {
 
 message Request {
   enum Type {
-    None      = 0;
-    Ping      = 1;
-    GetParam  = 2;
-    SetParam  = 3;
+    None            = 0;
+    Ping            = 1;
+    GetParam        = 2;
+    SetParam        = 3;
+    SetRealValue    = 4;
   }
 
   required  Type       type        = 1;
