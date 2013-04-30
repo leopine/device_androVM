@@ -7,13 +7,23 @@
 class Genymotion {
 
 public:
+    // Constructor
     Genymotion(void);
-    ~Genymotion(void);
 
 private:
+    // Destructor
+    ~Genymotion(void);
+
+    // Copy constructor
     Genymotion(const Genymotion &);
+
+    // Copy operator
     Genymotion operator=(const Genymotion &);
 
+    // Singleton instance
+    static Genymotion instance;
+
+    // Get singleton object
     static Genymotion &getInstance(void);
 
     // Callbacks lists
@@ -24,6 +34,9 @@ private:
     std::map<std::string, t_callback_member> battery_callbacks;
 
 public:
+    // Store current value to Genymotion cache
+    static void storeCurrentValue(const char *path, const char *buf, const size_t size);
+
     // Overload /proc values with genymotion configuration
     static int getValueFromProc(const char* path, char *buf, size_t size);
 

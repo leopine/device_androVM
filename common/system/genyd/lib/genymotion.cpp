@@ -1,26 +1,34 @@
 #include <cutils/log.h>
 #include "genymotion.hpp"
 
-static Genymotion __instance;
+// Singleton object
+Genymotion Genymotion::instance = Genymotion();
 
-Genymotion &Genymotion::getInstance(void)
-{
-    return __instance;
-}
-
-// cTor
+// Constructor
 Genymotion::Genymotion(void)
 {
+    // Populate callbacks lists
     callbacks["/sys/class/power_supply"] = &Genymotion::batteryCallback;
 
     battery_callbacks["/energy_full"] = &Genymotion::batteryFull;
     battery_callbacks["/energy_now"] = &Genymotion::batteryValue;
 }
 
-// dTor
+// Destructor
 Genymotion::~Genymotion(void)
 {
+}
 
+// Get singleton object
+Genymotion &Genymotion::getInstance(void)
+{
+    return instance;
+}
+
+// Store current value to Genymotion cache
+void Genymotion::storeCurrentValue(const char *path, const char *buf, const size_t size)
+{
+    SLOGI("Storing system value from path %s: %s", path, buf);
 }
 
 // Overload /proc values with genymotion configuration
