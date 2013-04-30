@@ -2,7 +2,7 @@
 #include <cutils/properties.h>
 
 #include "dispatcher.hpp"
-#include "genymotion.hpp"
+#include "libgenyd.hpp"
 
 void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 {
@@ -50,5 +50,5 @@ void Dispatcher::isBatteryManual(const Request &request, Reply *reply)
 
     char property[PROPERTY_VALUE_MAX];
     property_get("ro.build.version.release", property, "Unknown");
-    value->set_boolvalue(!Genymotion::useRealValue(BATTERY_VALUE));
+    value->set_boolvalue(!LibGenyd::useRealValue(BATTERY_VALUE));
 }
