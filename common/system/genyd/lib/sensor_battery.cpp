@@ -1,4 +1,8 @@
+
 #include "genymotion.hpp"
+#define __NO_PROTO
+#include "global.hpp"
+
 #include <cutils/properties.h>
 
 // Plug battery callbacks
@@ -22,8 +26,6 @@ int Genymotion::batteryCallback(const char *path, char *buff, size_t size)
 	size_t pos = haystack.rfind(begin->first);
 	// if haystack ends with
 	if (pos != std::string::npos && pos + begin->first.size() == haystack.size()) {
-	    // Store current value to Genymotion cache
-	    storeCurrentValue(path, buff, size);
 	    // Retrieve value forced by callback
 	    int result = (this->*(begin->second))(buff, size);
 	    SLOGI("%s Battery callback: Overloading file %s with content = '%s'",
@@ -60,11 +62,15 @@ int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
 // Get battery value when full
 int Genymotion::batteryFull(char *buff, size_t size)
 {
-    return readPropertyValueOrDefault("geny.bat.full", buff, size);
+    // Store current value to Genymotion cache
+    storeCurrentValue(BATTERY_FULL, buff, size);
+    return readPropertyValueOrDefault(BATTERY_FULL, buff, size);
 }
 
 // Get current battery value
 int Genymotion::batteryValue(char *buff, size_t size)
 {
-    return readPropertyValueOrDefault("geny.bat.value", buff, size);
+    // Store current value to Genymotion cache
+    storeCurrentValue(BATTERY_VALUE, buff, size);
+    return readPropertyValueOrDefault(BATTERY_VALUE, buff, size);
 }

@@ -19,8 +19,8 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
     // Read keys
     char property_full[PROPERTY_VALUE_MAX];
     char property_value[PROPERTY_VALUE_MAX];
-    property_get("geny.bat.full", property_full, "0");
-    property_get("geny.bat.value", property_value, "0");
+    property_get(CACHE_PREFIX BATTERY_FULL, property_full, "0");
+    property_get(CACHE_PREFIX BATTERY_VALUE, property_value, "0");
 
     int efull = atoi(property_full);
     int enow = atoi(property_value);

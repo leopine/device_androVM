@@ -1,4 +1,3 @@
-
 #include <cutils/properties.h>
 
 #include "genymotion.hpp"
@@ -27,11 +26,23 @@ Genymotion &Genymotion::getInstance(void)
 }
 
 // Store current value to Genymotion cache
-void Genymotion::storeCurrentValue(const char *path, const char *buf, const size_t size)
+void Genymotion::storeCurrentValue(const char *key, const char *buf, const size_t size)
 {
-    (void)size;
-    SLOGI("Storing   system value from '%s': '%s'", path, buf);
+    char final_key[PROPERTY_KEY_MAX];
+    char value[PROPERTY_VALUE_MAX];
+    int maxSize = size > sizeof(value) ? sizeof(value) : size;
+
+    // Prepare cache key name
+    snprintf(final_key, sizeof(final_key), "%s%s", CACHE_PREFIX, key);
+
+    // Prepare value
+    snprintf(value, maxSize, "%s", buf);
+
+    // Store value
+    property_set(final_key, value);
+    SLOGD("Caching value %s = '%s'", final_key, value);
 }
+
 
 // Overload /proc values with genymotion configuration
 int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
