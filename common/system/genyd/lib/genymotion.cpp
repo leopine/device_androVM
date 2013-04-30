@@ -1,4 +1,3 @@
-#include <cutils/log.h>
 #include "genymotion.hpp"
 
 // Singleton object

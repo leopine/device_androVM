@@ -3,6 +3,13 @@
 
 #include <map>
 #include <string>
+#include <cutils/log.h>
+
+// Define Log tag
+#ifdef LOG_TAG
+#undef LOG_TAG
+#define LOG_TAG "Genymotion"
+#endif
 
 class Genymotion {
 
