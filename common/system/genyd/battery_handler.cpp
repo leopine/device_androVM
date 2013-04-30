@@ -2,15 +2,16 @@
 #include <cutils/properties.h>
 
 #include "dispatcher.hpp"
+#include "genymotion.hpp"
 
 void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 {
     std::string value = request.parameter().value().stringvalue();
 
     if (property_set(BATTERY_STATUS, value.c_str())) {
-	SLOGE("Can't set property");
+        SLOGE("Can't set property");
     } else {
-	reply->set_type(Reply::None);
+        reply->set_type(Reply::None);
     }
 }
 
@@ -37,4 +38,17 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
 
     // Set value in response
     value->set_uintvalue(batlevel);
+}
+
+void Dispatcher::isBatteryManual(const Request &request, Reply *reply)
+{
+    reply->set_type(Reply::Value);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+    Value *value = reply->mutable_value();
+    value->set_type(Value::Bool);
+
+    char property[PROPERTY_VALUE_MAX];
+    property_get("ro.build.version.release", property, "Unknown");
+    value->set_boolvalue(!Genymotion::useRealValue(BATTERY_VALUE));
 }

@@ -49,7 +49,7 @@ private:
     // Generic requests    //
     /////////////////////////
 
-    // Answer "GetParam AndroidVersion" requests
+    // Answer "GetParam AndroidVersion" request
     void getAndroidVersion(const Request &request, Reply *reply);
 
 
@@ -60,12 +60,14 @@ private:
     // battery_handler.cpp //
     /////////////////////////
 
-    // Answer "GetParam Battery Value" requests
+    // Answer "GetParam Battery Value" request
     void getBatteryValue(const Request &request, Reply *reply);
 
-    // Answer "SetParam Battery Status"
+    // Answer "SetParam Battery Status" request
     void setBatteryStatus(const Request &request, Reply *reply);
 
+    // Answer "GetParam Battery Is manual" request
+    void isBatteryManual(const Request &request, Reply *reply);
 };
 
 #endif
