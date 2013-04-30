@@ -34,7 +34,7 @@ void Genymotion::storeCurrentValue(const char *path, const char *buf, const size
 // Overload /proc values with genymotion configuration
 int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
 {
-    SLOGI("Retrieving value from %s", path);
+    SLOGI("Reading forced value from %s. Current = '%s'", path, buf);
 
     Genymotion &instance = Genymotion::getInstance();
 
@@ -93,7 +93,7 @@ int Genymotion::batteryCallback(const char *path, char *buff, size_t size)
 int Genymotion::batteryFull(char *buff, size_t size)
 {
     unsigned long int val = 50000000UL;
-    int sz = snprintf(buff, size, "%lu\n", val);
+    int sz = snprintf(buff, size, "%lu", val);
     return sz;
 }
 
@@ -101,6 +101,6 @@ int Genymotion::batteryFull(char *buff, size_t size)
 int Genymotion::batteryValue(char *buff, size_t size)
 {
     unsigned long int val = 47500000UL;
-    int sz = snprintf(buff, size, "%lu\n", val);
+    int sz = snprintf(buff, size, "%lu", val);
     return sz;
 }
