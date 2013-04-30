@@ -1,24 +1,23 @@
-
-#include "genymotion.hpp"
+#include "libgenyd.hpp"
 #define __NO_PROTO
 #include "global.hpp"
 
 #include <cutils/properties.h>
 
 // Plug battery callbacks
-void Genymotion::initBatteryCallbacks()
+void LibGenyd::initBatteryCallbacks()
 {
-    sensor_callbacks["/sys/class/power_supply"] = &Genymotion::batteryCallback;
+    sensor_callbacks["/sys/class/power_supply"] = &LibGenyd::batteryCallback;
 
-    battery_callbacks["/energy_full"] = &Genymotion::batteryFull;
-    battery_callbacks["/energy_now"] = &Genymotion::batteryValue;
+    battery_callbacks["/energy_full"] = &LibGenyd::batteryFull;
+    battery_callbacks["/energy_now"] = &LibGenyd::batteryValue;
 }
 
 // Search for battery callbacks in file pattern
-int Genymotion::batteryCallback(const char *path, char *buff, size_t size)
+int LibGenyd::batteryCallback(const char *path, char *buff, size_t size)
 {
-    std::map<std::string, Genymotion::t_callback_member>::iterator begin = battery_callbacks.begin();
-    std::map<std::string, Genymotion::t_callback_member>::iterator end = battery_callbacks.end();
+    std::map<std::string, LibGenyd::t_callback_member>::iterator begin = battery_callbacks.begin();
+    std::map<std::string, LibGenyd::t_callback_member>::iterator end = battery_callbacks.end();
 
     std::string haystack(path);
 
@@ -60,7 +59,7 @@ int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
 
 
 // Get battery value when full
-int Genymotion::batteryFull(char *buff, size_t size)
+int LibGenyd::batteryFull(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
     storeCurrentValue(BATTERY_FULL, buff, size);
@@ -68,7 +67,7 @@ int Genymotion::batteryFull(char *buff, size_t size)
 }
 
 // Get current battery value
-int Genymotion::batteryValue(char *buff, size_t size)
+int LibGenyd::batteryValue(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
     storeCurrentValue(BATTERY_VALUE, buff, size);

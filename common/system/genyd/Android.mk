@@ -13,7 +13,7 @@ LOCAL_C_INCLUDES        := $(LOCAL_PATH) \
                            bionic \
                            external/stlport/stlport
 
-LOCAL_SRC_FILES         := lib/genymotion.cpp \
+LOCAL_SRC_FILES         := lib/libgenyd.cpp \
                            lib/sensor_battery.cpp
 
 LOCAL_MODULE_TAGS       := optional

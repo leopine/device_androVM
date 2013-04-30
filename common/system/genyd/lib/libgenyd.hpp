@@ -1,5 +1,5 @@
-#ifndef LIB_GENYMOTION_HPP_
-#define LIB_GENYMOTION_HPP_
+#ifndef LIB_GENYD_HPP_
+#define LIB_GENYD_HPP_
 
 #include <map>
 #include <string>
@@ -11,33 +11,33 @@
 #define LOG_TAG "Genymotion"
 #endif
 
-class Genymotion {
+class LibGenyd {
 
 public:
     // Constructor
-    Genymotion(void);
+    LibGenyd(void);
 
 private:
     // Destructor
-    ~Genymotion(void);
+    ~LibGenyd(void);
 
     // Copy constructor
-    Genymotion(const Genymotion &);
+    LibGenyd(const LibGenyd &);
 
     // Copy operator
-    Genymotion operator=(const Genymotion &);
+    LibGenyd operator=(const LibGenyd &);
 
     // Singleton instance
-    static Genymotion instance;
+    static LibGenyd instance;
 
     // Get singleton object
-    static Genymotion &getInstance(void);
+    static LibGenyd &getInstance(void);
 
     // Callbacks lists
-    typedef int (Genymotion::*t_dispatcher_member)(const char *, char *, size_t);
+    typedef int (LibGenyd::*t_dispatcher_member)(const char *, char *, size_t);
     std::map<std::string, t_dispatcher_member> sensor_callbacks;
 
-    typedef int (Genymotion::*t_callback_member)(char *, size_t);
+    typedef int (LibGenyd::*t_callback_member)(char *, size_t);
     std::map<std::string, t_callback_member> battery_callbacks;
 
 public:
@@ -71,4 +71,4 @@ private:
     int batteryValue(char *buff, size_t size);
 };
 
-#endif // #define LIB_GENYMOTION_HPP_GENYD_READ_PROC_HPP_
+#endif // #define LIB_GENYD_HPP_

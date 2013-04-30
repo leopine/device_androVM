@@ -1,32 +1,32 @@
 #include <cutils/properties.h>
 
-#include "genymotion.hpp"
+#include "libgenyd.hpp"
 #define __NO_PROTO
 #include "global.hpp"
 
 // Singleton object
-Genymotion Genymotion::instance = Genymotion();
+LibGenyd LibGenyd::instance = LibGenyd();
 
 // Constructor
-Genymotion::Genymotion(void)
+LibGenyd::LibGenyd(void)
 {
     // Populate callbacks links
     initBatteryCallbacks();
 }
 
 // Destructor
-Genymotion::~Genymotion(void)
+LibGenyd::~LibGenyd(void)
 {
 }
 
 // Get singleton object
-Genymotion &Genymotion::getInstance(void)
+LibGenyd& LibGenyd::getInstance(void)
 {
     return instance;
 }
 
 // Store current value to Genymotion cache
-void Genymotion::storeCurrentValue(const char *key, const char *buf, const size_t size)
+void LibGenyd::storeCurrentValue(const char *key, const char *buf, const size_t size)
 {
     char final_key[PROPERTY_KEY_MAX];
     char value[PROPERTY_VALUE_MAX];
@@ -45,13 +45,13 @@ void Genymotion::storeCurrentValue(const char *key, const char *buf, const size_
 
 
 // Overload /proc values with genymotion configuration
-int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
+int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 {
     SLOGI("Searching system value from '%s': '%s'", path, buf);
 
-    Genymotion &instance = Genymotion::getInstance();
+    LibGenyd &instance = LibGenyd::getInstance();
 
-    Genymotion::t_dispatcher_member sensorCallback = instance.getSensorCallback(path);
+    LibGenyd::t_dispatcher_member sensorCallback = instance.getSensorCallback(path);
 
     if (sensorCallback) {
         return (instance.*sensorCallback)(path, buf, size);
@@ -60,17 +60,17 @@ int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
     return -1;
 }
 
-bool Genymotion::useRealValue(const char *key)
+bool LibGenyd::useRealValue(const char *key)
 {
     char property[PROPERTY_VALUE_MAX];
     property_get(key, property, VALUE_USE_REAL);
     return !strcmp(property, VALUE_USE_REAL);
 }
 
-Genymotion::t_dispatcher_member Genymotion::getSensorCallback(const char *path)
+LibGenyd::t_dispatcher_member LibGenyd::getSensorCallback(const char *path)
 {
-    std::map<std::string, Genymotion::t_dispatcher_member>::iterator begin = sensor_callbacks.begin();
-    std::map<std::string, Genymotion::t_dispatcher_member>::iterator end = sensor_callbacks.end();
+    std::map<std::string, LibGenyd::t_dispatcher_member>::iterator begin = sensor_callbacks.begin();
+    std::map<std::string, LibGenyd::t_dispatcher_member>::iterator end = sensor_callbacks.end();
 
     std::string haystack(path);
 
