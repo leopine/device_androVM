@@ -60,6 +60,9 @@ private:
     // battery_handler.cpp //
     /////////////////////////
 
+    // Answer "GetParam Battery Value" requests
+    void getBatteryValue(const Request &request, Reply *reply);
+
     // Answer "SetParam Battery Status"
     void setBatteryStatus(const Request &request, Reply *reply);
 
