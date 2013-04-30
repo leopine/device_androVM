@@ -36,6 +36,15 @@ else
 fi
 
 # Load parameters from virtualbox guest properties
+
+# Load VM name as serial no for Android Device Chooser display
+prop_genymotion_vm_name=$(/system/bin/androVM-prop get genymotion_vm_name)
+if [ "$prop_genymotion_vm_name" ]; then
+  setprop ro.product.model "$prop_genymotion_vm_name"
+else
+  setprop ro.product.model "virtual machine"
+fi
+
 prop_vbox_graph_mode=`/system/bin/androVM-prop get vbox_graph_mode`
 if [ $prop_vbox_graph_mode ]; then
   vbox_graph_mode=$prop_vbox_graph_mode
