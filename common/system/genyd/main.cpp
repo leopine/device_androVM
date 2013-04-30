@@ -4,17 +4,12 @@
 
 int main(int argc, char**argv)
 {
-    SLOGI("Starting genyd...");
+    SLOGI("Starting genyd");
 
-    Genyd deamon;
+    Genyd daemon;
 
-    // TRY: setprop (used in shell)
-    // if(property_set("my.super.value", "good")){
-    //     fprintf(stderr, "could not set property\n");
-    // }
-
-    if (deamon.isInit()) {
-        deamon.run();
+    if (daemon.isInit()) {
+	daemon.run();
     }
 
     SLOGI("Exiting");

@@ -35,6 +35,8 @@ Socket::ReadStatus Socket::read(void)
     ALOGD("%d bytes read", len);
     istream.write(buffer, len);
 
+    // Try to parse the current stream
+    // On success, stream is consumed
     if (request.ParseFromIstream(&istream)) {
 	return Socket::NewMessage;
     } else {
