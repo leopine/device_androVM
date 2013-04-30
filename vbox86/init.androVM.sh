@@ -31,7 +31,7 @@ else
     IPETH0=(`ifconfig eth0`)
     IPMGMT=${IPETH0[2]}
     /system/bin/androVM-prop set androvm_ip_management $IPMGMT
-    echo "IP Management : $IPMGMT" > /dev/tty0 
+    echo "IP Management : $IPMGMT" > /dev/tty0
   )&
 fi
 
@@ -63,12 +63,12 @@ fi
 prop_statusbar_present=`/system/bin/androVM-prop get statusbar_present`
 if [ $prop_statusbar_present ]; then
   setprop qemu.hw.mainkeys 0
-fi 
+fi
 
 prop_su_bypass=`/system/bin/androVM-prop get su_bypass`
 if [ $prop_su_bypass ]; then
   setprop androVM.su.bypass 1
-fi 
+fi
 
 # UVESAFB
 insmod /system/lib/cfbcopyarea.ko
@@ -104,7 +104,7 @@ if [ -b $vbox_sdcard_drive ]; then
       echo "Unable to create FAT" > /dev/tty0
     fi
   fi
-else 
+else
   echo "NO SDCARD" > /dev/tty0
 fi
 
