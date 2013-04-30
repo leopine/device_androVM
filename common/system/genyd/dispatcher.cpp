@@ -5,10 +5,11 @@
 
 Dispatcher::Dispatcher(void)
 {
-    // "GetParam" callbacks lists
+    // "GetParam" callbacks list
     getCallbacks[Parameter::AndroidVersion] = &Dispatcher::getAndroidVersion;
 
-
+    // "SetParam" callback list
+    setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
 }
 
 Dispatcher::~Dispatcher(void)
@@ -48,15 +49,14 @@ void Dispatcher::treatGetParam(const Request &request, Reply *reply)
 
     Parameter param = request.parameter();
 
-    switch (param.type()) {
-    case Parameter::AndroidVersion:
-	getAndroidVersion(request, reply);
-	break;
-    default:
+    std::map<int, Dispatcher::t_get_callback>::iterator func = getCallbacks.find(param.type());
+
+    if (func != getCallbacks.end()) {
+	(this->*(func->second))(request, reply);
+    } else {
 	reply->set_type(Reply::Error);
 	Status *status = reply->mutable_status();
 	status->set_code(Status::GenericError);
-	break;
     }
 }
 
@@ -78,15 +78,14 @@ void Dispatcher::treatSetParam(const Request &request, Reply *reply)
 	return;
     }
 
-    switch (param.type()) {
-    case Parameter::BatteryStatus:
-	setBatteryStatus(request, reply);
-	break;
-    default:
+    std::map<int, Dispatcher::t_set_callback>::iterator func = setCallbacks.find(param.type());
+
+    if (func != setCallbacks.end()) {
+	(this->*(func->second))(request, reply);
+    } else {
 	reply->set_type(Reply::Error);
 	Status *status = reply->mutable_status();
 	status->set_code(Status::GenericError);
-	break;
     }
 }
 

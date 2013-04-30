@@ -13,16 +13,22 @@ private:
     Dispatcher(const Dispatcher &);
     Dispatcher operator=(const Dispatcher &);
 
-private:
     typedef void (Dispatcher::*t_get_callback)(const Request &, Reply *);
     std::map<int, t_get_callback> getCallbacks;
 
     typedef void (Dispatcher::*t_set_callback)(const Request &, Reply *);
     std::map<int, t_set_callback> setCallbacks;
 
-    /********************\
-    // Generic requests \\
-    \********************/
+public:
+    // Switch among requests
+    Reply *dispatchRequest(const Request &request);
+
+
+private:
+
+    /////////////////////////
+    // Dispatchers         //
+    /////////////////////////
 
     // Answer "Ping" request
     void treatPing(const Request &request, Reply *reply);
@@ -36,19 +42,26 @@ private:
     // Fallback for unknown requests
     void unknownRequest(const Request &request, Reply *reply);
 
+
+
+
+    /////////////////////////
+    // Generic requests    //
+    /////////////////////////
+
     // Answer "GetParam AndroidVersion" requests
     void getAndroidVersion(const Request &request, Reply *reply);
 
-    /********************\
-    // Battery requests \\
-    \********************/
+
+
+
+    /////////////////////////
+    // Battery requests    //
+    // battery_handler.cpp //
+    /////////////////////////
 
     // Answer "SetParam Battery Status"
     void setBatteryStatus(const Request &request, Reply *reply);
-
-public:
-    // Switch among requests
-    Reply *dispatchRequest(const Request &request);
 
 };
 
