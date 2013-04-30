@@ -22,16 +22,16 @@ int LibGenyd::batteryCallback(const char *path, char *buff, size_t size)
     std::string haystack(path);
 
     while (begin != end) {
-	size_t pos = haystack.rfind(begin->first);
-	// if haystack ends with
-	if (pos != std::string::npos && pos + begin->first.size() == haystack.size()) {
-	    // Retrieve value forced by callback
-	    int result = (this->*(begin->second))(buff, size);
-	    SLOGI("%s Battery callback: Overloading file %s with content = '%s'",
-		  __FUNCTION__, path, buff);
-	    return result;
-	}
-	++begin;
+        size_t pos = haystack.rfind(begin->first);
+        // if haystack ends with
+        if (pos != std::string::npos && pos + begin->first.size() == haystack.size()) {
+            // Retrieve value forced by callback
+            int result = (this->*(begin->second))(buff, size);
+            SLOGI("%s Battery callback: Overloading file %s with content = '%s'",
+                  __FUNCTION__, path, buff);
+            return result;
+        }
+        ++begin;
     }
 
     return -1;
@@ -44,13 +44,13 @@ int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
     char property[PROPERTY_VALUE_MAX];
     int length = property_get(key, property, NULL);
     if (length == 0) {
-	SLOGE("%s: No property %s. Let use default value '%s'",
-	      __FUNCTION__, key, buff);
-	return -1;
+        SLOGE("%s: No property %s. Let use default value '%s'",
+              __FUNCTION__, key, buff);
+        return -1;
     } else if (length > (int)max_size) {
-	SLOGE("%s: Unable to fill '%s' in %d chars max. Let use default value '%s'",
-	      __FUNCTION__, property, max_size, buff);
-	return -1;
+        SLOGE("%s: Unable to fill '%s' in %d chars max. Let use default value '%s'",
+              __FUNCTION__, property, max_size, buff);
+        return -1;
     }
     // Copy battery Value
     strncpy(buff, property, length);

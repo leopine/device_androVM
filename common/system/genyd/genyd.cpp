@@ -23,18 +23,18 @@ Genyd::Genyd(void)
     server_addr.sin_port = htons(SERVER_PORT);
 
     if((server_sock = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-	SLOGE("Cannot create socket");
-	return;
+        SLOGE("Cannot create socket");
+        return;
     }
 
     if (bind(server_sock, (sockaddr *)&server_addr, sizeof(server_addr)) == -1) {
-	SLOGE("Cannot bind socket");
-	return;
+        SLOGE("Cannot bind socket");
+        return;
     }
 
     if (listen(server_sock, 5) == -1) {
-	SLOGE("Cannot listen on socket");
-	return;
+        SLOGE("Cannot listen on socket");
+        return;
     }
     server = new Socket(server_sock);
 }
@@ -42,15 +42,15 @@ Genyd::Genyd(void)
 Genyd::~Genyd(void)
 {
     if (server) {
-	delete server;
+        delete server;
     }
 
     std::map<int, Socket*>::iterator begin = clients.begin();
     std::map<int, Socket*>::iterator end = clients.end();
 
     while (begin != end) {
-	delete begin->second;
-	++begin;
+        delete begin->second;
+        ++begin;
     }
 }
 
@@ -68,12 +68,12 @@ int Genyd::setFS(fd_set *readfs, fd_set *writefs) const
     FD_SET(server->getFD(), readfs);
 
     while (begin != end) {
-	FD_SET(begin->first, readfs);
-	if (begin->second->hasReplies()) {
-	    FD_SET(begin->first, writefs);
-	}
-	highest = std::max(highest, begin->first);
-	++begin;
+        FD_SET(begin->first, readfs);
+        if (begin->second->hasReplies()) {
+            FD_SET(begin->first, writefs);
+        }
+        highest = std::max(highest, begin->first);
+        ++begin;
     }
 
     return highest;
@@ -87,11 +87,10 @@ void Genyd::acceptNewClient(void)
 
     client = accept(server->getFD(), (sockaddr *)&clientAddr, &clientAddrSize);
 
-    if (client == -1)
-	{
-	    SLOGE("Cannot accept connection");
-	    return;
-	}
+    if (client == -1) {
+        SLOGE("Cannot accept connection");
+        return;
+    }
 
     clients[client] = new Socket(client);
     SLOGI("New client connected", clients.size());
@@ -100,7 +99,7 @@ void Genyd::acceptNewClient(void)
 void Genyd::treatMessage(Socket::ReadStatus status, Socket *client)
 {
     if (status == Socket::NoMessage) {
-	return;
+        return;
     }
     const Request &request = client->getRequest();
     client->addReply(dispatcher.dispatchRequest(request));
@@ -113,57 +112,57 @@ void Genyd::run(void)
 
     // Server loop
     while (true) {
-	int highest = setFS(&readfs, &writefs);
+        int highest = setFS(&readfs, &writefs);
 
-	// Wait for operations
-	if (select(highest + 1, &readfs, &writefs, NULL, NULL) < 0) {
-	    SLOGE("select() error");
-	    return;
-	}
+        // Wait for operations
+        if (select(highest + 1, &readfs, &writefs, NULL, NULL) < 0) {
+            SLOGE("select() error");
+            return;
+        }
 
-	// Accept new connection
-	if (FD_ISSET(server->getFD(), &readfs)) {
-	    SLOGD("Can accept new client");
-	    acceptNewClient();
-	}
+        // Accept new connection
+        if (FD_ISSET(server->getFD(), &readfs)) {
+            SLOGD("Can accept new client");
+            acceptNewClient();
+        }
 
-	std::map<int, Socket*>::iterator begin = clients.begin();
-	std::map<int, Socket*>::iterator end = clients.end();
+        std::map<int, Socket*>::iterator begin = clients.begin();
+        std::map<int, Socket*>::iterator end = clients.end();
 
-	// Handle messages for clients
-	while (begin != end) {
-	    // Ready read
-	    if (FD_ISSET(begin->first, &readfs)) {
-		SLOGD("Client %d id ready-read", begin->first);
+        // Handle messages for clients
+        while (begin != end) {
+            // Ready read
+            if (FD_ISSET(begin->first, &readfs)) {
+                SLOGD("Client %d id ready-read", begin->first);
 
-		Socket::ReadStatus status = begin->second->read();
+                Socket::ReadStatus status = begin->second->read();
 
-		SLOGD("ReadStatus: %d", status);
+                SLOGD("ReadStatus: %d", status);
 
-		if (status == Socket::ReadError) {
-		    delete begin->second;
-		    clients.erase(begin++);
-		    continue;
-		} else {
-		    treatMessage(status, begin->second);
-		}
-	    }
+                if (status == Socket::ReadError) {
+                    delete begin->second;
+                    clients.erase(begin++);
+                    continue;
+                } else {
+                    treatMessage(status, begin->second);
+                }
+            }
 
-	    // Ready write
-	    if (FD_ISSET(begin->first, &writefs)) {
-		SLOGD("Client %d id ready-write", begin->first);
+            // Ready write
+            if (FD_ISSET(begin->first, &writefs)) {
+                SLOGD("Client %d id ready-write", begin->first);
 
-		Socket::WriteStatus status = begin->second->reply();
+                Socket::WriteStatus status = begin->second->reply();
 
-		if (status == Socket::WriteError) {
-		    delete begin->second;
-		    clients.erase(begin++);
-		    continue;
-		}
-	    }
+                if (status == Socket::WriteError) {
+                    delete begin->second;
+                    clients.erase(begin++);
+                    continue;
+                }
+            }
 
-	    ++begin;
-	}
+            ++begin;
+        }
     }
 }
 

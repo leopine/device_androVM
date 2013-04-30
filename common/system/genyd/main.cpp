@@ -9,7 +9,7 @@ int main(int argc, char**argv)
     Genyd daemon;
 
     if (daemon.isInit()) {
-	daemon.run();
+        daemon.run();
     }
 
     SLOGI("Exiting");
