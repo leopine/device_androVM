@@ -43,10 +43,10 @@ void Dispatcher::getAndroidVersion(const Request &request, Reply *reply)
 void Dispatcher::treatGetParam(const Request &request, Reply *reply)
 {
     if (!request.has_parameter()) {
-	reply->set_type(Reply::Error);
-	Status *status = reply->mutable_status();
-	status->set_code(Status::GenericError);
-	return;
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::GenericError);
+        return;
     }
 
     Parameter param = request.parameter();
@@ -54,40 +54,40 @@ void Dispatcher::treatGetParam(const Request &request, Reply *reply)
     std::map<int, Dispatcher::t_get_callback>::iterator func = getCallbacks.find(param.type());
 
     if (func != getCallbacks.end()) {
-	(this->*(func->second))(request, reply);
+        (this->*(func->second))(request, reply);
     } else {
-	reply->set_type(Reply::Error);
-	Status *status = reply->mutable_status();
-	status->set_code(Status::GenericError);
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::GenericError);
     }
 }
 
 void Dispatcher::treatSetParam(const Request &request, Reply *reply)
 {
     if (!request.has_parameter()) {
-	reply->set_type(Reply::Error);
-	Status *status = reply->mutable_status();
-	status->set_code(Status::GenericError);
-	return;
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::GenericError);
+        return;
     }
 
     Parameter param = request.parameter();
 
     if (!param.has_value()) {
-	reply->set_type(Reply::Error);
-	Status *status = reply->mutable_status();
-	status->set_code(Status::GenericError);
-	return;
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::GenericError);
+        return;
     }
 
     std::map<int, Dispatcher::t_set_callback>::iterator func = setCallbacks.find(param.type());
 
     if (func != setCallbacks.end()) {
-	(this->*(func->second))(request, reply);
+        (this->*(func->second))(request, reply);
     } else {
-	reply->set_type(Reply::Error);
-	Status *status = reply->mutable_status();
-	status->set_code(Status::GenericError);
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::GenericError);
     }
 }
 
@@ -107,17 +107,17 @@ Reply *Dispatcher::dispatchRequest(const Request &request)
 
     switch (request.type()) {
     case Request::Ping:
-	treatPing(request, reply);
-	break;
+        treatPing(request, reply);
+        break;
     case Request::SetParam:
-	treatSetParam(request, reply);
-	break;
+        treatSetParam(request, reply);
+        break;
     case Request::GetParam:
-	treatGetParam(request, reply);
-	break;
+        treatGetParam(request, reply);
+        break;
     default:
-	unknownRequest(request, reply);
-	break;
+        unknownRequest(request, reply);
+        break;
     }
 
     return (reply);
