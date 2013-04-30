@@ -55,6 +55,9 @@ private:
     // Battery callbacks
     // =================
 
+    // Plug battery callbacks
+    void initBatteryCallbacks();
+
     // Battery dispatcher
     int batteryCallback(const char *path, char *buff, size_t size);
 
