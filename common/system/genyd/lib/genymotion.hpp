@@ -44,6 +44,9 @@ public:
     // Overload /proc values with genymotion configuration
     static int getValueFromProc(const char* path, char *buf, size_t size);
 
+    // Return true if the real value must be used
+    static bool useRealValue(const char *key);
+
 private:
     // Global dispatcher
     t_dispatcher_member getSensorCallback(const char *path);

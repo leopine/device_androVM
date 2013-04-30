@@ -7,6 +7,8 @@
 
 #include <cutils/log.h>
 
+#ifndef __NO_PROTO
+
 #include "device/androVM/common/system/genyd/requests.pb.h"
 
 using Genymotion::Parameter;
@@ -15,7 +17,11 @@ using Genymotion::Status;
 using Genymotion::Reply;
 using Genymotion::Value;
 
+#endif
+
 // Properties keys
+
+#define VALUE_USE_REAL   "--use-real-value--"
 
 // Battery
 #define BATTERY_VALUE    "genyd.battery.value"

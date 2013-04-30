@@ -1,4 +1,9 @@
+
+#include <cutils/properties.h>
+
 #include "genymotion.hpp"
+#define __NO_PROTO
+#include "global.hpp"
 
 // Singleton object
 Genymotion Genymotion::instance = Genymotion();
@@ -38,10 +43,17 @@ int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
     Genymotion::t_dispatcher_member sensorCallback = instance.getSensorCallback(path);
 
     if (sensorCallback) {
-	return (instance.*sensorCallback)(path, buf, size);
+        return (instance.*sensorCallback)(path, buf, size);
     }
     SLOGI("%s No callback found. Returning", __FUNCTION__);
     return -1;
+}
+
+bool Genymotion::useRealValue(const char *key)
+{
+    char property[PROPERTY_VALUE_MAX];
+    property_get(key, property, VALUE_USE_REAL);
+    return !strcmp(property, VALUE_USE_REAL);
 }
 
 Genymotion::t_dispatcher_member Genymotion::getSensorCallback(const char *path)
@@ -52,10 +64,10 @@ Genymotion::t_dispatcher_member Genymotion::getSensorCallback(const char *path)
     std::string haystack(path);
 
     while (begin != end) {
-	// if haystack starts with
-	if (haystack.find(begin->first) == 0)
-	    return begin->second;
-	++begin;
+        // if haystack starts with
+        if (haystack.find(begin->first) == 0)
+            return begin->second;
+        ++begin;
     }
 
     return NULL;
