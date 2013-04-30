@@ -14,7 +14,7 @@ Socket::Socket(int socket)
 Socket::~Socket(void)
 {
     if (socket != -1) {
-	close(socket);
+        close(socket);
     }
 }
 
@@ -25,11 +25,11 @@ Socket::ReadStatus Socket::read(void)
     char buffer[1024];
 
     if ((len = recv(socket, buffer, 1023, MSG_NOSIGNAL)) < 0) {
-	SLOGE("recv() error");
+        SLOGE("recv() error");
     }
 
     if (len <= 0) {
-	return Socket::ReadError;
+        return Socket::ReadError;
     }
 
     ALOGD("%d bytes read", len);
@@ -38,10 +38,10 @@ Socket::ReadStatus Socket::read(void)
     // Try to parse the current stream
     // On success, stream is consumed
     if (request.ParseFromIstream(&istream)) {
-	return Socket::NewMessage;
+        return Socket::NewMessage;
     } else {
-	ALOGE("Can't parse request");
-	return Socket::NoMessage;
+        ALOGE("Can't parse request");
+        return Socket::NoMessage;
     }
 }
 
@@ -59,14 +59,14 @@ Socket::WriteStatus Socket::reply(void)
     replies.pop();
 
     if (!reply->SerializeToString(&data)) {
-	ALOGE("Can't serialize reply");
-	delete reply;
-	return Socket::BadSerialize;
+        ALOGE("Can't serialize reply");
+        delete reply;
+        return Socket::BadSerialize;
     }
     if ((len = send(socket, data.c_str(), data.size(), MSG_NOSIGNAL)) < 0) {
-	ALOGE("Can't send reply");
-	delete reply;
-	return Socket::WriteError;
+        ALOGE("Can't send reply");
+        delete reply;
+        return Socket::WriteError;
     }
     ALOGD("%d bytes written", len);
     delete reply;
@@ -86,5 +86,5 @@ const Request &Socket::getRequest(void) const
 void Socket::addReply(Reply *reply)
 {
     if (reply->type() != Reply::None)
-	replies.push(reply);
+        replies.push(reply);
 }
