@@ -26,7 +26,7 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
     int enow = atoi(property_value);
 
     // Compute battery level
-    int batlevel = ((long long)enow)*100/efull;
+    int batlevel = efull ? ((long long)enow)*100/efull : 0;
 
     // Prepare response
     reply->set_type(Reply::Value);
