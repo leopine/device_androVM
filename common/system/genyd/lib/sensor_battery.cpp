@@ -1,4 +1,5 @@
 #include "genymotion.hpp"
+#include <cutils/properties.h>
 
 // Plug battery callbacks
 void Genymotion::initBatteryCallbacks()
@@ -35,18 +36,35 @@ int Genymotion::batteryCallback(const char *path, char *buff, size_t size)
     return -1;
 }
 
+// Static helper method that reads property key in a sane manner
+int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
+{
+    // Read property value
+    char property[PROPERTY_VALUE_MAX];
+    int length = property_get(key, property, NULL);
+    if (length == 0) {
+	SLOGE("%s: No property %s. Let use default value '%s'",
+	      __FUNCTION__, key, buff);
+	return -1;
+    } else if (length > (int)max_size) {
+	SLOGE("%s: Unable to fill '%s' in %d chars max. Let use default value '%s'",
+	      __FUNCTION__, property, max_size, buff);
+	return -1;
+    }
+    // Copy battery Value
+    strncpy(buff, property, length);
+    return length;
+}
+
+
 // Get battery value when full
 int Genymotion::batteryFull(char *buff, size_t size)
 {
-    unsigned long int val = 50000000UL;
-    int sz = snprintf(buff, size, "%lu", val);
-    return sz;
+    return readPropertyValueOrDefault("geny.bat.full", buff, size);
 }
 
 // Get current battery value
 int Genymotion::batteryValue(char *buff, size_t size)
 {
-    unsigned long int val = 47500000UL;
-    int sz = snprintf(buff, size, "%lu", val);
-    return sz;
+    return readPropertyValueOrDefault("geny.bat.value", buff, size);
 }

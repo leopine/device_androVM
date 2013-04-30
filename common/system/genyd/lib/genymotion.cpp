@@ -25,13 +25,13 @@ Genymotion &Genymotion::getInstance(void)
 void Genymotion::storeCurrentValue(const char *path, const char *buf, const size_t size)
 {
     (void)size;
-    SLOGI("Storing system value from path %s: %s", path, buf);
+    SLOGI("Storing   system value from '%s': '%s'", path, buf);
 }
 
 // Overload /proc values with genymotion configuration
 int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
 {
-    SLOGI("Reading forced value from %s. Current = '%s'", path, buf);
+    SLOGI("Searching system value from '%s': '%s'", path, buf);
 
     Genymotion &instance = Genymotion::getInstance();
 
