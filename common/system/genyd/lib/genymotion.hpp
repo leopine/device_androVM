@@ -35,21 +35,21 @@ private:
 
     // Callbacks lists
     typedef int (Genymotion::*t_dispatcher_member)(const char *, char *, size_t);
-    std::map<std::string, t_dispatcher_member> callbacks;
+    std::map<std::string, t_dispatcher_member> sensor_callbacks;
 
     typedef int (Genymotion::*t_callback_member)(char *, size_t);
     std::map<std::string, t_callback_member> battery_callbacks;
 
 public:
-    // Store current value to Genymotion cache
-    static void storeCurrentValue(const char *path, const char *buf, const size_t size);
-
     // Overload /proc values with genymotion configuration
     static int getValueFromProc(const char* path, char *buf, size_t size);
 
 private:
     // Global dispatcher
-    t_dispatcher_member getCallback(const char *path);
+    t_dispatcher_member getSensorCallback(const char *path);
+
+    // Store current value to Genymotion cache
+    void storeCurrentValue(const char *path, const char *buf, const size_t size);
 
     // =================
     // Battery callbacks

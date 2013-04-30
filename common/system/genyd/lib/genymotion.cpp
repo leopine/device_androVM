@@ -7,7 +7,7 @@ Genymotion Genymotion::instance = Genymotion();
 Genymotion::Genymotion(void)
 {
     // Populate callbacks lists
-    callbacks["/sys/class/power_supply"] = &Genymotion::batteryCallback;
+    sensor_callbacks["/sys/class/power_supply"] = &Genymotion::batteryCallback;
 
     battery_callbacks["/energy_full"] = &Genymotion::batteryFull;
     battery_callbacks["/energy_now"] = &Genymotion::batteryValue;
@@ -27,6 +27,7 @@ Genymotion &Genymotion::getInstance(void)
 // Store current value to Genymotion cache
 void Genymotion::storeCurrentValue(const char *path, const char *buf, const size_t size)
 {
+    (void)size;
     SLOGI("Storing system value from path %s: %s", path, buf);
 }
 
@@ -37,22 +38,19 @@ int Genymotion::getValueFromProc(const char *path, char *buf, size_t size)
 
     Genymotion &instance = Genymotion::getInstance();
 
-    Genymotion::t_dispatcher_member callback = instance.getCallback(path);
+    Genymotion::t_dispatcher_member sensorCallback = instance.getSensorCallback(path);
 
-    if (callback) {
-	int result = (instance.*callback)(path, buf, size);
-	SLOGI("%s Callback returned %d for key %s with content = %s",
-	      __FUNCTION__, result, path, buf);
-	return result;
+    if (sensorCallback) {
+	return (instance.*sensorCallback)(path, buf, size);
     }
     SLOGI("%s No callback found. Returning", __FUNCTION__);
     return -1;
 }
 
-Genymotion::t_dispatcher_member Genymotion::getCallback(const char *path)
+Genymotion::t_dispatcher_member Genymotion::getSensorCallback(const char *path)
 {
-    std::map<std::string, Genymotion::t_dispatcher_member>::iterator begin = callbacks.begin();
-    std::map<std::string, Genymotion::t_dispatcher_member>::iterator end = callbacks.end();
+    std::map<std::string, Genymotion::t_dispatcher_member>::iterator begin = sensor_callbacks.begin();
+    std::map<std::string, Genymotion::t_dispatcher_member>::iterator end = sensor_callbacks.end();
 
     std::string haystack(path);
 
@@ -77,7 +75,13 @@ int Genymotion::batteryCallback(const char *path, char *buff, size_t size)
 	size_t pos = haystack.rfind(begin->first);
 	// if haystack ends with
 	if (pos != std::string::npos && pos + begin->first.size() == haystack.size()) {
-	    return (this->*(begin->second))(buff, size);
+	    // Store current value to Genymotion cache
+	    storeCurrentValue(path, buff, size);
+	    // Retrieve value forced by callback
+	    int result = (this->*(begin->second))(buff, size);
+	    SLOGI("%s Battery callback: Overloading file %s with content = '%s'",
+		  __FUNCTION__, path, buff);
+	    return result;
 	}
 	++begin;
     }
