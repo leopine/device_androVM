@@ -5,6 +5,9 @@
 
 Dispatcher::Dispatcher(void)
 {
+    // "GetParam" callbacks lists
+    getCallbacks[Parameter::AndroidVersion] = &Dispatcher::getAndroidVersion;
+
 
 }
 

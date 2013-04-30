@@ -13,6 +13,17 @@ private:
     Dispatcher(const Dispatcher &);
     Dispatcher operator=(const Dispatcher &);
 
+private:
+    typedef void (Dispatcher::*t_get_callback)(const Request &, Reply *);
+    std::map<int, t_get_callback> getCallbacks;
+
+    typedef void (Dispatcher::*t_set_callback)(const Request &, Reply *);
+    std::map<int, t_set_callback> setCallbacks;
+
+    /********************\
+    // Generic requests \\
+    \********************/
+
     // Answer "Ping" request
     void treatPing(const Request &request, Reply *reply);
 
