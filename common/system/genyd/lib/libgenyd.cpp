@@ -32,7 +32,6 @@ void LibGenyd::cacheCurrentValue(const char *key,
                                  const char *buff)
 {
     char full_key[PROPERTY_KEY_MAX];
-    char value[PROPERTY_VALUE_MAX];
 
     // Generate new key
     snprintf(full_key, sizeof(full_key), "%s%s", key, CACHE_SUFFIX);
@@ -54,8 +53,6 @@ void LibGenyd::cacheCurrentValue(const char *key,
         wait(&status);
         SLOGD("Process exits with status %d", WEXITSTATUS(status));
     }
-
-    SLOGI("Cached value [%s] = '%s'", full_key, value);
 }
 
 

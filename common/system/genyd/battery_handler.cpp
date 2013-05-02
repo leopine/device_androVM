@@ -8,21 +8,20 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 {
     std::string value = request.parameter().value().stringvalue();
 
-    if (value != "Charging" &&
-        value != "Discharging" &&
-        value != "Not charging" &&
-        value != "Full") {
+    if (value != "Charging" && value != "Discharging" &&
+        value != "Not charging" && value != "Full") {
+
+        SLOGD("Unknown \"%s\" battery status", value.c_str());
+
         reply->set_type(Reply::Error);
         Status *status = reply->mutable_status();
         status->set_code(Status::InvalidRequest);
+
         return;
     }
 
-    if (property_set(BATTERY_STATUS, value.c_str())) {
-        SLOGE("Can't set property");
-    } else {
-        reply->set_type(Reply::None);
-    }
+    int ret = property_set(BATTERY_STATUS, value.c_str());
+    SLOGD("Setting [%s] to \"%s\": %d", BATTERY_STATUS, value.c_str(), ret);
 }
 
 void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
