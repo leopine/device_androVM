@@ -8,6 +8,10 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 {
     std::string value = request.parameter().value().stringvalue();
 
+    reply->set_type(Reply::None);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+
     if (value != "Charging" && value != "Discharging" &&
         value != "Not charging" && value != "Full") {
 
@@ -16,12 +20,14 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         reply->set_type(Reply::Error);
         Status *status = reply->mutable_status();
         status->set_code(Status::InvalidRequest);
-
-        return;
-    }
-
-    if (!property_set(BATTERY_STATUS, value.c_str())) {
-        reply->set_type(Reply::None);
+    } else {
+        if (LibGenyd::useRealValue(BATTERY_STATUS)) {
+            SLOGD("WUT ?");
+            reply->set_type(Reply::Error);
+            Status *status = reply->mutable_status();
+            status->set_code(Status::GenericError);
+        }
+        property_set(BATTERY_STATUS, value.c_str());
     }
 }
 
@@ -49,37 +55,38 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
 {
     int batlevel = request.parameter().value().uintvalue();
 
-    reply->set_type(Reply::Error);
+    reply->set_type(Reply::None);
     Status *status = reply->mutable_status();
-    status->set_code(Status::InvalidRequest);
+    status->set_code(Status::Ok);
 
     if (batlevel == -1) {
-        if (!property_set(BATTERY_VALUE, VALUE_USE_REAL)) {
-            reply->set_type(Reply::None);
-        }
-        SLOGE("Can't set [%s] to \"%s\"", BATTERY_VALUE, VALUE_USE_REAL);
-        return;
+        property_set(BATTERY_VALUE, VALUE_USE_REAL);
     } else if (batlevel < -1 || batlevel > 100) {
         SLOGE("Invalid battery level %d", batlevel);
-        return;
-    }
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::InvalidRequest);
+    } else {
+        if (LibGenyd::useRealValue(BATTERY_VALUE)) {
+            SLOGD("WUT ?");
+            reply->set_type(Reply::Error);
+            Status *status = reply->mutable_status();
+            status->set_code(Status::GenericError);
+        }
 
-    // Compute battery voltage
-    uint64_t efull = 50000000;
-    uint64_t enow = (efull * batlevel) / 100UL;
+        // Compute battery voltage
+        uint64_t efull = 50000000;
+        uint64_t enow = (efull * batlevel) / 100UL;
 
-    // Prepare string values
-    char prop_full[PROPERTY_VALUE_MAX];
-    char prop_now[PROPERTY_VALUE_MAX];
+        // Prepare string values
+        char prop_full[PROPERTY_VALUE_MAX];
+        char prop_now[PROPERTY_VALUE_MAX];
 
-    snprintf(prop_full, sizeof(prop_full), "%lld", efull);
-    snprintf(prop_now, sizeof(prop_now), "%lld", enow);
+        snprintf(prop_full, sizeof(prop_full), "%lld", efull);
+        snprintf(prop_now, sizeof(prop_now), "%lld", enow);
 
-    SLOGD("Battery: %s/%s", prop_now, prop_full);
-
-    if (!property_set(BATTERY_FULL, prop_full) &&
-        !property_set(BATTERY_VALUE, prop_now)) {
-        reply->set_type(Reply::None);
+        property_set(BATTERY_FULL, prop_full);
+        property_set(BATTERY_VALUE, prop_now);
     }
 }
 
