@@ -45,6 +45,33 @@ void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
     value->set_stringvalue(property_value);
 }
 
+void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
+{
+    int efull = 50000000;
+    int batlevel = request.parameter().value().uintvalue();
+
+    // Compute battery voltage
+    int enow = ((long long)efull * batlevel) / 100L;
+
+    // Prepare string values
+    char prop_full[PROPERTY_VALUE_MAX];
+    char prop_now[PROPERTY_VALUE_MAX];
+    snprintf(prop_full, sizeof(prop_full), "%d", efull);
+    snprintf(prop_now, sizeof(prop_full), "%d", enow);
+
+    if (property_set(BATTERY_FULL, prop_full)) {
+        SLOGE("Can't set property %s", BATTERY_FULL);
+        return;
+    }
+    if (property_set(BATTERY_VALUE, prop_now)) {
+        SLOGE("Can't set property %s", BATTERY_FULL);
+        return;
+    }
+
+    // Prepare response
+    reply->set_type(Reply::None);
+}
+
 void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
 {
     // Read keys

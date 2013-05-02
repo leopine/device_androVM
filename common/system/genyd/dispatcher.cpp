@@ -13,6 +13,7 @@ Dispatcher::Dispatcher(void)
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
+    setCallbacks[Parameter::BatteryValue] = &Dispatcher::setBatteryValue;
 }
 
 Dispatcher::~Dispatcher(void)
