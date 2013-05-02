@@ -28,11 +28,15 @@ LibGenyd& LibGenyd::getInstance(void)
 }
 
 // Store current value to Genymotion cache
-void LibGenyd::storeCurrentValue(const char *key,
+void LibGenyd::cacheCurrentValue(const char *key,
                                  const char *buff,
                                  const size_t size)
 {
+    char full_key[PROPERTY_KEY_MAX];
     char value[PROPERTY_VALUE_MAX];
+
+    // Generate new key
+    snprintf(full_key, sizeof(full_key), "%s%s", key, CACHE_SUFFIX);
 
     // Store value
     SLOGD("Forking");
@@ -44,7 +48,7 @@ void LibGenyd::storeCurrentValue(const char *key,
     } else if (p_id == 0) {
         SLOGD("Launching execl");
         execl("/system/bin/androVM_setprop",
-              "androVM_setprop", key, buff, NULL);
+              "androVM_setprop", full_key, buff, NULL);
         return;
     } else {
         int status = 0;
@@ -52,9 +56,7 @@ void LibGenyd::storeCurrentValue(const char *key,
         SLOGD("Process exits with status %d", WEXITSTATUS(status));
     }
 
-    property_get(key, value, VALUE_USE_REAL);
-
-    SLOGD("Cached value [%s] = '%s'", key, value);
+    SLOGI("Cached value [%s] = '%s'", full_key, value);
 }
 
 

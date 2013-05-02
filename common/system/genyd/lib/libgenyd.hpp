@@ -52,7 +52,7 @@ private:
     t_dispatcher_member getSensorCallback(const char *path);
 
     // Store current value to Genymotion cache
-    void storeCurrentValue(const char *path, const char *buf, const size_t size);
+    void cacheCurrentValue(const char *path, const char *buf, const size_t size);
 
     // =================
     // Battery callbacks

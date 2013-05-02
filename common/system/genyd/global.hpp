@@ -22,7 +22,7 @@
 
 // Cache values: For example, genyd.battery.value.cache refers
 // to real battery value has AOSP would see in manual mode
-#define CACHE_SUFFIX   ".cache"
+#define CACHE_SUFFIX   ".cached"
 
 // Properties keys
 
