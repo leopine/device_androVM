@@ -51,7 +51,7 @@ int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
 
     if (len >= 0 && len < (int)max_size) {
         // Copy property
-        strncpy(buff, property, len);
+        snprintf(buff, len, "%s", property);
         return len;
     }
 
