@@ -58,27 +58,28 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
             reply->set_type(Reply::None);
         }
         SLOGE("Can't set [%s] to \"%s\"", BATTERY_VALUE, VALUE_USE_REAL);
+        return;
     } else if (batlevel < -1 || batlevel > 100) {
-        SLOGE("Invalid battery level \"%s\"", batlevel);
-    } else {
-        long long efull = 50000000;
+        SLOGE("Invalid battery level %d", batlevel);
+        return;
+    }
 
-        // Compute battery voltage
-        long long enow = (efull * batlevel) / 100UL;
+    // Compute battery voltage
+    uint64_t efull = 50000000;
+    uint64_t enow = (efull * batlevel) / 100UL;
 
-        // Prepare string values
-        char prop_full[PROPERTY_VALUE_MAX];
-        char prop_now[PROPERTY_VALUE_MAX];
+    // Prepare string values
+    char prop_full[PROPERTY_VALUE_MAX];
+    char prop_now[PROPERTY_VALUE_MAX];
 
-        snprintf(prop_full, sizeof(prop_full), "%lld", efull);
-        snprintf(prop_now, sizeof(prop_now), "%lld", enow);
+    snprintf(prop_full, sizeof(prop_full), "%lld", efull);
+    snprintf(prop_now, sizeof(prop_now), "%lld", enow);
 
-        SLOGD("Battery: %s/%s", prop_now, prop_full);
+    SLOGD("Battery: %s/%s", prop_now, prop_full);
 
-        if (!property_set(BATTERY_FULL, prop_full) &&
-            !property_set(BATTERY_VALUE, prop_now)) {
-            reply->set_type(Reply::None);
-        }
+    if (!property_set(BATTERY_FULL, prop_full) &&
+        !property_set(BATTERY_VALUE, prop_now)) {
+        reply->set_type(Reply::None);
     }
 }
 
@@ -96,11 +97,11 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
         property_get(BATTERY_VALUE, property_value, "0");
     }
 
-    long long efull = atoll(property_full);
-    long long enow = atoll(property_value);
+    uint64_t efull = atoll(property_full);
+    uint64_t enow = atoll(property_value);
 
     // Compute battery level
-    int batlevel = efull ? ((enow * 100) / efull) : 0;
+    uint64_t batlevel = efull ? ((enow * ((uint64_t)100)) / efull) : 0;
 
     // Prepare response
     reply->set_type(Reply::Value);
