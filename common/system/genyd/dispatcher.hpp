@@ -66,6 +66,9 @@ private:
     // Answer "SetParam Battery Status" request
     void setBatteryStatus(const Request &request, Reply *reply);
 
+    // Answer "GetParam Battery Status" request
+    void getBatteryStatus(const Request &request, Reply *reply);
+
     // Answer "GetParam Battery Is manual" request
     void isBatteryManual(const Request &request, Reply *reply);
 };

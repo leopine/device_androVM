@@ -69,6 +69,9 @@ private:
 
     // Get current battery value
     int batteryValue(char *buff, size_t size);
+
+    // Get current battery value
+    int batteryStatus(char *buff, size_t size);
 };
 
 #endif // #define LIB_GENYD_HPP_

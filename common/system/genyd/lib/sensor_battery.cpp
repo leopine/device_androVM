@@ -11,6 +11,7 @@ void LibGenyd::initBatteryCallbacks()
 
     battery_callbacks["/energy_full"] = &LibGenyd::batteryFull;
     battery_callbacks["/energy_now"] = &LibGenyd::batteryValue;
+    battery_callbacks["/status"] = &LibGenyd::batteryStatus;
 }
 
 // Search for battery callbacks in file pattern
@@ -40,21 +41,21 @@ int LibGenyd::batteryCallback(const char *path, char *buff, size_t size)
 // Static helper method that reads property key in a sane manner
 int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
 {
-    // Read property value
-    char property[PROPERTY_VALUE_MAX];
-    int length = property_get(key, property, NULL);
-    if (length == 0) {
-        SLOGE("%s: No property %s. Let use default value '%s'",
-              __FUNCTION__, key, buff);
-        return -1;
-    } else if (length > (int)max_size) {
-        SLOGE("%s: Unable to fill '%s' in %d chars max. Let use default value '%s'",
-              __FUNCTION__, property, max_size, buff);
+    if (LibGenyd::useRealValue(key)) {
         return -1;
     }
-    // Copy battery Value
-    strncpy(buff, property, length);
-    return length;
+
+    // Read property value
+    char property[PROPERTY_VALUE_MAX];
+    int len = property_get(key, property, buff);
+
+    if (len >= 0 && len < (int)max_size) {
+        // Copy property
+        strncpy(buff, property, len);
+        return len;
+    }
+
+    return -1;
 }
 
 
@@ -72,4 +73,13 @@ int LibGenyd::batteryValue(char *buff, size_t size)
     // Store current value to Genymotion cache
     cacheCurrentValue(BATTERY_VALUE, buff, size);
     return readPropertyValueOrDefault(BATTERY_VALUE, buff, size);
+}
+
+
+// Get current battery status
+int LibGenyd::batteryStatus(char *buff, size_t size)
+{
+    // Store current value to Genymotion cache
+    storeCurrentValue(BATTERY_STATUS, buff, size);
+    return readPropertyValueOrDefault(BATTERY_STATUS, buff, size);
 }

@@ -8,11 +8,41 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 {
     std::string value = request.parameter().value().stringvalue();
 
+    if (value != "Charging" &&
+        value != "Discharging" &&
+        value != "Not charging" &&
+        value != "Full") {
+        reply->set_type(Reply::Error);
+        Status *status = reply->mutable_status();
+        status->set_code(Status::InvalidRequest);
+        return;
+    }
+
     if (property_set(BATTERY_STATUS, value.c_str())) {
         SLOGE("Can't set property");
     } else {
         reply->set_type(Reply::None);
     }
+}
+
+void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
+{
+    // Prepare response
+    reply->set_type(Reply::Value);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+    Value *value = reply->mutable_value();
+    value->set_type(Value::String);
+
+    char property_value[PROPERTY_VALUE_MAX];
+    property_get(BATTERY_STATUS CACHE_SUFFIX, property_value, "Unknown");
+
+    if (!LibGenyd::useRealValue(BATTERY_VALUE)) {
+        property_get(BATTERY_STATUS, property_value, "Unknown");
+    }
+
+    // Set value in response
+    value->set_stringvalue(property_value);
 }
 
 void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
@@ -42,13 +72,13 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
 
 void Dispatcher::isBatteryManual(const Request &request, Reply *reply)
 {
+    // Prepare response
     reply->set_type(Reply::Value);
     Status *status = reply->mutable_status();
     status->set_code(Status::Ok);
     Value *value = reply->mutable_value();
     value->set_type(Value::Bool);
 
-    char property[PROPERTY_VALUE_MAX];
-    property_get("ro.build.version.release", property, "Unknown");
+    // Set value in response
     value->set_boolvalue(!LibGenyd::useRealValue(BATTERY_VALUE));
 }
