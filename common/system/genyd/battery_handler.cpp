@@ -61,16 +61,19 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
     } else if (batlevel < -1 || batlevel > 100) {
         SLOGE("Invalid battery level \"%s\"", batlevel);
     } else {
-        int efull = 50000000;
+        long long efull = 50000000;
 
         // Compute battery voltage
-        int enow = ((long long)efull * batlevel) / 100L;
+        long long enow = (efull * batlevel) / 100UL;
 
         // Prepare string values
         char prop_full[PROPERTY_VALUE_MAX];
         char prop_now[PROPERTY_VALUE_MAX];
-        snprintf(prop_full, sizeof(prop_full), "%d", efull);
-        snprintf(prop_now, sizeof(prop_full), "%d", enow);
+
+        snprintf(prop_full, sizeof(prop_full), "%lld", efull);
+        snprintf(prop_now, sizeof(prop_now), "%lld", enow);
+
+        SLOGD("Battery: %s/%s", prop_now, prop_full);
 
         if (!property_set(BATTERY_FULL, prop_full) &&
             !property_set(BATTERY_VALUE, prop_now)) {
@@ -93,11 +96,11 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
         property_get(BATTERY_VALUE, property_value, "0");
     }
 
-    int efull = atoi(property_full);
-    int enow = atoi(property_value);
+    long long efull = atoll(property_full);
+    long long enow = atoll(property_value);
 
     // Compute battery level
-    int batlevel = efull ? ((long long)enow)*100/efull : 0;
+    int batlevel = efull ? ((enow * 100) / efull) : 0;
 
     // Prepare response
     reply->set_type(Reply::Value);

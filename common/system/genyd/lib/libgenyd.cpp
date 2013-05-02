@@ -76,6 +76,7 @@ bool LibGenyd::useRealValue(const char *key)
 {
     char property[PROPERTY_VALUE_MAX];
     property_get(key, property, VALUE_USE_REAL);
+    SLOGD("Forced value for [%s]: \"%s\"", key, property);
     return !strcmp(property, VALUE_USE_REAL);
 }
 
