@@ -18,13 +18,11 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         SLOGD("Unknown \"%s\" battery status", value.c_str());
 
         reply->set_type(Reply::Error);
-        Status *status = reply->mutable_status();
         status->set_code(Status::InvalidRequest);
     } else {
         if (LibGenyd::useRealValue(BATTERY_STATUS)) {
             SLOGD("WUT ?");
             reply->set_type(Reply::Error);
-            Status *status = reply->mutable_status();
             status->set_code(Status::GenericError);
         }
         property_set(BATTERY_STATUS, value.c_str());
@@ -55,8 +53,8 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
 {
     int batlevel = request.parameter().value().uintvalue();
 
-    reply->set_type(Reply::None);
     Status *status = reply->mutable_status();
+    reply->set_type(Reply::None);
     status->set_code(Status::Ok);
 
     if (batlevel == -1) {
@@ -64,13 +62,11 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
     } else if (batlevel < -1 || batlevel > 100) {
         SLOGE("Invalid battery level %d", batlevel);
         reply->set_type(Reply::Error);
-        Status *status = reply->mutable_status();
         status->set_code(Status::InvalidRequest);
     } else {
         if (LibGenyd::useRealValue(BATTERY_VALUE)) {
             SLOGD("WUT ?");
             reply->set_type(Reply::Error);
-            Status *status = reply->mutable_status();
             status->set_code(Status::GenericError);
         }
 
