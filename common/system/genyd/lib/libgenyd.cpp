@@ -1,4 +1,6 @@
+
 #include <cutils/properties.h>
+#include <sys/wait.h>
 
 #include "libgenyd.hpp"
 #define __NO_PROTO
@@ -26,21 +28,33 @@ LibGenyd& LibGenyd::getInstance(void)
 }
 
 // Store current value to Genymotion cache
-void LibGenyd::storeCurrentValue(const char *key, const char *buf, const size_t size)
+void LibGenyd::storeCurrentValue(const char *key,
+                                 const char *buff,
+                                 const size_t size)
 {
-    char final_key[PROPERTY_KEY_MAX];
     char value[PROPERTY_VALUE_MAX];
-    int maxSize = size > sizeof(value) ? sizeof(value) : size;
-
-    // Prepare cache key name
-    snprintf(final_key, sizeof(final_key), "%s%s", CACHE_PREFIX, key);
-
-    // Prepare value
-    snprintf(value, maxSize, "%s", buf);
 
     // Store value
-    property_set(final_key, value);
-    SLOGD("Caching value %s = '%s'", final_key, value);
+    SLOGD("Forking");
+    pid_t p_id = fork();
+
+    if (p_id < 0) {
+        SLOGE("Unable to fork.");
+        return;
+    } else if (p_id == 0) {
+        SLOGD("Launching execl");
+        execl("/system/bin/androVM_setprop",
+              "androVM_setprop", key, buff, NULL);
+        return;
+    } else {
+        int status = 0;
+        wait(&status);
+        SLOGD("Process exits with status %d", WEXITSTATUS(status));
+    }
+
+    property_get(key, value, VALUE_USE_REAL);
+
+    SLOGD("Cached value [%s] = '%s'", key, value);
 }
 
 

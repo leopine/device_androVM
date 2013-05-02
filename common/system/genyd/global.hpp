@@ -20,16 +20,16 @@
 
 // Property keys cache. For example, cache.genyd.battery.value refers
 // to real battery value has AOSP would see in manual mode
-#define CACHE_PREFIX     "cache."
+#define CACHE_PREFIX     "genyd."
 
 // Properties keys
 
 #define VALUE_USE_REAL   "--use-real-value--"
 
 // Battery
-#define BATTERY_FULL     "genyd.battery.full"
-#define BATTERY_VALUE    "genyd.battery.value"
-#define BATTERY_STATUS   "genyd.battery.status"
-#define BATTERY_LOADTYPE "genyd.battery.load_type"
+#define BATTERY_FULL     CACHE_PREFIX "battery.full"
+#define BATTERY_VALUE    CACHE_PREFIX "battery.value"
+#define BATTERY_STATUS   CACHE_PREFIX "battery.status"
+#define BATTERY_LOADTYPE CACHE_PREFIX "battery.load_type"
 
 #endif
