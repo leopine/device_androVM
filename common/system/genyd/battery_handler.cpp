@@ -47,29 +47,36 @@ void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
 
 void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
 {
-    int efull = 50000000;
     int batlevel = request.parameter().value().uintvalue();
 
-    // Compute battery voltage
-    int enow = ((long long)efull * batlevel) / 100L;
+    reply->set_type(Reply::Error);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::InvalidRequest);
 
-    // Prepare string values
-    char prop_full[PROPERTY_VALUE_MAX];
-    char prop_now[PROPERTY_VALUE_MAX];
-    snprintf(prop_full, sizeof(prop_full), "%d", efull);
-    snprintf(prop_now, sizeof(prop_full), "%d", enow);
+    if (batlevel == -1) {
+        if (!property_set(BATTERY_VALUE, VALUE_USE_REAL)) {
+            reply->set_type(Reply::None);
+        }
+        SLOGE("Can't set [%s] to \"%s\"", BATTERY_VALUE, VALUE_USE_REAL);
+    } else if (batlevel < -1 || batlevel > 100) {
+        SLOGE("Invalid battery level \"%s\"", batlevel);
+    } else {
+        int efull = 50000000;
 
-    if (property_set(BATTERY_FULL, prop_full)) {
-        SLOGE("Can't set property %s", BATTERY_FULL);
-        return;
+        // Compute battery voltage
+        int enow = ((long long)efull * batlevel) / 100L;
+
+        // Prepare string values
+        char prop_full[PROPERTY_VALUE_MAX];
+        char prop_now[PROPERTY_VALUE_MAX];
+        snprintf(prop_full, sizeof(prop_full), "%d", efull);
+        snprintf(prop_now, sizeof(prop_full), "%d", enow);
+
+        if (!property_set(BATTERY_FULL, prop_full) &&
+            !property_set(BATTERY_VALUE, prop_now)) {
+            reply->set_type(Reply::None);
+        }
     }
-    if (property_set(BATTERY_VALUE, prop_now)) {
-        SLOGE("Can't set property %s", BATTERY_FULL);
-        return;
-    }
-
-    // Prepare response
-    reply->set_type(Reply::None);
 }
 
 void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
