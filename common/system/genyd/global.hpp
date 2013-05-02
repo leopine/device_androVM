@@ -17,19 +17,21 @@
   using Genymotion::Value;
 #endif
 
+// Property keys naming convention
+#define KEY_PREFIX     "genyd."
 
-// Property keys cache. For example, cache.genyd.battery.value refers
+// Cache values: For example, genyd.battery.value.cache refers
 // to real battery value has AOSP would see in manual mode
-#define CACHE_PREFIX     "genyd."
+#define CACHE_SUFFIX   ".cache"
 
 // Properties keys
 
 #define VALUE_USE_REAL   "--use-real-value--"
 
 // Battery
-#define BATTERY_FULL     CACHE_PREFIX "battery.full"
-#define BATTERY_VALUE    CACHE_PREFIX "battery.value"
-#define BATTERY_STATUS   CACHE_PREFIX "battery.status"
-#define BATTERY_LOADTYPE CACHE_PREFIX "battery.load_type"
+#define BATTERY_FULL     KEY_PREFIX "battery.full"
+#define BATTERY_VALUE    KEY_PREFIX "battery.value"
+#define BATTERY_STATUS   KEY_PREFIX "battery.status"
+#define BATTERY_LOADTYPE KEY_PREFIX "battery.load_type"
 
 #endif
