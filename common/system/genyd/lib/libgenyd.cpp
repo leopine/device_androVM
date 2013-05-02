@@ -29,8 +29,7 @@ LibGenyd& LibGenyd::getInstance(void)
 
 // Store current value to Genymotion cache
 void LibGenyd::cacheCurrentValue(const char *key,
-                                 const char *buff,
-                                 const size_t size)
+                                 const char *buff)
 {
     char full_key[PROPERTY_KEY_MAX];
     char value[PROPERTY_VALUE_MAX];

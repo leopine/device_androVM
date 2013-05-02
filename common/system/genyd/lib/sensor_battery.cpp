@@ -63,7 +63,7 @@ int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
 int LibGenyd::batteryFull(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
-    cacheCurrentValue(BATTERY_FULL, buff, size);
+    cacheCurrentValue(BATTERY_FULL, buff);
     return readPropertyValueOrDefault(BATTERY_FULL, buff, size);
 }
 
@@ -71,7 +71,7 @@ int LibGenyd::batteryFull(char *buff, size_t size)
 int LibGenyd::batteryValue(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
-    cacheCurrentValue(BATTERY_VALUE, buff, size);
+    cacheCurrentValue(BATTERY_VALUE, buff);
     return readPropertyValueOrDefault(BATTERY_VALUE, buff, size);
 }
 
@@ -80,6 +80,6 @@ int LibGenyd::batteryValue(char *buff, size_t size)
 int LibGenyd::batteryStatus(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
-    storeCurrentValue(BATTERY_STATUS, buff, size);
+    cacheCurrentValue(BATTERY_STATUS, buff);
     return readPropertyValueOrDefault(BATTERY_STATUS, buff, size);
 }
