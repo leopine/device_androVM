@@ -20,8 +20,9 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         return;
     }
 
-    int ret = property_set(BATTERY_STATUS, value.c_str());
-    SLOGD("Setting [%s] to \"%s\": %d", BATTERY_STATUS, value.c_str(), ret);
+    if (!property_set(BATTERY_STATUS, value.c_str())) {
+        reply->set_type(Reply::None);
+    }
 }
 
 void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)

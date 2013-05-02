@@ -85,6 +85,5 @@ const Request &Socket::getRequest(void) const
 
 void Socket::addReply(Reply *reply)
 {
-    if (reply->type() != Reply::None)
-        replies.push(reply);
+    replies.push(reply);
 }
