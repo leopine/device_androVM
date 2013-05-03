@@ -72,18 +72,11 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
         reply->set_type(Reply::None);
         status->set_code(Status::OkWithInformation);
         status->set_description("Battery mode forced to 'manual'");
-        SLOGI("Genyd forces manual mode by setting battery value manually");
 
         // Force battery status if it has not been set yet
-        if (batlevel == 100) {
-            property_set(BATTERY_STATUS, "Full");
-        } else {
-            char prop_status[PROPERTY_VALUE_MAX];
-            property_get(BATTERY_STATUS CACHE_SUFFIX, prop_status, "Unknown");
-            if (strncasecmp(prop_status, "full", 4) == 0) {
-                property_set(BATTERY_STATUS, "Not charging");
-            }
-        }
+        property_set(BATTERY_STATUS, "Not charging");
+
+        SLOGI("Genyd forces manual mode by setting battery value manually");
     }
 
     // Compute battery voltage
