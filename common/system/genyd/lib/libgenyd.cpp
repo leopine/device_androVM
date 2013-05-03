@@ -37,21 +37,19 @@ void LibGenyd::cacheCurrentValue(const char *key,
     snprintf(full_key, sizeof(full_key), "%s%s", key, CACHE_SUFFIX);
 
     // Store value
-    SLOGD("Forking");
     pid_t p_id = fork();
-
     if (p_id < 0) {
         SLOGE("Unable to fork.");
         return;
     } else if (p_id == 0) {
-        SLOGD("Launching execl");
         execl("/system/bin/androVM_setprop",
               "androVM_setprop", full_key, buff, NULL);
         return;
     } else {
+        // Wait for child process
         int status = 0;
         wait(&status);
-        SLOGD("Process exits with status %d", WEXITSTATUS(status));
+        SLOGD("Setprop process exited  with status %d", WEXITSTATUS(status));
     }
 }
 
