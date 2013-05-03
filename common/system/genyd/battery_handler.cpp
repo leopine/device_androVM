@@ -21,8 +21,10 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         status->set_code(Status::InvalidRequest);
     } else {
         if (LibGenyd::useRealValue(BATTERY_STATUS)) {
-            reply->set_type(Reply::Error);
-            status->set_code(Status::GenericError);
+            reply->set_type(Reply::None);
+            status->set_code(Status::OkWithInformation);
+            status->set_description("Battery mode forced to 'manual'");
+            SLOGI("Genyd forces manual mode by setting battery value manually");
         }
         property_set(BATTERY_STATUS, value.c_str());
     }
