@@ -21,7 +21,6 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         status->set_code(Status::InvalidRequest);
     } else {
         if (LibGenyd::useRealValue(BATTERY_STATUS)) {
-            SLOGD("WUT ?");
             reply->set_type(Reply::Error);
             status->set_code(Status::GenericError);
         }
@@ -65,7 +64,6 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
         status->set_code(Status::InvalidRequest);
     } else {
         if (LibGenyd::useRealValue(BATTERY_VALUE)) {
-            SLOGD("WUT ?");
             reply->set_type(Reply::Error);
             status->set_code(Status::GenericError);
         }
