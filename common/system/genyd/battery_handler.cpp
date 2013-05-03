@@ -41,7 +41,7 @@ void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
     property_get(BATTERY_STATUS CACHE_SUFFIX, property_value, "Unknown");
 
     if (!LibGenyd::useRealValue(BATTERY_VALUE)) {
-        property_get(BATTERY_STATUS, property_value, "Unknown");
+        property_get(BATTERY_STATUS, property_value, "Not charging");
     }
 
     // Set value in response
@@ -58,30 +58,45 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
 
     if (batlevel == -1) {
         property_set(BATTERY_VALUE, VALUE_USE_REAL);
+        return;
     } else if (batlevel < -1 || batlevel > 100) {
         SLOGE("Invalid battery level %d", batlevel);
         reply->set_type(Reply::Error);
         status->set_code(Status::InvalidRequest);
-    } else {
-        if (LibGenyd::useRealValue(BATTERY_VALUE)) {
-            reply->set_type(Reply::Error);
-            status->set_code(Status::GenericError);
-        }
-
-        // Compute battery voltage
-        uint64_t efull = 50000000;
-        uint64_t enow = (efull * batlevel) / 100UL;
-
-        // Prepare string values
-        char prop_full[PROPERTY_VALUE_MAX];
-        char prop_now[PROPERTY_VALUE_MAX];
-
-        snprintf(prop_full, sizeof(prop_full), "%lld", efull);
-        snprintf(prop_now, sizeof(prop_now), "%lld", enow);
-
-        property_set(BATTERY_FULL, prop_full);
-        property_set(BATTERY_VALUE, prop_now);
+        return;
     }
+
+    if (LibGenyd::useRealValue(BATTERY_VALUE)) {
+        reply->set_type(Reply::None);
+        status->set_code(Status::OkWithInformation);
+        status->set_description("Battery mode forced to 'manual'");
+        SLOGI("Genyd forces manual mode by setting battery value manually");
+
+        // Force battery status if it has not been set yet
+        if (batlevel == 100) {
+            property_set(BATTERY_STATUS, "Full");
+        } else {
+            char prop_status[PROPERTY_VALUE_MAX];
+            property_get(BATTERY_STATUS CACHE_SUFFIX, prop_status, "Unknown");
+            if (strncasecmp(prop_status, "full", 4) == 0) {
+                property_set(BATTERY_STATUS, "Not charging");
+            }
+        }
+    }
+
+    // Compute battery voltage
+    uint64_t efull = 50000000;
+    uint64_t enow = (efull * batlevel) / 100UL;
+
+    // Prepare string values
+    char prop_full[PROPERTY_VALUE_MAX];
+    char prop_now[PROPERTY_VALUE_MAX];
+
+    snprintf(prop_full, sizeof(prop_full), "%lld", efull);
+    snprintf(prop_now, sizeof(prop_now), "%lld", enow);
+
+    property_set(BATTERY_FULL, prop_full);
+    property_set(BATTERY_VALUE, prop_now);
 }
 
 void Dispatcher::getBatteryValue(const Request &request, Reply *reply)

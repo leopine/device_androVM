@@ -2,9 +2,10 @@ package Genymotion;
 
 message Status {
   enum Code {
-    Ok             = 0;
-    GenericError   = 1;
-    InvalidRequest = 2;
+    Ok                = 0;
+    GenericError      = 1;
+    InvalidRequest    = 2;
+    OkWithInformation = 3;
   }
 
   required Code code = 2;
