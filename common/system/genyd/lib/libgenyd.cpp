@@ -70,9 +70,12 @@ int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
     return -1;
 }
 
+// Check if value of 'key' should be read from from system or from the stored property
 bool LibGenyd::useRealValue(const char *key)
 {
     char property[PROPERTY_VALUE_MAX];
+    // if the value is not set (default will be VALUE_USE_REAL) or if it is stored with
+    // the value VALUE_USE_REAL, the real value should be used
     property_get(key, property, VALUE_USE_REAL);
     SLOGD("Forced value for [%s]: \"%s\"", key, property);
     return !strcmp(property, VALUE_USE_REAL);
