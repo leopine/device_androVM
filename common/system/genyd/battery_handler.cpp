@@ -46,7 +46,7 @@ void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
     char property_value[PROPERTY_VALUE_MAX];
     property_get(BATTERY_STATUS CACHE_SUFFIX, property_value, "Unknown");
 
-    if (!LibGenyd::useRealValue(BATTERY_VALUE)) {
+    if (!LibGenyd::useRealValue(BATTERY_LEVEL)) {
         property_get(BATTERY_STATUS, property_value, "Not charging");
     }
 
@@ -54,18 +54,16 @@ void Dispatcher::getBatteryStatus(const Request &request, Reply *reply)
     value->set_stringvalue(property_value);
 }
 
-void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
+void Dispatcher::setBatteryLevel(const Request &request, Reply *reply)
 {
-    // TODO: un uint dans un int ???
-    int batlevel = request.parameter().value().uintvalue();
+    int batlevel = request.parameter().value().intvalue();
 
     Status *status = reply->mutable_status();
     reply->set_type(Reply::None);
     status->set_code(Status::Ok);
 
-    // TODO: we've just read a uint (??)
     if (batlevel == -1) {
-        property_set(BATTERY_VALUE, VALUE_USE_REAL);
+        property_set(BATTERY_LEVEL, VALUE_USE_REAL);
         return;
     } else if (batlevel < -1 || batlevel > 100) {
         SLOGE("Invalid battery level %d", batlevel);
@@ -76,7 +74,7 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
 
     // If the real value was in used, this will switched the mode to manual
     // inform the user and set a default status to "Not charging"
-    if (LibGenyd::useRealValue(BATTERY_VALUE)) {
+    if (LibGenyd::useRealValue(BATTERY_LEVEL)) {
         reply->set_type(Reply::None);
         status->set_code(Status::OkWithInformation);
         status->set_description("Battery mode forced to 'manual'");
@@ -90,7 +88,8 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
 
     // Compute battery voltage
     uint64_t efull = 50000000;
-    uint64_t enow = (efull * batlevel) / 100UL;
+    uint64_t ratio = efull / 100UL;
+    uint64_t enow = batlevel * ratio;
 
     // Prepare string values
     char prop_full[PROPERTY_VALUE_MAX];
@@ -100,22 +99,22 @@ void Dispatcher::setBatteryValue(const Request &request, Reply *reply)
     snprintf(prop_now, sizeof(prop_now), "%lld", enow);
 
     property_set(BATTERY_FULL, prop_full);
-    property_set(BATTERY_VALUE, prop_now);
+    property_set(BATTERY_LEVEL, prop_now);
 }
 
-void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
+void Dispatcher::getBatteryLevel(const Request &request, Reply *reply)
 {
     // Read keys
     char property_full[PROPERTY_VALUE_MAX];
     char property_value[PROPERTY_VALUE_MAX];
 
-    if (LibGenyd::useRealValue(BATTERY_VALUE)) {
+    if (LibGenyd::useRealValue(BATTERY_LEVEL)) {
         // Read cashed values which are set by the framework
         property_get(BATTERY_FULL CACHE_SUFFIX, property_full, "0");
-        property_get(BATTERY_VALUE CACHE_SUFFIX, property_value, "0");
+        property_get(BATTERY_LEVEL CACHE_SUFFIX, property_value, "0");
     } else {
         property_get(BATTERY_FULL, property_full, "0");
-        property_get(BATTERY_VALUE, property_value, "0");
+        property_get(BATTERY_LEVEL, property_value, "0");
     }
 
     uint64_t efull = atoll(property_full);
@@ -129,10 +128,10 @@ void Dispatcher::getBatteryValue(const Request &request, Reply *reply)
     Status *status = reply->mutable_status();
     status->set_code(Status::Ok);
     Value *value = reply->mutable_value();
-    value->set_type(Value::Uint);
+    value->set_type(Value::Int);
 
     // Set value in response
-    value->set_uintvalue(batlevel);
+    value->set_intvalue(batlevel);
 }
 
 void Dispatcher::isBatteryManual(const Request &request, Reply *reply)
@@ -146,5 +145,5 @@ void Dispatcher::isBatteryManual(const Request &request, Reply *reply)
 
     // Set value in response
     // TODO: why does the Manual status is only determined by the battery level ??
-    value->set_boolvalue(!LibGenyd::useRealValue(BATTERY_VALUE));
+    value->set_boolvalue(!LibGenyd::useRealValue(BATTERY_LEVEL));
 }

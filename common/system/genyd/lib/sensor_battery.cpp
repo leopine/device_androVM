@@ -10,7 +10,7 @@ void LibGenyd::initBatteryCallbacks()
     sensor_callbacks["/sys/class/power_supply"] = &LibGenyd::batteryCallback;
 
     battery_callbacks["/energy_full"] = &LibGenyd::batteryFull;
-    battery_callbacks["/energy_now"] = &LibGenyd::batteryValue;
+    battery_callbacks["/energy_now"] = &LibGenyd::batteryLevel;
     battery_callbacks["/status"] = &LibGenyd::batteryStatus;
 }
 
@@ -67,12 +67,12 @@ int LibGenyd::batteryFull(char *buff, size_t size)
     return readPropertyValueOrDefault(BATTERY_FULL, buff, size);
 }
 
-// Get current battery value
-int LibGenyd::batteryValue(char *buff, size_t size)
+// Get current battery level
+int LibGenyd::batteryLevel(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
-    cacheCurrentValue(BATTERY_VALUE, buff);
-    return readPropertyValueOrDefault(BATTERY_VALUE, buff, size);
+    cacheCurrentValue(BATTERY_LEVEL, buff);
+    return readPropertyValueOrDefault(BATTERY_LEVEL, buff, size);
 }
 
 

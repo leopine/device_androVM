@@ -30,7 +30,7 @@
 
 // Battery
 #define BATTERY_FULL     KEY_PREFIX "battery.full"
-#define BATTERY_VALUE    KEY_PREFIX "battery.value"
+#define BATTERY_LEVEL    KEY_PREFIX "battery.level"
 #define BATTERY_STATUS   KEY_PREFIX "battery.status"
 #define BATTERY_LOADTYPE KEY_PREFIX "battery.load_type"
 

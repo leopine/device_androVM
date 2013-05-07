@@ -64,13 +64,13 @@ private:
     // Battery dispatcher
     int batteryCallback(const char *path, char *buff, size_t size);
 
-    // Get battery value when full
+    // Get battery level when full
     int batteryFull(char *buff, size_t size);
 
-    // Get current battery value
-    int batteryValue(char *buff, size_t size);
+    // Get current battery level
+    int batteryLevel(char *buff, size_t size);
 
-    // Get current battery value
+    // Get current battery status
     int batteryStatus(char *buff, size_t size);
 };
 
