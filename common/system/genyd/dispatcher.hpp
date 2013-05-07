@@ -60,6 +60,10 @@ private:
     // battery_handler.cpp //
     /////////////////////////
 
+    // Mics
+    void setDefaultBatteryLevel(void) const;
+    void setDefaultBatteryStatus(void) const;
+
     // Action behind "SetParam Battery Level" request
     void setBatteryLevel(const Request &request, Reply *reply);
 

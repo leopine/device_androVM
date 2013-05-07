@@ -4,6 +4,35 @@
 #include "dispatcher.hpp"
 #include "libgenyd.hpp"
 
+void Dispatcher::setDefaultBatteryLevel(void) const {
+    char full[PROPERTY_VALUE_MAX];
+    char real[PROPERTY_VALUE_MAX];
+    char level[PROPERTY_VALUE_MAX];
+
+    // Get cached full battery level, or 50000000
+    property_get(BATTERY_FULL CACHE_SUFFIX, full, "50000000");
+
+    // Get cached real battery level, or full
+    property_get(BATTERY_LEVEL CACHE_SUFFIX, real, full);
+
+    // Get old force battery level, or real level
+    property_get(BATTERY_LEVEL, level, real);
+
+    property_set(BATTERY_LEVEL, level);
+}
+
+void Dispatcher::setDefaultBatteryStatus(void) const {
+    char real[PROPERTY_VALUE_MAX];
+    char status[PROPERTY_VALUE_MAX];
+
+    // Get cached real battery status, or "Not charging"
+    property_get(BATTERY_STATUS CACHE_SUFFIX, real, "Not charging");
+    // Get old force battery status, or real level
+    property_get(BATTERY_STATUS, status, real);
+
+    property_set(BATTERY_STATUS, status);
+}
+
 void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 {
     std::string battery_status = request.parameter().value().stringvalue();
@@ -23,10 +52,6 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         return;
     }
 
-    char full[PROPERTY_VALUE_MAX];
-    // Get cached full battery level, or 50000000
-    property_get(BATTERY_FULL CACHE_SUFFIX, full, "50000000");
-
     // If battery mode is AUTO
     if (!LibGenyd::isManualMode(BATTERY_MODE)) {
         // Force battery mode to MANUAL
@@ -39,24 +64,17 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
         SLOGI("Genyd forces manual mode by setting battery status manually");
 
         // Set default battery level
-        {
-            char real[PROPERTY_VALUE_MAX];
-            char level[PROPERTY_VALUE_MAX];
-
-            // Get cached real battery level, or full
-            property_get(BATTERY_LEVEL CACHE_SUFFIX, real, full);
-
-            // Get old force battery level, or real level
-            property_get(BATTERY_LEVEL, level, real);
-
-            property_set(BATTERY_LEVEL, level);
-
-        }
+        setDefaultBatteryLevel();
     }
 
     property_set(BATTERY_STATUS, battery_status.c_str());
 
     if (battery_status == "Full") {
+        char full[PROPERTY_VALUE_MAX];
+
+        // Get cached full battery level, or 50000000
+        property_get(BATTERY_FULL CACHE_SUFFIX, full, "50000000");
+
         property_set(BATTERY_LEVEL, full);
     }
 }
@@ -109,17 +127,7 @@ void Dispatcher::setBatteryLevel(const Request &request, Reply *reply)
         status->set_description("Battery mode forced to 'manual'");
 
         // Set default battery status
-        {
-            char real[PROPERTY_VALUE_MAX];
-            char status[PROPERTY_VALUE_MAX];
-
-            // Get cached real battery status, or "Not charging"
-            property_get(BATTERY_STATUS CACHE_SUFFIX, real, "Not charging");
-            // Get old force battery status, or real level
-            property_get(BATTERY_STATUS, status, real);
-
-            property_set(BATTERY_STATUS, status);
-        }
+        setDefaultBatteryStatus();
 
         SLOGI("Genyd forces manual mode by setting battery value manually");
     }
@@ -188,33 +196,10 @@ void Dispatcher::setBatteryMode(const Request &request, Reply *reply) {
         property_set(BATTERY_MODE, MANUAL_MODE);
 
         // Set default battery level
-        {
-            char full[PROPERTY_VALUE_MAX];
-            char real[PROPERTY_VALUE_MAX];
-            char level[PROPERTY_VALUE_MAX];
-
-            // Get cached full battery level, or 50000000
-            property_get(BATTERY_FULL CACHE_SUFFIX, full, "50000000");
-            // Get cached real battery level, or full
-            property_get(BATTERY_LEVEL CACHE_SUFFIX, real, full);
-            // Get old force battery level, or real level
-            property_get(BATTERY_LEVEL, level, real);
-
-            property_set(BATTERY_LEVEL, level);
-        }
+        setDefaultBatteryLevel();
 
         // Set default battery status
-        {
-            char real[PROPERTY_VALUE_MAX];
-            char status[PROPERTY_VALUE_MAX];
-
-            // Get cached real battery status, or "Not charging"
-            property_get(BATTERY_STATUS CACHE_SUFFIX, real, "Not charging");
-            // Get old force battery status, or real level
-            property_get(BATTERY_STATUS, status, real);
-
-            property_set(BATTERY_STATUS, status);
-        }
+        setDefaultBatteryStatus();
     }
 }
 
