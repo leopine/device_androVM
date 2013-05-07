@@ -133,7 +133,7 @@ void Dispatcher::setBatteryLevel(const Request &request, Reply *reply)
     }
 
     // Compute battery voltage
-    uint64_t efull = 50000000;
+    uint64_t efull = 50000000UL;
     uint64_t ratio = efull / 100UL;
     uint64_t enow = batlevel * ratio;
 
@@ -167,7 +167,7 @@ void Dispatcher::getBatteryLevel(const Request &request, Reply *reply)
 
     uint64_t efull = atoll(full);
     uint64_t enow = atoll(level);
-    uint64_t batlevel = (enow * ((uint64_t)100)) / efull;
+    uint64_t batlevel = (efull) ? ((enow * 100UL) / efull) : 100UL;
 
     // Prepare response
     reply->set_type(Reply::Value);
