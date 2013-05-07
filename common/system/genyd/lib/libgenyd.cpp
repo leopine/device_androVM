@@ -57,7 +57,7 @@ void LibGenyd::cacheCurrentValue(const char *key,
 // Overload /proc values with genymotion configuration
 int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 {
-    SLOGI("Searching system value from '%s': '%s'", path, buf);
+    SLOGD("Searching system value from '%s': '%s'", path, buf);
 
     LibGenyd &instance = LibGenyd::getInstance();
 
@@ -66,7 +66,7 @@ int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
     if (sensorCallback) {
         return (instance.*sensorCallback)(path, buf, size);
     }
-    SLOGI("%s No callback found. Returning", __FUNCTION__);
+    SLOGD("%s No callback found. Returning", __FUNCTION__);
     return -1;
 }
 

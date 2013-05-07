@@ -32,7 +32,7 @@ Socket::ReadStatus Socket::read(void)
         return Socket::ReadError;
     }
 
-    ALOGD("%d bytes read", len);
+    SLOGD("%d bytes read", len);
     istream.write(buffer, len);
 
     // Try to parse the current stream
@@ -40,7 +40,7 @@ Socket::ReadStatus Socket::read(void)
     if (request.ParseFromIstream(&istream)) {
         return Socket::NewMessage;
     } else {
-        ALOGE("Can't parse request");
+        SLOGE("Can't parse request");
         return Socket::NoMessage;
     }
 }
@@ -59,16 +59,16 @@ Socket::WriteStatus Socket::reply(void)
     replies.pop();
 
     if (!reply->SerializeToString(&data)) {
-        ALOGE("Can't serialize reply");
+        SLOGE("Can't serialize reply");
         delete reply;
         return Socket::BadSerialize;
     }
     if ((len = send(socket, data.c_str(), data.size(), MSG_NOSIGNAL)) < 0) {
-        ALOGE("Can't send reply");
+        SLOGE("Can't send reply");
         delete reply;
         return Socket::WriteError;
     }
-    ALOGD("%d bytes written", len);
+    SLOGD("%d bytes written", len);
     delete reply;
     return Socket::WriteSuccess;
 }
