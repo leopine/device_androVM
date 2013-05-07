@@ -39,12 +39,8 @@ int LibGenyd::batteryCallback(const char *path, char *buff, size_t size)
 }
 
 // Static helper method that reads property key in a sane manner
-int readPropertyValueOrDefault(const char *key, char *buff, size_t max_size)
+int readPropertyValue(const char *key, char *buff, size_t max_size)
 {
-    if (LibGenyd::useRealValue(key)) {
-        return -1;
-    }
-
     // Read property value
     char property[PROPERTY_VALUE_MAX];
     int len = property_get(key, property, buff);
@@ -64,7 +60,12 @@ int LibGenyd::batteryFull(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
     cacheCurrentValue(BATTERY_FULL, buff);
-    return readPropertyValueOrDefault(BATTERY_FULL, buff, size);
+
+    if (LibGenyd::isManualMode(BATTERY_MODE)){
+        return readPropertyValue(BATTERY_FULL, buff, size);
+    } else {
+        return -1;
+    }
 }
 
 // Get current battery level
@@ -72,7 +73,12 @@ int LibGenyd::batteryLevel(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
     cacheCurrentValue(BATTERY_LEVEL, buff);
-    return readPropertyValueOrDefault(BATTERY_LEVEL, buff, size);
+
+    if (LibGenyd::isManualMode(BATTERY_MODE)){
+        return readPropertyValue(BATTERY_LEVEL, buff, size);
+    } else {
+        return -1;
+    }
 }
 
 
@@ -81,5 +87,10 @@ int LibGenyd::batteryStatus(char *buff, size_t size)
 {
     // Store current value to Genymotion cache
     cacheCurrentValue(BATTERY_STATUS, buff);
-    return readPropertyValueOrDefault(BATTERY_STATUS, buff, size);
+
+    if (LibGenyd::isManualMode(BATTERY_MODE)){
+        return readPropertyValue(BATTERY_STATUS, buff, size);
+    } else {
+        return -1;
+    }
 }

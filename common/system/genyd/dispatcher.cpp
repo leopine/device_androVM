@@ -14,6 +14,7 @@ Dispatcher::Dispatcher(void)
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
     setCallbacks[Parameter::BatteryLevel] = &Dispatcher::setBatteryLevel;
+    setCallbacks[Parameter::BatteryMode] = &Dispatcher::setBatteryMode;
 }
 
 Dispatcher::~Dispatcher(void)

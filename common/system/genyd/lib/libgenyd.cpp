@@ -53,7 +53,6 @@ void LibGenyd::cacheCurrentValue(const char *key,
     }
 }
 
-
 // Overload /proc values with genymotion configuration
 int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 {
@@ -71,14 +70,13 @@ int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 }
 
 // Check if value of 'key' should be read from from system or from the stored property
-bool LibGenyd::useRealValue(const char *key)
+bool LibGenyd::isManualMode(const char *key)
 {
-    char property[PROPERTY_VALUE_MAX];
-    // if the value is not set (default will be VALUE_USE_REAL) or if it is stored with
-    // the value VALUE_USE_REAL, the real value should be used
-    property_get(key, property, VALUE_USE_REAL);
-    SLOGD("Forced value for [%s]: \"%s\"", key, property);
-    return !strcmp(property, VALUE_USE_REAL);
+    char manual[PROPERTY_VALUE_MAX];
+    // if value is MANUAL8MODE (default is AUTO_MODE) we must use real value
+    property_get(key, manual, AUTO_MODE);
+    SLOGD("Forced value for [%s]: \"%s\"", key, manual);
+    return !strcmp(manual, MANUAL_MODE);
 }
 
 LibGenyd::t_dispatcher_member LibGenyd::getSensorCallback(const char *path)
