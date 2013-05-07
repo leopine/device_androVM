@@ -8,12 +8,12 @@ Dispatcher::Dispatcher(void)
     // "GetParam" callbacks list
     getCallbacks[Parameter::AndroidVersion] = &Dispatcher::getAndroidVersion;
     getCallbacks[Parameter::BatteryStatus] = &Dispatcher::getBatteryStatus;
-    getCallbacks[Parameter::BatteryValue] = &Dispatcher::getBatteryLevel;
+    getCallbacks[Parameter::BatteryLevel] = &Dispatcher::getBatteryLevel;
     getCallbacks[Parameter::BatteryMode] = &Dispatcher::isBatteryManual;
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
-    setCallbacks[Parameter::BatteryValue] = &Dispatcher::setBatteryLevel;
+    setCallbacks[Parameter::BatteryLevel] = &Dispatcher::setBatteryLevel;
 }
 
 Dispatcher::~Dispatcher(void)

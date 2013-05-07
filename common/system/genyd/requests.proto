@@ -37,7 +37,7 @@ message Parameter {
     AndroidVersion     = 1; // string
     BuildNumber        = 2; // string
     BatteryMode        = 3;
-    BatteryValue       = 4; // uint in [0;100]
+    BatteryLevel       = 4; // uint in [0;100]
     BatteryStatus      = 5; // "Charging", "Discharging", "Not charging", "Full"
   }
 
