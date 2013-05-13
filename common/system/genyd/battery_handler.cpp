@@ -150,6 +150,13 @@ void Dispatcher::setBatteryLevel(const Request &request, Reply *reply)
 
     property_set(BATTERY_FULL, prop_full);
     property_set(BATTERY_LEVEL, prop_now);
+
+    // Make sure status is not "Full" if battery level is not 100%
+    char bat_status[PROPERTY_VALUE_MAX];
+    property_get(BATTERY_STATUS, bat_status, "Unknown");
+    if (batlevel < 100 && (strcmp(bat_status, "Full") == 0)) {
+        property_set(BATTERY_STATUS, "Charging");
+    }
 }
 
 void Dispatcher::getBatteryLevel(const Request &request, Reply *reply)
