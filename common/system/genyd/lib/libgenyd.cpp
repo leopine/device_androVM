@@ -53,6 +53,25 @@ void LibGenyd::cacheCurrentValue(const char *key,
     }
 }
 
+// Check if the /proc path is a fake one an should be overloaded completely
+int LibGenyd::useFakeValue(const char* path, char* buf, size_t size)
+{
+    // Check if /proc path start with the fake genymotion power supply one
+    if (strncmp(path, GENYMOTION_FAKE_POWER_SUPPLY,
+        strlen(GENYMOTION_FAKE_POWER_SUPPLY)) == 0) {
+        SLOGD("Path value must be overloaded: '%s'", path);
+
+        // one fake value mean that we should switch to manual mode
+        SLOGD("Switching to manual mode");
+        property_set(BATTERY_MODE, MANUAL_MODE);
+
+        // Use the standard mechanism then to read our custom properties with
+        // corresponding callbacks
+        return LibGenyd::getValueFromProc(path, buf, size);
+    }
+    return 0;
+}
+
 // Overload /proc values with genymotion configuration
 int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 {
@@ -73,7 +92,7 @@ int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 bool LibGenyd::isManualMode(const char *key)
 {
     char manual[PROPERTY_VALUE_MAX];
-    // if value is MANUAL8MODE (default is AUTO_MODE) we must use real value
+    // if value is MANUAL_MODE (default is AUTO_MODE) we must use real value
     property_get(key, manual, AUTO_MODE);
     SLOGD("Forced value for [%s]: \"%s\"", key, manual);
     return !strcmp(manual, MANUAL_MODE);

@@ -11,6 +11,8 @@
 #define LOG_TAG "Genymotion"
 #endif
 
+#define GENYMOTION_FAKE_POWER_SUPPLY "/sys/class/power_supply/genymotion_fake_path"
+
 class LibGenyd {
 
 public:
@@ -41,6 +43,9 @@ private:
     std::map<std::string, t_callback_member> battery_callbacks;
 
 public:
+    // Check if the /proc path is a fake one an should be overloaded completely
+    static int useFakeValue(const char* path, char* buf, size_t size);
+
     // Overload /proc values with genymotion configuration
     static int getValueFromProc(const char* path, char *buf, size_t size);
 
