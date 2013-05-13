@@ -52,6 +52,9 @@ public:
     // Return true if the real value must be used
     static bool isManualMode(const char *key);
 
+    // Set Ac Online
+    static void setAcOnlineFromStatus(const char *status);
+
 private:
     // Global dispatcher
     t_dispatcher_member getSensorCallback(const char *path);
@@ -77,6 +80,9 @@ private:
 
     // Get current battery status
     int batteryStatus(char *buff, size_t size);
+
+    // Get AC Online status
+    int acOnlineStatus(char *buff, size_t size);
 };
 
 #endif // #define LIB_GENYD_HPP_

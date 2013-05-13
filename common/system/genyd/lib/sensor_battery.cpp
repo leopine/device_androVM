@@ -12,6 +12,7 @@ void LibGenyd::initBatteryCallbacks()
     battery_callbacks["/energy_full"] = &LibGenyd::batteryFull;
     battery_callbacks["/energy_now"] = &LibGenyd::batteryLevel;
     battery_callbacks["/status"] = &LibGenyd::batteryStatus;
+    battery_callbacks["/online"] = &LibGenyd::acOnlineStatus;
 }
 
 // Search for battery callbacks in file pattern
@@ -90,6 +91,19 @@ int LibGenyd::batteryStatus(char *buff, size_t size)
 
     if (LibGenyd::isManualMode(BATTERY_MODE)){
         return readPropertyValue(BATTERY_STATUS, buff, size);
+    } else {
+        return -1;
+    }
+}
+
+// Get ac online value
+int LibGenyd::acOnlineStatus(char *buff, size_t size)
+{
+    // Store current value to Genymotion cache
+    cacheCurrentValue(AC_ONLINE, buff);
+
+    if (LibGenyd::isManualMode(BATTERY_MODE)){
+        return readPropertyValue(AC_ONLINE, buff, size);
     } else {
         return -1;
     }

@@ -98,6 +98,15 @@ bool LibGenyd::isManualMode(const char *key)
     return !strcmp(manual, MANUAL_MODE);
 }
 
+void LibGenyd::setAcOnlineFromStatus(const char *status)
+{
+    if (strcmp(status, "Discharging") == 0) {
+        property_set(AC_ONLINE, "0");
+    } else { // Full, Charging or Not Charging
+        property_set(AC_ONLINE, "1");
+    }
+}
+
 LibGenyd::t_dispatcher_member LibGenyd::getSensorCallback(const char *path)
 {
     std::map<std::string, LibGenyd::t_dispatcher_member>::iterator begin = sensor_callbacks.begin();

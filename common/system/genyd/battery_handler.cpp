@@ -31,6 +31,8 @@ void Dispatcher::setDefaultBatteryStatus(void) const {
     property_get(BATTERY_STATUS, status, real);
 
     property_set(BATTERY_STATUS, status);
+    // set AC status too
+    LibGenyd::setAcOnlineFromStatus(status);
 }
 
 void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
@@ -41,7 +43,7 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
     Status *status = reply->mutable_status();
     status->set_code(Status::Ok);
 
-    // Authorized status: "Charging", "Discharging", "Not chargind" and "Full"
+    // Authorized status: "Charging", "Discharging", "Not charging" and "Full"
     if (battery_status != "Charging" && battery_status != "Discharging" &&
         battery_status != "Not charging" && battery_status != "Full") {
 
@@ -68,6 +70,8 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
     }
 
     property_set(BATTERY_STATUS, battery_status.c_str());
+    // set AC status too
+    LibGenyd::setAcOnlineFromStatus(battery_status.c_str());
 
     if (battery_status == "Full") {
         char full[PROPERTY_VALUE_MAX];
