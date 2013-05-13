@@ -59,6 +59,9 @@ private:
     // Global dispatcher
     t_dispatcher_member getSensorCallback(const char *path);
 
+    // Function to write property
+    static int setProperty(const char *property, const char *value);
+
     // Store current value to Genymotion cache
     void cacheCurrentValue(const char *path, const char *buf);
 

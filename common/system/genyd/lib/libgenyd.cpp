@@ -27,33 +27,43 @@ LibGenyd& LibGenyd::getInstance(void)
     return instance;
 }
 
-// Store current value to Genymotion cache
-void LibGenyd::cacheCurrentValue(const char *key,
-                                 const char *buff)
+// Set property with external binary androVM_setprop to avoid RO problem
+int LibGenyd::setProperty(const char *property, const char *value)
 {
-    char full_key[PROPERTY_KEY_MAX];
-
-    // Generate new key
-    snprintf(full_key, sizeof(full_key), "%s%s", key, CACHE_SUFFIX);
+    int status = 1;
 
     // Store value
     pid_t p_id = fork();
     if (p_id < 0) {
         SLOGE("Unable to fork.");
-        return;
+        return 1;
     } else if (p_id == 0) {
         execl("/system/bin/androVM_setprop",
-              "androVM_setprop", full_key, buff, NULL);
-        return;
+              "androVM_setprop", property, value, NULL);
+        return 0;
     } else {
         // Wait for child process
-        int status = 0;
         wait(&status);
         SLOGD("Setprop process exited  with status %d", WEXITSTATUS(status));
     }
+    return status;
 }
 
-// Check if the /proc path is a fake one an should be overloaded completely
+// Store current value to Genymotion cache
+void LibGenyd::cacheCurrentValue(const char *key,
+                                 const char *buff)
+{
+    char full_key[PROPERTY_KEY_MAX];
+    // Don't cache empty value to use default one instead
+    if (!buff || strlen(buff) <= 0)
+        return;
+
+    // Generate new key
+    snprintf(full_key, sizeof(full_key), "%s%s", key, CACHE_SUFFIX);
+    LibGenyd::setProperty(full_key, buff);
+}
+
+// Check if the /proc path is a fake one then values must be overloaded every time
 int LibGenyd::useFakeValue(const char* path, char* buf, size_t size)
 {
     // Check if /proc path start with the fake genymotion power supply one
@@ -62,10 +72,18 @@ int LibGenyd::useFakeValue(const char* path, char* buf, size_t size)
         SLOGD("Path value must be overloaded: '%s'", path);
 
         // one fake value mean that we should switch to manual mode
-        SLOGD("Switching to manual mode");
-        property_set(BATTERY_MODE, MANUAL_MODE);
+        if (!isManualMode(BATTERY_MODE)) {
+            SLOGD("Switching to manual mode and setting default values");
+            LibGenyd::setProperty(BATTERY_MODE, MANUAL_MODE);
+            LibGenyd::setProperty(BATTERY_LEVEL, "50000000");
+            LibGenyd::setProperty(BATTERY_FULL, "50000000");
+            LibGenyd::setProperty(BATTERY_STATUS, "Not charging");
+            LibGenyd::setProperty(AC_ONLINE, "1");
+        }
 
-        // Use the standard mechanism then to read our custom properties with
+        // make sure nothing is present in buf or garbage will be cached and reused
+        if (buf && size>0) buf[0] = '\0';
+        // Use the standard mechanism to read our custom properties with
         // corresponding callbacks
         return LibGenyd::getValueFromProc(path, buf, size);
     }
