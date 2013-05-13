@@ -17,7 +17,7 @@ void Dispatcher::setDefaultBatteryLevel(void) const {
 
     // Get old force battery level, or real level
     property_get(BATTERY_LEVEL, level, real);
-
+    property_set(BATTERY_FULL, full);
     property_set(BATTERY_LEVEL, level);
 }
 
@@ -78,7 +78,7 @@ void Dispatcher::setBatteryStatus(const Request &request, Reply *reply)
 
         // Get cached full battery level, or 50000000
         property_get(BATTERY_FULL CACHE_SUFFIX, full, "50000000");
-
+        property_set(BATTERY_FULL, full);
         property_set(BATTERY_LEVEL, full);
     }
 }
