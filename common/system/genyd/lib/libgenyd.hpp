@@ -84,7 +84,7 @@ private:
     // Get current battery status
     int batteryStatus(char *buff, size_t size);
 
-    // Get AC Online status
+    // Get AC Online status "0" = offline, "1"
     int acOnlineStatus(char *buff, size_t size);
 };
 

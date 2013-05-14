@@ -119,9 +119,9 @@ bool LibGenyd::isManualMode(const char *key)
 void LibGenyd::setAcOnlineFromStatus(const char *status)
 {
     if (strcmp(status, "Discharging") == 0) {
-        property_set(AC_ONLINE, "0");
+        property_set(AC_ONLINE, "0" /* offline */);
     } else { // Full, Charging or Not Charging
-        property_set(AC_ONLINE, "1");
+        property_set(AC_ONLINE, "1" /* online */);
     }
 }
 
