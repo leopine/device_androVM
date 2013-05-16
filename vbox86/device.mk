@@ -109,7 +109,7 @@ PRODUCT_PACKAGES += \
     busybox \
     genyd \
     gps.vbox86 \
-    local.gps \
+    local_gps \
 
 
 $(call inherit-product-if-exists,frameworks/base/build/tablet-dalvik-heap.mk)
