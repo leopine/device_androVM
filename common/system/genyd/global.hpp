@@ -36,5 +36,6 @@
 #define BATTERY_STATUS   KEY_PREFIX "battery.status"
 #define BATTERY_LOADTYPE KEY_PREFIX "battery.load_type"
 #define AC_ONLINE        KEY_PREFIX "ac.online"
+#define GPS_STATUS       KEY_PREFIX "gps.status"
 
 #endif

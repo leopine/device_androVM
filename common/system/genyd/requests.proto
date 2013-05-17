@@ -39,6 +39,7 @@ message Parameter {
     BatteryMode        = 3;
     BatteryLevel       = 4; // uint in [0;100]
     BatteryStatus      = 5; // "Charging", "Discharging", "Not charging", "Full"
+    GpsStatus          = 6; // boolean for Enabled/Disabled
   }
 
   required Type  type = 1;

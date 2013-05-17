@@ -60,7 +60,7 @@ private:
     // battery_handler.cpp //
     /////////////////////////
 
-    // Mics
+    // Miscs
     void setDefaultBatteryLevel(void) const;
     void setDefaultBatteryStatus(void) const;
 
@@ -81,6 +81,18 @@ private:
 
     // Answer "GetParam Battery Mode" == manual request
     void isBatteryManual(const Request &request, Reply *reply);
+
+
+    /////////////////////
+    // GPS requests    //
+    // gps_handler.cpp //
+    /////////////////////
+
+    // Answer "SetParam GPS Status" request
+    void setGpsStatus(const Request &request, Reply *reply);
+
+    // Answer "GetParam GPS Status" request
+    void getGpsStatus(const Request &request, Reply *reply);
 };
 
 #endif

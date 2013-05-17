@@ -10,11 +10,13 @@ Dispatcher::Dispatcher(void)
     getCallbacks[Parameter::BatteryStatus] = &Dispatcher::getBatteryStatus;
     getCallbacks[Parameter::BatteryLevel] = &Dispatcher::getBatteryLevel;
     getCallbacks[Parameter::BatteryMode] = &Dispatcher::isBatteryManual;
+    getCallbacks[Parameter::GpsStatus] = &Dispatcher::getGpsStatus;
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
     setCallbacks[Parameter::BatteryLevel] = &Dispatcher::setBatteryLevel;
     setCallbacks[Parameter::BatteryMode] = &Dispatcher::setBatteryMode;
+    setCallbacks[Parameter::GpsStatus] = &Dispatcher::setGpsStatus;
 }
 
 Dispatcher::~Dispatcher(void)
