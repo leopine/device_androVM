@@ -10,6 +10,8 @@
 #include <netinet/tcp.h>
 #include <pthread.h>
 
+#define LOG_TAG "local_gps"
+#include <cutils/log.h>
 #include <cutils/properties.h>
 
 #define GPS_PORT 22470
@@ -40,7 +42,7 @@ int main(int argc, char *argv[]) {
     srv_addr.sin_port = htons(GPS_PORT);
 
     if ((ssocket = socket(AF_INET, SOCK_STREAM, 0))<0) {
-	fprintf(stderr, "Unable to create socket\n");
+	SLOGE("Unable to create socket\n");
 	exit(-1);
     }
 
@@ -48,18 +50,18 @@ int main(int argc, char *argv[]) {
     setsockopt(ssocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
     if (bind(ssocket, (struct sockaddr *)&srv_addr, sizeof(srv_addr))<0) {
-        fprintf(stderr, "Unable to bind socket, errno=%d\n", errno);
+        SLOGE("Unable to bind socket, errno=%d\n", errno);
         exit(-1);
     }
 
     if (listen(ssocket, 1)<0) {
-        fprintf(stderr, "Unable to listen to socket, errno=%d\n", errno);
+        SLOGE("Unable to listen to socket, errno=%d\n", errno);
         exit(-1);
     }
 
     main_socket=accept(ssocket, NULL, 0);
     if (main_socket<0) {
-        fprintf(stderr, "Unable to accept socket for main conection, errno=%d\n", errno);
+        SLOGE("Unable to accept socket for main conection, errno=%d\n", errno);
         exit(-1);
     }
 
@@ -71,15 +73,13 @@ int main(int argc, char *argv[]) {
         sleep(GPS_UPDATE_PERIOD);
         property_get(GPS_STATUS_PROPERTY, gps_status, GPS_DEFAULT_STATUS);
         if (strcmp(gps_status, GPS_ENABLED) == 0) {
-            if (strlen(androVM_gps_fix) <= 0) {
-                continue;
-	    }
+            SLOGD("GPS enabled, parsing properties");
 
             property_get(GPS_FIX_PROPERTY, androVM_gps_fix, "");
 
             float i_lat=0, i_lng=0, i_alt=0;
-	    if (sscanf(androVM_gps_fix, "%f %f %f", &i_lat, &i_lng, &i_alt) != 3) {
-                fprintf(stderr, "Invalid fix format '%s'", androVM_gps_fix);
+            if (sscanf(androVM_gps_fix, "%f %f %f", &i_lat, &i_lng, &i_alt) != 3) {
+                SLOGE("Invalid fix format '%s'", androVM_gps_fix);
                 continue;
             }
 
