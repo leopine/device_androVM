@@ -9,9 +9,17 @@
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #include <pthread.h>
+
 #include <cutils/properties.h>
 
 #define GPS_PORT 22470
+
+#define GPS_STATUS_PROPERTY "genymotion.gps.status"
+#define GPS_DISABLED "disabled"
+#define GPS_ENABLED "enabled"
+#define GPS_DEFAULT_STATUS GPS_DISABLED
+
+#define GPS_UPDATE_PERIOD 5 /* period in sec between 2 gps fix emission */
 
 #define GPS_FIX_PROPERTY "androVM.gps.fix"
 
@@ -56,13 +64,24 @@ int main(int argc, char *argv[]) {
     }
 
     char androVM_gps_fix[PROPERTY_VALUE_MAX];
+    char gps_status[PROPERTY_VALUE_MAX];
     char gps_fix[128];
 
     while (1) {
-        property_get(GPS_FIX_PROPERTY, androVM_gps_fix, "");
-        if (strlen(androVM_gps_fix)>0) {
+        sleep(GPS_UPDATE_PERIOD);
+        property_get(GPS_STATUS_PROPERTY, gps_status, GPS_DEFAULT_STATUS);
+        if (strcmp(gps_status, GPS_ENABLED) == 0) {
+            if (strlen(androVM_gps_fix) <= 0) {
+                continue;
+	    }
+
+            property_get(GPS_FIX_PROPERTY, androVM_gps_fix, "");
+
             float i_lat=0, i_lng=0, i_alt=0;
-            sscanf(androVM_gps_fix, "%f %f %f", &i_lat, &i_lng, &i_alt);
+	    if (sscanf(androVM_gps_fix, "%f %f %f", &i_lat, &i_lng, &i_alt) != 3) {
+                fprintf(stderr, "Invalid fix format '%s'", androVM_gps_fix);
+                continue;
+            }
 
             float o_lat, o_lng, o_alt;
             int o_latdeg, o_latmin, o_lngdeg, o_lngmin;
@@ -93,10 +112,12 @@ int main(int argc, char *argv[]) {
             o_lngmin = (int) o_lng;
             o_lng = 10000*(o_lng - o_lngmin);
 
-            sprintf(gps_fix, STRING_GPS_FIX, last_time++, o_latdeg, o_latmin, (int)o_lat, o_clat, o_lngdeg, o_lngmin, (int)o_lng, o_clng, i_alt);
+            snprintf(gps_fix, sizeof(gps_fix), STRING_GPS_FIX, last_time++,
+                    o_latdeg, o_latmin, (int)o_lat, o_clat,
+                    o_lngdeg, o_lngmin, (int)o_lng, o_clng,
+                    i_alt);
             write(main_socket, gps_fix, strlen(gps_fix));
         }
-        sleep(5);
     }
 
     return 0;    
