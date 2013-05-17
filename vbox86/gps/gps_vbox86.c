@@ -447,6 +447,7 @@ nmea_reader_parse( NmeaReader*  r )
         Token  tok_latitudeHemi  = nmea_tokenizer_get(tzer,3);
         Token  tok_longitude     = nmea_tokenizer_get(tzer,4);
         Token  tok_longitudeHemi = nmea_tokenizer_get(tzer,5);
+        Token  tok_accuracy      = nmea_tokenizer_get(tzer,8);
         Token  tok_altitude      = nmea_tokenizer_get(tzer,9);
         Token  tok_altitudeUnits = nmea_tokenizer_get(tzer,10);
 
@@ -456,7 +457,10 @@ nmea_reader_parse( NmeaReader*  r )
                                       tok_longitude,
                                       tok_longitudeHemi.p[0]);
         nmea_reader_update_altitude(r, tok_altitude, tok_altitudeUnits);
-        r->fix.accuracy = 1;
+        r->fix.accuracy = str2int(tok_accuracy.p, tok_accuracy.end);
+        D("Got accuray token %s, value %d", tok_accuracy.p, r->fix.accuracy);
+        if (r->fix.accuracy < 0 || r->fix.accuracy > 200)
+	    r->fix.accuracy = 1;
         r->fix.flags |= GPS_LOCATION_HAS_ACCURACY;
     } else if ( !memcmp(tok.p, "GSA", 3) ) {
         // do something ?

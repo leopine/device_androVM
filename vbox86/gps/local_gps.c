@@ -21,13 +21,16 @@
 #define GPS_ENABLED "enabled"
 #define GPS_DEFAULT_STATUS GPS_DISABLED
 
+#define GPS_PRECISION_PROPERTY "genymotion.gps.precision"
+#define GPS_DEFAULT_PRECISION "1"
+
 #define GPS_UPDATE_PERIOD 5 /* period in sec between 2 gps fix emission */
 
 #define GPS_FIX_PROPERTY "androVM.gps.fix"
 
 static int last_time = 0;
 
-#define STRING_GPS_FIX "$GPGGA,%06d,%02d%02d.%04d,%c,%02d%02d.%04d,%c,1,08,,%.1g,M,0.,M,,,*47\n"
+#define STRING_GPS_FIX "$GPGGA,%06d,%02d%02d.%04d,%c,%02d%02d.%04d,%c,1,08,%d,%.1g,M,0.,M,,,*47\n"
 
 int main(int argc, char *argv[]) {
     int ssocket, main_socket;
@@ -67,6 +70,7 @@ int main(int argc, char *argv[]) {
 
     char androVM_gps_fix[PROPERTY_VALUE_MAX];
     char gps_status[PROPERTY_VALUE_MAX];
+    char gps_precision[PROPERTY_VALUE_MAX];
     char gps_fix[128];
 
     while (1) {
@@ -76,7 +80,6 @@ int main(int argc, char *argv[]) {
             SLOGD("GPS enabled, parsing properties");
 
             property_get(GPS_FIX_PROPERTY, androVM_gps_fix, "");
-
             float i_lat=0, i_lng=0, i_alt=0;
             if (sscanf(androVM_gps_fix, "%f %f %f", &i_lat, &i_lng, &i_alt) != 3) {
                 SLOGE("Invalid fix format '%s'", androVM_gps_fix);
@@ -112,10 +115,20 @@ int main(int argc, char *argv[]) {
             o_lngmin = (int) o_lng;
             o_lng = 10000*(o_lng - o_lngmin);
 
+            /* HDOP (horizontal dilution of precision) */
+            property_get(GPS_PRECISION_PROPERTY, gps_precision, GPS_DEFAULT_PRECISION);
+            int precision = atoi(gps_precision);
+            if (precision < 0 || precision > 200) {
+                SLOGE("Invalid precision %s, should be [0..200]");
+                continue;
+	    }
+
             snprintf(gps_fix, sizeof(gps_fix), STRING_GPS_FIX, last_time++,
                     o_latdeg, o_latmin, (int)o_lat, o_clat,
                     o_lngdeg, o_lngmin, (int)o_lng, o_clng,
+                    precision,
                     i_alt);
+            SLOGD("Will send : %s", gps_fix);
             write(main_socket, gps_fix, strlen(gps_fix));
         }
     }
