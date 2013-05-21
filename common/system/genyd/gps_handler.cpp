@@ -3,17 +3,14 @@
 #include "dispatcher.hpp"
 #include "libgenyd.hpp"
 
-
-// Answer "SetParam GPS Status" request
-void Dispatcher::setGpsStatus(const Request &request, Reply *reply)
+// Check if GPS Status is enabled (and then, we should read values from stored properties)
+bool isGpsStatusEnabled()
 {
-    bool gps_status = request.parameter().value().boolvalue();
+    char str_value[PROPERTY_VALUE_MAX];
+    property_get(GPS_STATUS, str_value, "false");
 
-    reply->set_type(Reply::None);
-    Status *status = reply->mutable_status();
-    status->set_code(Status::Ok);
-
-    property_set(GPS_STATUS, gps_status ? "true" : "false");
+    int comp = strncmp(str_value, GPS_STATUS_ENABLED, strlen(GPS_STATUS_ENABLED));
+    return comp == 0;
 }
 
 // Answer "GetParam GPS Status" request
@@ -26,11 +23,102 @@ void Dispatcher::getGpsStatus(const Request &request, Reply *reply)
     Value *value = reply->mutable_value();
     value->set_type(Value::Bool);
 
-    char gps_status[PROPERTY_VALUE_MAX];
-
-    property_get(GPS_STATUS, gps_status, "false");
-
-    int cmp = strncmp(gps_status, "true", 4);
     // Set value in response
-    value->set_boolvalue(cmp == 0);
+    bool enabled = isGpsStatusEnabled();
+    value->set_boolvalue(enabled);
+}
+
+// Answer "SetParam GPS Status" request
+void Dispatcher::setGpsStatus(const Request &request, Reply *reply)
+{
+    bool gps_status = request.parameter().value().boolvalue();
+
+    reply->set_type(Reply::None);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+
+    property_set(GPS_STATUS, gps_status ? GPS_STATUS_ENABLED : "false");
+}
+
+// Helper method that reads a double value, given its key and protobuf request object
+void getDoubleParam(const char* key, const Request &request, Reply *reply)
+{
+    // Prepare response
+    reply->set_type(Reply::Value);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+    Value *value = reply->mutable_value();
+    value->set_type(Value::Float);
+
+    // Read property
+    char str_value[PROPERTY_VALUE_MAX];
+    if (isGpsStatusEnabled()) {
+        property_get(key, str_value, "0");
+    } else {
+        str_value[0] = '0';
+        str_value[1] = '\0';
+    }
+
+    // Converts to double
+    double val = atof(str_value);
+
+    // Set value in response
+    value->set_floatvalue(val);
+}
+
+void setDoubleParam(const char* key, const Request &request, Reply *reply,
+                    double lower, double upper,
+                    bool lowerIncluded = true, bool upperIncluded = true)
+{
+    double value = request.parameter().value().floatvalue();
+
+    // Prepare default OK response
+    Status *status = reply->mutable_status();
+    reply->set_type(Reply::None);
+    status->set_code(Status::Ok);
+
+    // Check value limits
+    bool lowerValid = lowerIncluded ? (value >= lower) : (value > lower);
+    bool upperValid = upperIncluded ? (value <= upper) : (value < upper);
+
+    if (!(lowerValid && upperValid)) {
+        SLOGE("Invalid value %d", value);
+        reply->set_type(Reply::Error);
+        status->set_code(Status::InvalidRequest);
+        return;
+    }
+
+    if (!isGpsStatusEnabled()) {
+        // Enable GPS by forcing Status to true
+        property_set(GPS_STATUS, GPS_STATUS_ENABLED);
+
+        // Inform the user of mode switching
+        reply->set_type(Reply::None);
+        status->set_code(Status::OkWithInformation);
+        status->set_description("GPS have been enabled");
+
+        SLOGI("Genyd enabled GPS automatically");
+    }
+
+    // Read property
+    char str_value[PROPERTY_VALUE_MAX];
+    snprintf(str_value, PROPERTY_VALUE_MAX, "%f", value);
+
+    // Set property
+    property_set(key, str_value);
+}
+
+
+
+// Answer "GetParam GPS Latitude" request
+void Dispatcher::getGpsLatitude(const Request &request, Reply *reply)
+{
+    getDoubleParam(GPS_LATITUDE, request, reply);
+}
+
+
+// Answer "SetParam GPS Latitude" request
+void Dispatcher::setGpsLatitude(const Request &request, Reply *reply)
+{
+    setDoubleParam(GPS_LATITUDE, request, reply, -90, 90, true, false);
 }

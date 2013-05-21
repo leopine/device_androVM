@@ -26,8 +26,9 @@
 
 // Properties keys
 
-#define MANUAL_MODE      "manual"
-#define AUTO_MODE        "auto"
+#define MANUAL_MODE         "manual"
+#define AUTO_MODE           "auto"
+#define GPS_STATUS_ENABLED  "true"
 
 // Battery
 #define BATTERY_MODE     KEY_PREFIX "battery.mode"
@@ -36,6 +37,13 @@
 #define BATTERY_STATUS   KEY_PREFIX "battery.status"
 #define BATTERY_LOADTYPE KEY_PREFIX "battery.load_type"
 #define AC_ONLINE        KEY_PREFIX "ac.online"
+
+// GPS
 #define GPS_STATUS       KEY_PREFIX "gps.status"
+#define GPS_LATITUDE     KEY_PREFIX "gps.latitude"
+#define GPS_LONGITUDE    KEY_PREFIX "gps.longitude"
+#define GPS_ALTITUDE     KEY_PREFIX "gps.altitude"
+#define GPS_ACCURACY     KEY_PREFIX "gps.accuracy"
+#define GPS_BEAR         KEY_PREFIX "gps.bear"
 
 #endif

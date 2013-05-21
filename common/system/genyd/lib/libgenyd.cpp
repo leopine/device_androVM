@@ -106,7 +106,7 @@ int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
     return -1;
 }
 
-// Check if value of 'key' should be read from from system or from the stored property
+// Check if value of 'key' should be read from system or from the stored property
 bool LibGenyd::isManualMode(const char *key)
 {
     char manual[PROPERTY_VALUE_MAX];
