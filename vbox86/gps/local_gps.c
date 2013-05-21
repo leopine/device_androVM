@@ -21,12 +21,14 @@
 #define GPS_ENABLED "enabled"
 #define GPS_DEFAULT_STATUS GPS_DISABLED
 
+#define GPS_LATITUDE "genymotion.gps.latitude"
+#define GPS_LONGITUDE "genymotion.gps.longitude"
+#define GPS_ALTITUDE "genymotion.gps.altitude"
+
 #define GPS_PRECISION_PROPERTY "genymotion.gps.precision"
 #define GPS_DEFAULT_PRECISION "1"
 
 #define GPS_UPDATE_PERIOD 5 /* period in sec between 2 gps fix emission */
-
-#define GPS_FIX_PROPERTY "androVM.gps.fix"
 
 static int last_time = 0;
 
@@ -68,7 +70,9 @@ int main(int argc, char *argv[]) {
         exit(-1);
     }
 
-    char androVM_gps_fix[PROPERTY_VALUE_MAX];
+    char gps_latitude[PROPERTY_VALUE_MAX];
+    char gps_longitude[PROPERTY_VALUE_MAX];
+    char gps_altitude[PROPERTY_VALUE_MAX];
     char gps_status[PROPERTY_VALUE_MAX];
     char gps_precision[PROPERTY_VALUE_MAX];
     char gps_fix[128];
@@ -77,16 +81,17 @@ int main(int argc, char *argv[]) {
         sleep(GPS_UPDATE_PERIOD);
         property_get(GPS_STATUS_PROPERTY, gps_status, GPS_DEFAULT_STATUS);
         if (strcmp(gps_status, GPS_ENABLED) == 0) {
+            double i_lat=0, i_lng=0, i_alt=0;
             SLOGD("GPS enabled, parsing properties");
 
-            property_get(GPS_FIX_PROPERTY, androVM_gps_fix, "");
-            float i_lat=0, i_lng=0, i_alt=0;
-            if (sscanf(androVM_gps_fix, "%f %f %f", &i_lat, &i_lng, &i_alt) != 3) {
-                SLOGE("Invalid fix format '%s'", androVM_gps_fix);
-                continue;
-            }
+            property_get(GPS_LATITUDE, gps_latitude, "0");
+            property_get(GPS_LONGITUDE, gps_longitude, "0");
+            property_get(GPS_ALTITUDE, gps_altitude, "0");
+            i_lat = atof(gps_latitude);
+            i_lng = atof(gps_longitude);
+            i_alt = atof(gps_altitude);
 
-            float o_lat, o_lng, o_alt;
+            double o_lat, o_lng, o_alt;
             int o_latdeg, o_latmin, o_lngdeg, o_lngmin;
             char o_clat, o_clng;
             if (i_lat<0) {
