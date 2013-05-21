@@ -30,6 +30,7 @@
 #include <math.h>
 #include <time.h>
 #include <sys/socket.h>
+#include <arpa/inet.h>
 #include <netinet/in.h>
 
 #define  LOG_TAG  "gps_vbox86"
@@ -458,7 +459,7 @@ nmea_reader_parse( NmeaReader*  r )
                                       tok_longitudeHemi.p[0]);
         nmea_reader_update_altitude(r, tok_altitude, tok_altitudeUnits);
         r->fix.accuracy = str2int(tok_accuracy.p, tok_accuracy.end);
-        D("Got accuray token %s, value %d", tok_accuracy.p, r->fix.accuracy);
+        D("Got accuray token %s, value %f", tok_accuracy.p, r->fix.accuracy);
         if (r->fix.accuracy < 0 || r->fix.accuracy > 200)
             r->fix.accuracy = 1;
         r->fix.flags |= GPS_LOCATION_HAS_ACCURACY;
