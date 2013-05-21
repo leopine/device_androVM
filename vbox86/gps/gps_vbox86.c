@@ -460,7 +460,7 @@ nmea_reader_parse( NmeaReader*  r )
         r->fix.accuracy = str2int(tok_accuracy.p, tok_accuracy.end);
         D("Got accuray token %s, value %d", tok_accuracy.p, r->fix.accuracy);
         if (r->fix.accuracy < 0 || r->fix.accuracy > 200)
-	    r->fix.accuracy = 1;
+            r->fix.accuracy = 1;
         r->fix.flags |= GPS_LOCATION_HAS_ACCURACY;
     } else if ( !memcmp(tok.p, "GSA", 3) ) {
         // do something ?
