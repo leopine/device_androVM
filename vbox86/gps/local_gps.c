@@ -33,6 +33,7 @@
 static int last_time = 0;
 
 #define STRING_GPS_FIX "$GPGGA,%06d,%02d%02d.%04d,%c,%02d%02d.%04d,%c,1,08,%d,%.1g,M,0.,M,,,*47\n"
+#define STRING_GPRMC "$GPRMC,%02d%02d%02d.%02d,A,%02d%02d.%04d,%c,%02d%02d.%04d,%c,%f,%f,%02d%02d%02d,%f,*47\n"
 
 int main(int argc, char *argv[]) {
     int ssocket, main_socket;
@@ -47,8 +48,8 @@ int main(int argc, char *argv[]) {
     srv_addr.sin_port = htons(GPS_PORT);
 
     if ((ssocket = socket(AF_INET, SOCK_STREAM, 0))<0) {
-	SLOGE("Unable to create socket\n");
-	exit(-1);
+        SLOGE("Unable to create socket\n");
+        exit(-1);
     }
 
     int yes = 1;
@@ -76,6 +77,7 @@ int main(int argc, char *argv[]) {
     char gps_status[PROPERTY_VALUE_MAX];
     char gps_precision[PROPERTY_VALUE_MAX];
     char gps_fix[128];
+    char gprmc[128];
 
     while (1) {
         sleep(GPS_UPDATE_PERIOD);
@@ -94,6 +96,7 @@ int main(int argc, char *argv[]) {
             double o_lat, o_lng, o_alt;
             int o_latdeg, o_latmin, o_lngdeg, o_lngmin;
             char o_clat, o_clng;
+
             if (i_lat<0) {
                 o_lat = -i_lat;
                 o_clat = 'S';
@@ -126,17 +129,48 @@ int main(int argc, char *argv[]) {
             if (precision < 0 || precision > 200) {
                 SLOGE("Invalid precision %s, should be [0..200]");
                 continue;
-	    }
+            }
+
+            struct timeval tv;
+            struct tm tm;
+
+            if (gettimeofday(&tv, NULL) == -1) {
+                SLOGE("gettimeofday");
+                continue;
+            }
+
+            if (!gmtime_r(&tv.tv_sec, &tm)) {
+                SLOGE("gmtime_r");
+                continue;
+            }
 
             snprintf(gps_fix, sizeof(gps_fix), STRING_GPS_FIX, last_time++,
-                    o_latdeg, o_latmin, (int)o_lat, o_clat,
-                    o_lngdeg, o_lngmin, (int)o_lng, o_clng,
-                    precision,
-                    i_alt);
-            SLOGD("Will send : %s", gps_fix);
-            write(main_socket, gps_fix, strlen(gps_fix));
+                     o_latdeg, o_latmin, (int)o_lat, o_clat,
+                     o_lngdeg, o_lngmin, (int)o_lng, o_clng,
+                     precision,
+                     i_alt);
+
+            snprintf(gprmc, sizeof(gprmc), STRING_GPRMC,
+                     tm.tm_hour, tm.tm_min, tm.tm_sec, 0,
+                     o_latdeg, o_latmin, (int)o_lat, o_clat,
+                     o_lngdeg, o_lngmin, (int)o_lng, o_clng,
+                     0.0,
+                     90.0,
+                     tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+                     90.0);
+
+            SLOGD("GGA command : %s", gps_fix);
+            SLOGD("RMC command : %s", gprmc);
+
+            if (send(main_socket, gps_fix, strlen(gps_fix), MSG_NOSIGNAL) == -1) {
+                SLOGE("Can't send GGA command");
+            }
+
+            if (send(main_socket, gprmc, strlen(gprmc), MSG_NOSIGNAL) == -1) {
+                SLOGE("Can't send RMC command");
+            }
         }
     }
 
-    return 0;    
+    return 0;
 }
