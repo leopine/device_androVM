@@ -380,8 +380,9 @@ nmea_reader_update_bearing( NmeaReader*  r,
     double  alt;
     Token   tok = bearing;
 
-    if (tok.p >= tok.end)
+    if (tok.p >= tok.end) {
         return -1;
+    }
 
     r->fix.flags   |= GPS_LOCATION_HAS_BEARING;
     r->fix.bearing  = str2float(tok.p, tok.end);
@@ -408,9 +409,9 @@ nmea_reader_update_speed( NmeaReader*  r,
 static void
 nmea_reader_parse( NmeaReader*  r )
 {
-   /* we received a complete sentence, now parse it to generate
-    * a new GPS fix...
-    */
+    /* we received a complete sentence, now parse it to generate
+     * a new GPS fix...
+     */
     NmeaTokenizer  tzer[1];
     Token          tok;
 
@@ -454,9 +455,9 @@ nmea_reader_parse( NmeaReader*  r )
 
         nmea_reader_update_time(r, tok_time);
         nmea_reader_update_latlong(r, tok_latitude,
-                                      tok_latitudeHemi.p[0],
-                                      tok_longitude,
-                                      tok_longitudeHemi.p[0]);
+                                   tok_latitudeHemi.p[0],
+                                   tok_longitude,
+                                   tok_longitudeHemi.p[0]);
         nmea_reader_update_altitude(r, tok_altitude, tok_altitudeUnits);
         r->fix.accuracy = str2int(tok_accuracy.p, tok_accuracy.end);
         D("Got accuray token %s, value %f", tok_accuracy.p, r->fix.accuracy);
@@ -477,22 +478,24 @@ nmea_reader_parse( NmeaReader*  r )
         Token  tok_date          = nmea_tokenizer_get(tzer,9);
 
         D("in RMC, fixStatus=%c", tok_fixStatus.p[0]);
-        if (tok_fixStatus.p[0] == 'A')
-        {
+
+        if (tok_fixStatus.p[0] == 'A') {
             nmea_reader_update_date( r, tok_date, tok_time );
 
             nmea_reader_update_latlong( r, tok_latitude,
-                                           tok_latitudeHemi.p[0],
-                                           tok_longitude,
-                                           tok_longitudeHemi.p[0] );
+                                        tok_latitudeHemi.p[0],
+                                        tok_longitude,
+                                        tok_longitudeHemi.p[0] );
 
             nmea_reader_update_bearing( r, tok_bearing );
+
             nmea_reader_update_speed  ( r, tok_speed );
         }
     } else {
         tok.p -= 2;
         D("unknown sentence '%.*s", tok.end-tok.p, tok.p);
     }
+
     if (r->fix.flags != 0) {
 #if GPS_DEBUG
         char   temp[256];
