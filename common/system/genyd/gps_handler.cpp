@@ -141,7 +141,7 @@ void Dispatcher::getGpsAltitude(const Request &request, Reply *reply)
 // Answer "SetParam GPS Altitude" request
 void Dispatcher::setGpsAltitude(const Request &request, Reply *reply)
 {
-    setDoubleParam(GPS_ALTITUDE, request, reply, -10000, 10000);
+    setDoubleParam(GPS_ALTITUDE, request, reply, -20, 10000);
 }
 
 // Answer "GetParam GPS Accuracy" request
