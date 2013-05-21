@@ -736,12 +736,13 @@ gps_state_thread( void*  arg )
                 }
                 else if (fd == gps_fd)
                 {
-                    char  buff[32];
+                    char  buff[128];
                     D("gps fd event");
                     for (;;) {
                         int  nn, ret;
 
-                        ret = read( fd, buff, sizeof(buff) );
+                        ret = recv(fd, buff, sizeof(buff), 0);
+
                         if (ret < 0) {
                             if (errno == EINTR)
                                 continue;
