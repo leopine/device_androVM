@@ -44,6 +44,6 @@
 #define GPS_LONGITUDE    KEY_PREFIX "gps.longitude"
 #define GPS_ALTITUDE     KEY_PREFIX "gps.altitude"
 #define GPS_ACCURACY     KEY_PREFIX "gps.accuracy"
-#define GPS_BEAR         KEY_PREFIX "gps.bear"
+#define GPS_BEARING      KEY_PREFIX "gps.bearing"
 
 #endif

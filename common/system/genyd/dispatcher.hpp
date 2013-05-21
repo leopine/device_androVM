@@ -88,17 +88,29 @@ private:
     // gps_handler.cpp //
     /////////////////////
 
-    // Answer "GetParam GPS Status" request
+    // Answer "Get/Set GPS Status" request
     void getGpsStatus(const Request &request, Reply *reply);
-
-    // Answer "SetParam GPS Status" request
     void setGpsStatus(const Request &request, Reply *reply);
 
-    // Answer "GetParam GPS Latitude" request
+    // Answer "Get/Set GPS Latitude" request
     void getGpsLatitude(const Request &request, Reply *reply);
-
-    // Answer "GetParam GPS Latitude" request
     void setGpsLatitude(const Request &request, Reply *reply);
+
+    // Answer "Get/Set GPS Longitude" request
+    void getGpsLongitude(const Request &request, Reply *reply);
+    void setGpsLongitude(const Request &request, Reply *reply);
+
+    // Answer "Get/Set GPS Altitude" request
+    void getGpsAltitude(const Request &request, Reply *reply);
+    void setGpsAltitude(const Request &request, Reply *reply);
+
+    // Answer "Get/Set GPS Accuracy" request
+    void getGpsAccuracy(const Request &request, Reply *reply);
+    void setGpsAccuracy(const Request &request, Reply *reply);
+
+    // Answer "Get/Set GPS Bearing" request
+    void getGpsBearing(const Request &request, Reply *reply);
+    void setGpsBearing(const Request &request, Reply *reply);
 };
 
 #endif

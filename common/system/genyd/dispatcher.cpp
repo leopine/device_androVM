@@ -12,17 +12,24 @@ Dispatcher::Dispatcher(void)
     getCallbacks[Parameter::BatteryMode] = &Dispatcher::isBatteryManual;
     getCallbacks[Parameter::GpsStatus] = &Dispatcher::getGpsStatus;
     getCallbacks[Parameter::GpsLatitude] = &Dispatcher::getGpsLatitude;
+    getCallbacks[Parameter::GpsLongitude] = &Dispatcher::getGpsLongitude;
+    getCallbacks[Parameter::GpsAltitude] = &Dispatcher::getGpsAltitude;
+    getCallbacks[Parameter::GpsAccuracy] = &Dispatcher::getGpsAccuracy;
+    getCallbacks[Parameter::GpsBearing] = &Dispatcher::getGpsBearing;
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
     setCallbacks[Parameter::BatteryLevel] = &Dispatcher::setBatteryLevel;
     setCallbacks[Parameter::BatteryMode] = &Dispatcher::setBatteryMode;
     setCallbacks[Parameter::GpsLatitude] = &Dispatcher::setGpsLatitude;
+    setCallbacks[Parameter::GpsLongitude] = &Dispatcher::setGpsLongitude;
+    setCallbacks[Parameter::GpsAltitude] = &Dispatcher::setGpsAltitude;
+    setCallbacks[Parameter::GpsAccuracy] = &Dispatcher::setGpsAccuracy;
+    setCallbacks[Parameter::GpsBearing] = &Dispatcher::setGpsBearing;
 }
 
 Dispatcher::~Dispatcher(void)
 {
-
 }
 
 void Dispatcher::treatPing(const Request &request, Reply *reply)

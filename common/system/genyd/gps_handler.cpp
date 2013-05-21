@@ -108,17 +108,62 @@ void setDoubleParam(const char* key, const Request &request, Reply *reply,
     property_set(key, str_value);
 }
 
-
-
 // Answer "GetParam GPS Latitude" request
 void Dispatcher::getGpsLatitude(const Request &request, Reply *reply)
 {
     getDoubleParam(GPS_LATITUDE, request, reply);
 }
 
-
 // Answer "SetParam GPS Latitude" request
 void Dispatcher::setGpsLatitude(const Request &request, Reply *reply)
 {
     setDoubleParam(GPS_LATITUDE, request, reply, -90, 90, true, false);
+}
+
+// Answer "GetParam GPS Longitude" request
+void Dispatcher::getGpsLongitude(const Request &request, Reply *reply)
+{
+    getDoubleParam(GPS_LONGITUDE, request, reply);
+}
+
+// Answer "SetParam GPS Longitude" request
+void Dispatcher::setGpsLongitude(const Request &request, Reply *reply)
+{
+    setDoubleParam(GPS_LONGITUDE, request, reply, -180, 180, true, false);
+}
+
+// Answer "GetParam GPS Altitude" request
+void Dispatcher::getGpsAltitude(const Request &request, Reply *reply)
+{
+    getDoubleParam(GPS_ALTITUDE, request, reply);
+}
+
+// Answer "SetParam GPS Altitude" request
+void Dispatcher::setGpsAltitude(const Request &request, Reply *reply)
+{
+    setDoubleParam(GPS_ALTITUDE, request, reply, -10000, 10000);
+}
+
+// Answer "GetParam GPS Accuracy" request
+void Dispatcher::getGpsAccuracy(const Request &request, Reply *reply)
+{
+    getDoubleParam(GPS_ACCURACY, request, reply);
+}
+
+// Answer "SetParam GPS Accuracy" request
+void Dispatcher::setGpsAccuracy(const Request &request, Reply *reply)
+{
+    setDoubleParam(GPS_ACCURACY, request, reply, 0, 200);
+}
+
+// Answer "GetParam GPS Bearing" request
+void Dispatcher::getGpsBearing(const Request &request, Reply *reply)
+{
+    getDoubleParam(GPS_BEARING, request, reply);
+}
+
+// Answer "SetParam GPS Bearing" request
+void Dispatcher::setGpsBearing(const Request &request, Reply *reply)
+{
+    setDoubleParam(GPS_BEARING, request, reply, 0, 360, true, false);
 }
