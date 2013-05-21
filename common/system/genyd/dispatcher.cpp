@@ -21,6 +21,7 @@ Dispatcher::Dispatcher(void)
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
     setCallbacks[Parameter::BatteryLevel] = &Dispatcher::setBatteryLevel;
     setCallbacks[Parameter::BatteryMode] = &Dispatcher::setBatteryMode;
+    setCallbacks[Parameter::GpsStatus] = &Dispatcher::setGpsStatus;
     setCallbacks[Parameter::GpsLatitude] = &Dispatcher::setGpsLatitude;
     setCallbacks[Parameter::GpsLongitude] = &Dispatcher::setGpsLongitude;
     setCallbacks[Parameter::GpsAltitude] = &Dispatcher::setGpsAltitude;
