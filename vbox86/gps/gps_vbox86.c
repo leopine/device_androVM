@@ -487,7 +487,8 @@ static void nmea_reader_parse(NmeaReader *r)
         if (r->fix.flags & GPS_LOCATION_HAS_ACCURACY) {
             p += snprintf(p,end-p, " accuracy=%g", r->fix.accuracy);
         }
-        gmtime_r( (time_t*) &r->fix.timestamp, &utc );
+        time_t t = r->fix.timestamp / 1000;
+        gmtime_r(&t, &utc);
         p += snprintf(p, end-p, " time=%s", asctime( &utc ) );
         D("%s",temp);
 #endif
