@@ -22,12 +22,11 @@
 
 #define GPS_UPDATE_PERIOD 1 /* period in sec between 2 gps fix emission */
 
-#define STRING_GPGGA "$GPGGA,%02d%02d%02d,%02d%02d.%04d,%c,%02d%02d.%04d,%c,1,08,%f,%.1f,M,0.,M,,,*47\n"
+#define STRING_GPGGA "$GPGGA,%02d%02d%02d,%02d%02d.%04d,%c,%02d%02d.%04d,%c,1,08,%i,%f,M,0.,M,,,*47\n"
 #define STRING_GPRMC "$GPRMC,%02d%02d%02d,A,%02d%02d.%04d,%c,%02d%02d.%04d,%c,%f,%f,%02d%02d%02d,%f,*47\n"
 
-static int wait_for_client(void) {
+static int start_server(void) {
     int server = -1;
-    int client = -1;
     struct sockaddr_in srv_addr;
     long haddr;
 
@@ -44,10 +43,16 @@ static int wait_for_client(void) {
     int yes = 1;
     setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-    if (bind(server, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) <0 ) {
+    if (bind(server, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) < 0) {
         SLOGE("Unable to bind socket, errno=%d\n", errno);
         exit(-1);
     }
+
+    return server;
+}
+
+static int wait_for_client(int server) {
+    int client = -1;
 
     if (listen(server, 1) < 0) {
         SLOGE("Unable to listen to socket, errno=%d\n", errno);
@@ -65,7 +70,8 @@ static int wait_for_client(void) {
 }
 
 int main(int argc, char *argv[]) {
-    int client = 0;
+    int server = -1;
+    int client = -1;
 
     char gps_latitude[PROPERTY_VALUE_MAX];
     char gps_longitude[PROPERTY_VALUE_MAX];
@@ -81,8 +87,13 @@ int main(int argc, char *argv[]) {
     int o_latdeg, o_latmin, o_lngdeg, o_lngmin;
     char o_clat, o_clng;
 
+    if ((server = start_server()) == -1) {
+        SLOGE("Unable to create socket\n");
+        exit(-1);
+    }
+
     // Listen for main connection
-    while ((client = wait_for_client())) {
+    while ((client = wait_for_client(server)) != -1) {
 
         while (1) {
             // 1 GPS info every GPS_UPDATE_PERIOD seconds
@@ -151,7 +162,7 @@ int main(int argc, char *argv[]) {
                          tm.tm_hour, tm.tm_min, tm.tm_sec,
                          o_latdeg, o_latmin, (int)o_lat, o_clat,
                          o_lngdeg, o_lngmin, (int)o_lng, o_clng,
-                         precision,
+                         (int)precision,
                          i_alt);
 
                 snprintf(gprmc, sizeof(gprmc), STRING_GPRMC,
