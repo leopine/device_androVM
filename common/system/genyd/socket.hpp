@@ -15,7 +15,8 @@ public:
   enum ReadStatus {
     ReadError,
     NoMessage,
-    NewMessage
+    NewMessage,
+    UnknownMessage,
   };
   enum WriteStatus {
     WriteError,

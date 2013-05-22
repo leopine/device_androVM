@@ -93,14 +93,10 @@ void Genyd::acceptNewClient(void)
     }
 
     clients[client] = new Socket(client);
-    SLOGI("New client connected", clients.size());
 }
 
-void Genyd::treatMessage(Socket::ReadStatus status, Socket *client)
+void Genyd::treatMessage(Socket *client)
 {
-    if (status == Socket::NoMessage) {
-        return;
-    }
     const Request &request = client->getRequest();
     client->addReply(dispatcher.dispatchRequest(request));
 }
@@ -122,7 +118,6 @@ void Genyd::run(void)
 
         // Accept new connection
         if (FD_ISSET(server->getFD(), &readfs)) {
-            SLOGD("Can accept new client");
             acceptNewClient();
         }
 
@@ -133,28 +128,29 @@ void Genyd::run(void)
         while (begin != end) {
             // Ready read
             if (FD_ISSET(begin->first, &readfs)) {
-                SLOGD("Client %d id ready-read", begin->first);
-
                 Socket::ReadStatus status = begin->second->read();
-
-                SLOGD("ReadStatus: %d", status);
-
-                if (status == Socket::ReadError) {
+                switch (status) {
+                case Socket::ReadError:
+                    SLOGD("Socket read error");
+                case Socket::NoMessage:
                     delete begin->second;
                     clients.erase(begin++);
                     continue;
-                } else {
-                    treatMessage(status, begin->second);
+                    break;
+                case Socket::NewMessage:
+                case Socket::UnknownMessage:
+                    treatMessage(begin->second);
+                    break;
+                default:
+                    SLOGE("Unknown socket status");
                 }
             }
 
             // Ready write
             if (FD_ISSET(begin->first, &writefs)) {
-                SLOGD("Client %d id ready-write", begin->first);
-
                 Socket::WriteStatus status = begin->second->reply();
-
                 if (status == Socket::WriteError) {
+                    SLOGD("Socket write error with client %d", begin->first);
                     delete begin->second;
                     clients.erase(begin++);
                     continue;

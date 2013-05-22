@@ -36,6 +36,8 @@ Dispatcher::~Dispatcher(void)
 void Dispatcher::treatPing(const Request &request, Reply *reply)
 {
     (void)request;
+    SLOGD("Received Ping");
+
     reply->set_type(Reply::Pong);
     Status *status = reply->mutable_status();
     status->set_code(Status::Ok);
@@ -43,6 +45,8 @@ void Dispatcher::treatPing(const Request &request, Reply *reply)
 
 void Dispatcher::getAndroidVersion(const Request &request, Reply *reply)
 {
+    SLOGD("Received Get AndroidVersion");
+
     reply->set_type(Reply::Value);
     Status *status = reply->mutable_status();
     status->set_code(Status::Ok);
@@ -64,8 +68,10 @@ void Dispatcher::treatGetParam(const Request &request, Reply *reply)
     }
 
     Parameter param = request.parameter();
+    Genymotion::Parameter_Type type = param.type();
+    SLOGD("Received Get %s", Parameter::Type_Name(type).c_str());
 
-    std::map<int, Dispatcher::t_get_callback>::iterator func = getCallbacks.find(param.type());
+    std::map<int, Dispatcher::t_get_callback>::iterator func = getCallbacks.find(type);
 
     if (func != getCallbacks.end()) {
         (this->*(func->second))(request, reply);
@@ -94,7 +100,10 @@ void Dispatcher::treatSetParam(const Request &request, Reply *reply)
         return;
     }
 
-    std::map<int, Dispatcher::t_set_callback>::iterator func = setCallbacks.find(param.type());
+    Genymotion::Parameter_Type type = param.type();
+    SLOGD("Received Set %s", Parameter::Type_Name(type).c_str());
+
+    std::map<int, Dispatcher::t_set_callback>::iterator func = setCallbacks.find(type);
 
     if (func != setCallbacks.end()) {
         (this->*(func->second))(request, reply);
@@ -107,6 +116,7 @@ void Dispatcher::treatSetParam(const Request &request, Reply *reply)
 
 void Dispatcher::unknownRequest(const Request &request, Reply *reply)
 {
+    SLOGD("Received unknown request");
     (void)request;
     reply->set_type(Reply::Error);
     Status *status = reply->mutable_status();

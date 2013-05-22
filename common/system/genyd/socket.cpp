@@ -26,13 +26,13 @@ Socket::ReadStatus Socket::read(void)
 
     if ((len = recv(socket, buffer, 1023, MSG_NOSIGNAL)) < 0) {
         SLOGE("recv() error");
-    }
-
-    if (len <= 0) {
         return Socket::ReadError;
     }
 
-    SLOGD("%d bytes read", len);
+    if (len == 0) {
+        return Socket::NoMessage;
+    }
+
     istream.write(buffer, len);
 
     // Try to parse the current stream
@@ -41,7 +41,7 @@ Socket::ReadStatus Socket::read(void)
         return Socket::NewMessage;
     } else {
         SLOGE("Can't parse request");
-        return Socket::NoMessage;
+        return Socket::UnknownMessage;
     }
 }
 
@@ -68,7 +68,6 @@ Socket::WriteStatus Socket::reply(void)
         delete reply;
         return Socket::WriteError;
     }
-    SLOGD("%d bytes written", len);
     delete reply;
     return Socket::WriteSuccess;
 }

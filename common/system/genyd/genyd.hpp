@@ -31,7 +31,7 @@ private:
   void acceptNewClient(void);
 
   // Handle Socket::read status for a given client
-  void treatMessage(Socket::ReadStatus status, Socket *client);
+  void treatMessage(Socket *client);
 
 public:
   // Start server
