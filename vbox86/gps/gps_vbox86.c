@@ -14,29 +14,23 @@
  * limitations under the License.
  */
 
-/* this implements a GPS hardware library for the Android emulator.
- * the following code should be built as a shared library that will be
- * placed into /system/lib/hw/gps.goldfish.so
- *
- * it will be loaded by the code in hardware/libhardware/hardware.c
- * which is itself called from android_location_GpsLocationProvider.cpp
- */
-
-
-#include <errno.h>
 #include <pthread.h>
+#include <errno.h>
 #include <fcntl.h>
-#include <sys/epoll.h>
 #include <math.h>
 #include <time.h>
-#include <sys/socket.h>
+
 #include <arpa/inet.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
+#include <sys/socket.h>
+#include <cutils/sockets.h>
 
 #define  LOG_TAG  "gps_vbox86"
 #include <cutils/log.h>
-#include <cutils/sockets.h>
 #include <hardware/gps.h>
+
+#include "gps_vbox86.h"
 
 #define  GPS_DEBUG  1
 
@@ -54,23 +48,14 @@
 /*****************************************************************/
 /*****************************************************************/
 
-typedef struct {
-    const char*  p;
-    const char*  end;
-} Token;
+static t_all_tokens tokens;
 
-#define  MAX_NMEA_TOKENS  16
+static GpsState _gps_state[1];
 
-typedef struct {
-    int     count;
-    Token   tokens[ MAX_NMEA_TOKENS ];
-} NmeaTokenizer;
-
-static int
-nmea_tokenizer_init( NmeaTokenizer*  t, const char*  p, const char*  end )
+static int nmea_tokenizer_init(NmeaTokenizer *t, const char *p, const char *end)
 {
-    int    count = 0;
-    char*  q;
+    int count = 0;
+    char *q;
 
     // the initial '$' is optional
     if (p < end && p[0] == '$')
@@ -97,8 +82,10 @@ nmea_tokenizer_init( NmeaTokenizer*  t, const char*  p, const char*  end )
 
         if (q > p) {
             if (count < MAX_NMEA_TOKENS) {
-                t->tokens[count].p   = p;
-                t->tokens[count].end = q;
+                snprintf(t->tokens[count].buff, sizeof(t->tokens[count].buff), "%s", p);
+                t->tokens[count].p = t->tokens[count].buff;
+                t->tokens[count].end = t->tokens[count].p + (q - p);
+                t->tokens[count].init = 1;
                 count += 1;
             }
         }
@@ -112,29 +99,28 @@ nmea_tokenizer_init( NmeaTokenizer*  t, const char*  p, const char*  end )
     return count;
 }
 
-static Token
-nmea_tokenizer_get( NmeaTokenizer*  t, int  index )
+static void nmea_tokenizer_get(NmeaTokenizer *t, int index, Token *tok)
 {
-    Token  tok;
-    static const char*  dummy = "";
-
     if (index < 0 || index >= t->count) {
-        tok.p = tok.end = dummy;
-    } else
-        tok = t->tokens[index];
+        memset(tok->buff, 0, sizeof(tok->buff));
+        tok->p = tok->buff;
+        tok->end = tok->p;
+    } else {
+        snprintf(tok->buff, sizeof(tok->buff), "%s", t->tokens[index].p);
+        tok->p = tok->buff;
+        tok->end = tok->p + (t->tokens[index].end - t->tokens[index].p);
+    }
 
-    return tok;
+    tok->init = 1;
 }
 
 
-static int
-str2int( const char*  p, const char*  end )
+static int str2int(const char *p, const char *end)
 {
-    int   result = 0;
-    int   len    = end - p;
+    int result = 0;
+    int len = end - p;
 
-    for ( ; len > 0; len--, p++ )
-    {
+    for ( ; len > 0; len--, p++ ) {
         int  c;
 
         if (p >= end)
@@ -148,19 +134,19 @@ str2int( const char*  p, const char*  end )
     }
     return  result;
 
-Fail:
+ Fail:
     return -1;
 }
 
-static double
-str2float( const char*  p, const char*  end )
+static double str2float( const char*  p, const char*  end )
 {
     int   result = 0;
     int   len    = end - p;
     char  temp[16];
 
-    if (len >= (int)sizeof(temp))
+    if (len >= (int)sizeof(temp)) {
         return 0.;
+    }
 
     memcpy( temp, p, len );
     temp[len] = 0;
@@ -175,23 +161,8 @@ str2float( const char*  p, const char*  end )
 /*****************************************************************/
 /*****************************************************************/
 
-#define  NMEA_MAX_SIZE  83
 
-typedef struct {
-    int     pos;
-    int     overflow;
-    int     utc_year;
-    int     utc_mon;
-    int     utc_day;
-    int     utc_diff;
-    GpsLocation  fix;
-    gps_location_callback  callback;
-    char    in[ NMEA_MAX_SIZE+1 ];
-} NmeaReader;
-
-
-static void
-nmea_reader_update_utc_diff( NmeaReader*  r )
+static void nmea_reader_update_utc_diff( NmeaReader*  r )
 {
     time_t         now = time(NULL);
     struct tm      tm_local;
@@ -217,8 +188,7 @@ nmea_reader_update_utc_diff( NmeaReader*  r )
 }
 
 
-static void
-nmea_reader_init( NmeaReader*  r )
+static void nmea_reader_init(NmeaReader *r)
 {
     memset( r, 0, sizeof(*r) );
 
@@ -234,8 +204,7 @@ nmea_reader_init( NmeaReader*  r )
 }
 
 
-static void
-nmea_reader_set_callback( NmeaReader*  r, gps_location_callback  cb )
+static void nmea_reader_set_callback(NmeaReader *r, gps_location_callback cb)
 {
     r->callback = cb;
     if (cb != NULL && r->fix.flags != 0) {
@@ -246,16 +215,15 @@ nmea_reader_set_callback( NmeaReader*  r, gps_location_callback  cb )
 }
 
 
-static int
-nmea_reader_update_time( NmeaReader*  r, Token  tok )
+static int nmea_reader_update_time(NmeaReader *r, Token *tok)
 {
     int        hour, minute;
     double     seconds;
     struct tm  tm;
     time_t     fix_time;
 
-    if (tok.p + 6 > tok.end)
-        return -1;
+    if (!tok->init || tok->p + 6 > tok->end)
+        return 0;//-1;
 
     if (r->utc_year < 0) {
         // no date yet, get current one
@@ -266,9 +234,9 @@ nmea_reader_update_time( NmeaReader*  r, Token  tok )
         r->utc_day  = tm.tm_mday;
     }
 
-    hour    = str2int(tok.p,   tok.p+2);
-    minute  = str2int(tok.p+2, tok.p+4);
-    seconds = str2float(tok.p+4, tok.end);
+    hour    = str2int(tok->p,   tok->p+2);
+    minute  = str2int(tok->p+2, tok->p+4);
+    seconds = str2float(tok->p+4, tok->end);
 
     tm.tm_hour  = hour;
     tm.tm_min   = minute;
@@ -283,37 +251,54 @@ nmea_reader_update_time( NmeaReader*  r, Token  tok )
     return 0;
 }
 
-static int
-nmea_reader_update_date( NmeaReader*  r, Token  date, Token  time )
+static int nmea_reader_update_date(NmeaReader *r, Token *date, Token *time)
 {
-    Token  tok = date;
-    int    day, mon, year;
+    Token *tok = date;
+    int day, mon, year;
 
-    if (tok.p + 6 != tok.end) {
-        D("date not properly formatted: '%.*s'", tok.end-tok.p, tok.p);
-        return -1;
+    if (!tok->init || tok->p + 6 != tok->end) {
+        D("date not properly formatted: '%.*s'", tok->end - tok->p, tok->p);
+        return 0;//-1;
     }
-    day  = str2int(tok.p, tok.p+2);
-    mon  = str2int(tok.p+2, tok.p+4);
-    year = str2int(tok.p+4, tok.p+6) + 2000;
+
+    day = str2int(tok->p, tok->p + 2);
+    mon = str2int(tok->p + 2, tok->p + 4);
+    year = str2int(tok->p + 4, tok->p + 6) + 2000;
 
     if ((day|mon|year) < 0) {
-        D("date not properly formatted: '%.*s'", tok.end-tok.p, tok.p);
+        D("date not properly formatted: '%.*s'", tok->end - tok->p, tok->p);
         return -1;
     }
 
-    r->utc_year  = year;
-    r->utc_mon   = mon;
-    r->utc_day   = day;
+    r->utc_year = year;
+    r->utc_mon = mon;
+    r->utc_day = day;
 
-    return nmea_reader_update_time( r, time );
+    return nmea_reader_update_time(r, time);
 }
 
-
-static double
-convert_from_hhmm( Token  tok )
+static int nmea_reader_update_accuracy(NmeaReader *r, Token *tok)
 {
-    double  val     = str2float(tok.p, tok.end);
+    if (!tok->init) {
+        return 0;//-1;
+    }
+
+    r->fix.accuracy = str2int(tok->p, tok->end);
+
+    if (r->fix.accuracy < 0 || r->fix.accuracy > 200) {
+        r->fix.accuracy = 1;
+    }
+
+    D("Accuracy fixed to %f", r->fix.accuracy);
+
+    r->fix.flags |= GPS_LOCATION_HAS_ACCURACY;
+
+    return 0;
+}
+
+static double convert_from_hhmm(Token *tok)
+{
+    double  val     = str2float(tok->p, tok->end);
     int     degrees = (int)(floor(val) / 100);
     double  minutes = val - degrees*100.;
     double  dcoord  = degrees + minutes / 60.0;
@@ -321,33 +306,36 @@ convert_from_hhmm( Token  tok )
 }
 
 
-static int
-nmea_reader_update_latlong( NmeaReader*  r,
-                            Token        latitude,
-                            char         latitudeHemi,
-                            Token        longitude,
-                            char         longitudeHemi )
+static int nmea_reader_update_latlong(NmeaReader *r,
+                                      Token *latitude,
+                                      char latitudeHemi,
+                                      Token *longitude,
+                                      char longitudeHemi)
 {
-    double   lat, lon;
-    Token    tok;
+    double lat, lon;
+    Token *tok;
 
     tok = latitude;
-    if (tok.p + 6 > tok.end) {
-        D("latitude is too short: '%.*s'", tok.end-tok.p, tok.p);
-        return -1;
+    if (!tok->init || tok->p + 6 > tok->end) {
+        D("latitude is too short: '%.*s'", tok->end-tok->p, tok->p);
+        return 0;//-1;
     }
+
     lat = convert_from_hhmm(tok);
-    if (latitudeHemi == 'S')
+    if (latitudeHemi == 'S') {
         lat = -lat;
+    }
 
     tok = longitude;
-    if (tok.p + 6 > tok.end) {
-        D("longitude is too short: '%.*s'", tok.end-tok.p, tok.p);
-        return -1;
+    if (!tok->init || tok->p + 6 > tok->end) {
+        D("longitude is too short: '%.*s'", tok->end-tok->p, tok->p);
+        return 0;//-1;
     }
+
     lon = convert_from_hhmm(tok);
-    if (longitudeHemi == 'W')
+    if (longitudeHemi == 'W') {
         lon = -lon;
+    }
 
     r->fix.flags    |= GPS_LOCATION_HAS_LAT_LONG;
     r->fix.latitude  = lat;
@@ -356,66 +344,58 @@ nmea_reader_update_latlong( NmeaReader*  r,
 }
 
 
-static int
-nmea_reader_update_altitude( NmeaReader*  r,
-                             Token        altitude,
-                             Token        units )
+static int nmea_reader_update_altitude(NmeaReader *r, Token *altitude, Token *units)
 {
-    double  alt;
-    Token   tok = altitude;
+    double alt;
+    Token *tok = altitude;
 
-    if (tok.p >= tok.end)
-        return -1;
+    if (!tok->init || tok->p >= tok->end) {
+        return 0;//-1;
+    }
 
     r->fix.flags   |= GPS_LOCATION_HAS_ALTITUDE;
-    r->fix.altitude = str2float(tok.p, tok.end);
+    r->fix.altitude = str2float(tok->p, tok->end);
     return 0;
 }
 
 
 static int
-nmea_reader_update_bearing( NmeaReader*  r,
-                            Token        bearing )
+nmea_reader_update_bearing(NmeaReader *r, Token *bearing)
 {
-    double  alt;
-    Token   tok = bearing;
+    double alt;
+    Token *tok = bearing;
 
-    if (tok.p >= tok.end) {
-        return -1;
+    if (!tok->init || tok->p >= tok->end) {
+        return 0;//-1;
     }
 
     r->fix.flags   |= GPS_LOCATION_HAS_BEARING;
-    r->fix.bearing  = str2float(tok.p, tok.end);
+    r->fix.bearing  = str2float(tok->p, tok->end);
     return 0;
 }
 
 
-static int
-nmea_reader_update_speed( NmeaReader*  r,
-                          Token        speed )
+static int nmea_reader_update_speed(NmeaReader *r, Token *speed)
 {
-    double  alt;
-    Token   tok = speed;
+    double alt;
+    Token *tok = speed;
 
-    if (tok.p >= tok.end)
-        return -1;
+    if (!tok->init || tok->p >= tok->end)
+        return 0;//-1;
 
     r->fix.flags   |= GPS_LOCATION_HAS_SPEED;
-    r->fix.speed    = str2float(tok.p, tok.end);
+    r->fix.speed    = str2float(tok->p, tok->end);
     return 0;
 }
 
 
-static void
-nmea_reader_parse( NmeaReader*  r )
+static void nmea_reader_parse(NmeaReader *r)
 {
-    /* we received a complete sentence, now parse it to generate
-     * a new GPS fix...
-     */
-    NmeaTokenizer  tzer[1];
-    Token          tok;
+    NmeaTokenizer tzer[1];
+    Token tok;
 
     D("Received: '%.*s'", r->pos, r->in);
+
     if (r->pos < 9) {
         D("Too short. discarded.");
         return;
@@ -427,13 +407,15 @@ nmea_reader_parse( NmeaReader*  r )
         int  n;
         D("Found %d tokens", tzer->count);
         for (n = 0; n < tzer->count; n++) {
-            Token  tok = nmea_tokenizer_get(tzer,n);
+            Token  tok;
+            nmea_tokenizer_get(tzer, n, &tok);
             D("%2d: '%.*s'", n, tok.end-tok.p, tok.p);
         }
     }
 #endif
 
-    tok = nmea_tokenizer_get(tzer, 0);
+    nmea_tokenizer_get(tzer, 0, &tok);
+
     if (tok.p + 5 > tok.end) {
         D("sentence id '%.*s' too short, ignored.", tok.end-tok.p, tok.p);
         return;
@@ -444,56 +426,43 @@ nmea_reader_parse( NmeaReader*  r )
     D("Got GPS command %s", tok.p);
     if ( !memcmp(tok.p, "GGA", 3) ) {
         // GPS fix
-        Token  tok_time          = nmea_tokenizer_get(tzer,1);
-        Token  tok_latitude      = nmea_tokenizer_get(tzer,2);
-        Token  tok_latitudeHemi  = nmea_tokenizer_get(tzer,3);
-        Token  tok_longitude     = nmea_tokenizer_get(tzer,4);
-        Token  tok_longitudeHemi = nmea_tokenizer_get(tzer,5);
-        Token  tok_accuracy      = nmea_tokenizer_get(tzer,8);
-        Token  tok_altitude      = nmea_tokenizer_get(tzer,9);
-        Token  tok_altitudeUnits = nmea_tokenizer_get(tzer,10);
-
-        nmea_reader_update_time(r, tok_time);
-        nmea_reader_update_latlong(r, tok_latitude,
-                                   tok_latitudeHemi.p[0],
-                                   tok_longitude,
-                                   tok_longitudeHemi.p[0]);
-        nmea_reader_update_altitude(r, tok_altitude, tok_altitudeUnits);
-        r->fix.accuracy = str2int(tok_accuracy.p, tok_accuracy.end);
-        D("Got accuray token %s, value %f", tok_accuracy.p, r->fix.accuracy);
-        if (r->fix.accuracy < 0 || r->fix.accuracy > 200)
-            r->fix.accuracy = 1;
-        r->fix.flags |= GPS_LOCATION_HAS_ACCURACY;
+        nmea_tokenizer_get(tzer, 1, &tokens.time);
+        nmea_tokenizer_get(tzer, 2, &tokens.fixStatus);
+        nmea_tokenizer_get(tzer, 3, &tokens.latitude);
+        nmea_tokenizer_get(tzer, 4, &tokens.latitudeHemi);
+        nmea_tokenizer_get(tzer, 5, &tokens.longitude);
+        nmea_tokenizer_get(tzer, 6, &tokens.longitudeHemi);
+        nmea_tokenizer_get(tzer, 8, &tokens.accuracy);
+        nmea_tokenizer_get(tzer, 9, &tokens.altitude);
+        nmea_tokenizer_get(tzer, 10, &tokens.altitudeUnits);
     } else if ( !memcmp(tok.p, "GSA", 3) ) {
-        // do something ?
+
     } else if ( !memcmp(tok.p, "RMC", 3) ) {
-        Token  tok_time          = nmea_tokenizer_get(tzer,1);
-        Token  tok_fixStatus     = nmea_tokenizer_get(tzer,2);
-        Token  tok_latitude      = nmea_tokenizer_get(tzer,3);
-        Token  tok_latitudeHemi  = nmea_tokenizer_get(tzer,4);
-        Token  tok_longitude     = nmea_tokenizer_get(tzer,5);
-        Token  tok_longitudeHemi = nmea_tokenizer_get(tzer,6);
-        Token  tok_speed         = nmea_tokenizer_get(tzer,7);
-        Token  tok_bearing       = nmea_tokenizer_get(tzer,8);
-        Token  tok_date          = nmea_tokenizer_get(tzer,9);
-
-        D("in RMC, fixStatus=%c", tok_fixStatus.p[0]);
-
-        if (tok_fixStatus.p[0] == 'A') {
-            nmea_reader_update_date( r, tok_date, tok_time );
-
-            nmea_reader_update_latlong( r, tok_latitude,
-                                        tok_latitudeHemi.p[0],
-                                        tok_longitude,
-                                        tok_longitudeHemi.p[0] );
-
-            nmea_reader_update_bearing( r, tok_bearing );
-
-            nmea_reader_update_speed  ( r, tok_speed );
-        }
+        nmea_tokenizer_get(tzer, 1, &tokens.time);
+        nmea_tokenizer_get(tzer, 2, &tokens.fixStatus);
+        nmea_tokenizer_get(tzer, 3, &tokens.latitude);
+        nmea_tokenizer_get(tzer, 4, &tokens.latitudeHemi);
+        nmea_tokenizer_get(tzer, 5, &tokens.longitude);
+        nmea_tokenizer_get(tzer, 6, &tokens.longitudeHemi);
+        nmea_tokenizer_get(tzer, 7, &tokens.speed);
+        nmea_tokenizer_get(tzer, 8, &tokens.bearing);
+        nmea_tokenizer_get(tzer, 9, &tokens.date);
     } else {
         tok.p -= 2;
         D("unknown sentence '%.*s", tok.end-tok.p, tok.p);
+    }
+
+    nmea_reader_update_time(r, &tokens.time);
+    nmea_reader_update_latlong(r,
+                               &tokens.latitude, tokens.latitudeHemi.p[0],
+                               &tokens.longitude, tokens.longitudeHemi.p[0]);
+    nmea_reader_update_altitude(r, &tokens.altitude, &tokens.altitudeUnits);
+    nmea_reader_update_accuracy(r, &tokens.accuracy);
+
+    if (tokens.fixStatus.init && tokens.fixStatus.p[0] == 'A') {
+        nmea_reader_update_date(r, &tokens.date, &tokens.time);
+        nmea_reader_update_bearing(r, &tokens.bearing);
+        nmea_reader_update_speed(r, &tokens.speed);
     }
 
     if (r->fix.flags != 0) {
@@ -565,25 +534,6 @@ nmea_reader_addc( NmeaReader*  r, int  c )
 /*****                                                       *****/
 /*****************************************************************/
 /*****************************************************************/
-
-/* commands sent to the gps thread */
-enum {
-    CMD_QUIT  = 0,
-    CMD_START = 1,
-    CMD_STOP  = 2
-};
-
-
-/* this is the state of our connection to the qemu_gpsd daemon */
-typedef struct {
-    int                     init;
-    int                     fd;
-    GpsCallbacks            callbacks;
-    pthread_t               thread;
-    int                     control[2];
-} GpsState;
-
-static GpsState  _gps_state[1];
 
 
 static void
@@ -961,10 +911,11 @@ static int open_gps(const struct hw_module_t* module, char const* name,
     dev->common.tag = HARDWARE_DEVICE_TAG;
     dev->common.version = 0;
     dev->common.module = (struct hw_module_t*)module;
-//    dev->common.close = (int (*)(struct hw_device_t*))close_lights;
     dev->get_gps_interface = gps__get_gps_interface;
 
     *device = (struct hw_device_t*)dev;
+
+    memset(&tokens, 0, sizeof(tokens));
     return 0;
 }
 
