@@ -111,7 +111,6 @@ bool LibGenyd::isManualMode(const char *key)
     char manual[PROPERTY_VALUE_MAX];
     // if value is MANUAL_MODE (default is AUTO_MODE) we must use real value
     property_get(key, manual, AUTO_MODE);
-    SLOGD("Forced value for [%s]: \"%s\"", key, manual);
     return !strcmp(manual, MANUAL_MODE);
 }
 
