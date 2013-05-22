@@ -7,14 +7,15 @@
 
 #include <cutils/log.h>
 
-#ifndef __NO_PROTO
-  #include "device/androVM/common/system/genyd/requests.pb.h"
+#ifndef NO_PROTOBUF
+#include "device/androVM/common/system/genyd/requests.pb.h"
 
-  using Genymotion::Parameter;
-  using Genymotion::Request;
-  using Genymotion::Status;
-  using Genymotion::Reply;
-  using Genymotion::Value;
+using Genymotion::Parameter;
+using Genymotion::Request;
+using Genymotion::Status;
+using Genymotion::Reply;
+using Genymotion::Value;
+
 #endif
 
 // Property keys naming convention

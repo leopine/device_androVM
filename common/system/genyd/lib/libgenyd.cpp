@@ -3,7 +3,7 @@
 #include <sys/wait.h>
 
 #include "libgenyd.hpp"
-#define __NO_PROTO
+#define NO_PROTOBUF
 #include "global.hpp"
 
 // Singleton object

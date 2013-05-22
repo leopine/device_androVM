@@ -31,6 +31,7 @@
 #include <hardware/gps.h>
 
 #include "gps_vbox86.h"
+#include "gps.h"
 
 #define  GPS_DEBUG  1
 
@@ -121,24 +122,22 @@ static int str2int(const char *p, const char *end)
     int len = end - p;
 
     for ( ; len > 0; len--, p++ ) {
-        int  c;
+        int c;
 
         if (p >= end)
-            goto Fail;
+            return -1;
 
         c = *p - '0';
         if ((unsigned)c >= 10)
-            goto Fail;
+            return -1;
 
-        result = result*10 + c;
+        result = result * 10 + c;
     }
-    return  result;
 
- Fail:
-    return -1;
+    return result;
 }
 
-static double str2float( const char*  p, const char*  end )
+static double str2float(const char *p, const char *end)
 {
     int   result = 0;
     int   len    = end - p;
@@ -148,7 +147,7 @@ static double str2float( const char*  p, const char*  end )
         return 0.;
     }
 
-    memcpy( temp, p, len );
+    memcpy(temp, p, len);
     temp[len] = 0;
     return strtod( temp, NULL );
 }
@@ -628,12 +627,7 @@ epoll_deregister( int  epoll_fd, int  fd )
     return ret;
 }
 
-/* this is the main thread, it waits for commands from gps_state_start/stop and,
- * when started, messages from the QEMU GPS daemon. these are simple NMEA sentences
- * that must be parsed to be converted into GPS fixes sent to the framework
- */
-static void
-gps_state_thread( void*  arg )
+static void gps_state_thread(void *arg)
 {
     GpsState*   state = (GpsState*) arg;
     NmeaReader  reader[1];
@@ -735,8 +729,7 @@ gps_state_thread( void*  arg )
 }
 
 
-static void
-gps_state_init( GpsState*  state, GpsCallbacks* callbacks )
+static void gps_state_init(GpsState *state, GpsCallbacks *callbacks)
 {
     state->init       = 1;
     state->control[0] = -1;
@@ -753,7 +746,7 @@ gps_state_init( GpsState*  state, GpsCallbacks* callbacks )
     local_server.sin_family = AF_INET;
     local_server.sin_addr.s_addr = inet_addr("127.0.0.1");
     local_server.sin_family = AF_INET;
-    local_server.sin_port = htons(22470);
+    local_server.sin_port = htons(GPS_PORT);
     int i;
     for (i=0;i<3;i++) {
         if (!connect(state->fd, (struct sockaddr *)&local_server, sizeof(local_server)))
@@ -784,7 +777,7 @@ gps_state_init( GpsState*  state, GpsCallbacks* callbacks )
     D("gps state initialized");
     return;
 
-Fail:
+ Fail:
     gps_state_done( state );
 }
 
@@ -798,34 +791,34 @@ Fail:
 /*****************************************************************/
 
 
-static int
-qemu_gps_init(GpsCallbacks* callbacks)
+static int gps_init(GpsCallbacks* callbacks)
 {
-    GpsState*  s = _gps_state;
+    GpsState *s = _gps_state;
 
-    if (!s->init)
+    if (!s->init) {
         gps_state_init(s, callbacks);
+    }
 
-    if (s->fd < 0)
+    if (s->fd < 0) {
         return -1;
+    }
 
     return 0;
 }
 
-static void
-qemu_gps_cleanup(void)
+static void gps_cleanup(void)
 {
-    GpsState*  s = _gps_state;
+    GpsState *s = _gps_state;
 
-    if (s->init)
+    if (s->init) {
         gps_state_done(s);
+    }
 }
 
 
-static int
-qemu_gps_start()
+static int gps_start(void)
 {
-    GpsState*  s = _gps_state;
+    GpsState *s = _gps_state;
 
     if (!s->init) {
         D("%s: called with uninitialized state !!", __FUNCTION__);
@@ -838,10 +831,9 @@ qemu_gps_start()
 }
 
 
-static int
-qemu_gps_stop()
+static int gps_stop(void)
 {
-    GpsState*  s = _gps_state;
+    GpsState *s = _gps_state;
 
     if (!s->init) {
         D("%s: called with uninitialized state !!", __FUNCTION__);
@@ -854,56 +846,54 @@ qemu_gps_stop()
 }
 
 
-static int
-qemu_gps_inject_time(GpsUtcTime time, int64_t timeReference, int uncertainty)
+static int gps_inject_time(GpsUtcTime time, int64_t timeReference, int uncertainty)
 {
     return 0;
 }
 
-static int
-qemu_gps_inject_location(double latitude, double longitude, float accuracy)
+static int gps_inject_location(double latitude, double longitude, float accuracy)
 {
     return 0;
 }
 
-static void
-qemu_gps_delete_aiding_data(GpsAidingData flags)
+static void gps_delete_aiding_data(GpsAidingData flags)
 {
 }
 
-static int qemu_gps_set_position_mode(GpsPositionMode mode, int fix_frequency)
+static int gps_set_position_mode(GpsPositionMode mode,
+                                 GpsPositionRecurrence recurrence,
+                                 uint32_t min_interval,
+                                 uint32_t preferred_accuracy,
+                                 uint32_t preferred_time)
 {
-    // FIXME - support fix_frequency
     return 0;
 }
 
-static const void*
-qemu_gps_get_extension(const char* name)
+static const void *gps_get_extension(const char* name)
 {
-    // no extensions supported
     return NULL;
 }
 
-static const GpsInterface  qemuGpsInterface = {
+static const GpsInterface gpsInterface = {
     sizeof(GpsInterface),
-    qemu_gps_init,
-    qemu_gps_start,
-    qemu_gps_stop,
-    qemu_gps_cleanup,
-    qemu_gps_inject_time,
-    qemu_gps_inject_location,
-    qemu_gps_delete_aiding_data,
-    qemu_gps_set_position_mode,
-    qemu_gps_get_extension,
+    gps_init,
+    gps_start,
+    gps_stop,
+    gps_cleanup,
+    gps_inject_time,
+    gps_inject_location,
+    gps_delete_aiding_data,
+    gps_set_position_mode,
+    gps_get_extension,
 };
 
 const GpsInterface* gps__get_gps_interface(struct gps_device_t* dev)
 {
-    return &qemuGpsInterface;
+    return &gpsInterface;
 }
 
-static int open_gps(const struct hw_module_t* module, char const* name,
-        struct hw_device_t** device)
+static int open_gps(const struct hw_module_t *module, char const *name,
+                    struct hw_device_t **device)
 {
     struct gps_device_t *dev = malloc(sizeof(struct gps_device_t));
     memset(dev, 0, sizeof(*dev));
@@ -915,6 +905,7 @@ static int open_gps(const struct hw_module_t* module, char const* name,
 
     *device = (struct hw_device_t*)dev;
 
+    // Initialize tokens
     memset(&tokens, 0, sizeof(tokens));
     return 0;
 }
@@ -929,7 +920,7 @@ struct hw_module_t HAL_MODULE_INFO_SYM = {
     .version_major = 1,
     .version_minor = 0,
     .id = GPS_HARDWARE_MODULE_ID,
-    .name = "Goldfish GPS Module",
-    .author = "The Android Open Source Project",
+    .name = "Genymotion GPS Module",
+    .author = "Genymobile - Based on the Android Open Source Project work",
     .methods = &gps_module_methods,
 };

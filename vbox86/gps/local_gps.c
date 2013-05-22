@@ -15,10 +15,10 @@
 #include <stdlib.h>
 #include <pthread.h>
 
-#define __NO_PROTO
+#define NO_PROTOBUF
 #include "global.hpp"
 
-#define GPS_PORT 22470
+#include "gps.h"
 
 #define GPS_UPDATE_PERIOD 1 /* period in sec between 2 gps fix emission */
 
