@@ -634,6 +634,20 @@ gps_state_stop( GpsState*  s )
           __FUNCTION__, ret, strerror(errno));
 }
 
+static void
+gps_update_status(GpsState *state, GpsStatusValue val)
+{
+    if (state && state->callbacks.status_cb) {
+        GpsStatus status;
+        D("%s: updating gps status to %u", __FUNCTION__, (uint16_t)val);
+        memset (&status, 0, sizeof(status));
+        status.size = sizeof(status);
+        status.status = val;
+        state->callbacks.status_cb(&status);
+    } else if (state) {
+        D("%s: no status_cb available", __FUNCTION__);
+    }
+}
 
 static int
 epoll_register( int  epoll_fd, int  fd )
@@ -686,6 +700,8 @@ gps_state_thread( void*  arg )
 
     D("gps thread running");
 
+    gps_update_status(state, GPS_STATUS_ENGINE_ON);
+
     // now loop
     for (;;) {
         struct epoll_event   events[2];
@@ -717,12 +733,14 @@ gps_state_thread( void*  arg )
 
                     if (cmd == CMD_QUIT) {
                         D("gps thread quitting on demand");
+                        gps_update_status(state, GPS_STATUS_ENGINE_OFF);
                         return;
                     }
                     else if (cmd == CMD_START) {
                         if (!started) {
                             D("gps thread starting  location_cb=%p", state->callbacks.location_cb);
                             started = 1;
+                            gps_update_status(state, GPS_STATUS_SESSION_BEGIN);
                             nmea_reader_set_callback( reader, state->callbacks.location_cb );
                         }
                     }
@@ -730,6 +748,7 @@ gps_state_thread( void*  arg )
                         if (started) {
                             D("gps thread stopping");
                             started = 0;
+                            gps_update_status(state, GPS_STATUS_SESSION_END);
                             nmea_reader_set_callback( reader, NULL );
                         }
                     }
