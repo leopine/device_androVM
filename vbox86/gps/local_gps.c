@@ -171,7 +171,7 @@ int main(int argc, char *argv[]) {
                          o_lngdeg, o_lngmin, (int)o_lng, o_clng,
                          0.0,
                          i_bearing,
-                         tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
+                         tm.tm_mday, tm.tm_mon + 1, tm.tm_year % 100,
                          i_bearing);
 
                 SLOGD("GGA command : %s", gpgga);
