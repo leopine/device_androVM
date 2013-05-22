@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
                          0.0,
                          i_bearing,
                          tm.tm_year % 100, tm.tm_mon + 1, tm.tm_mday,
-                         90.0);
+                         i_bearing);
 
                 SLOGD("GGA command : %s", gpgga);
                 SLOGD("RMC command : %s", gprmc);
