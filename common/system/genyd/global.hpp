@@ -28,7 +28,6 @@
 
 #define MANUAL_MODE           "manual"
 #define AUTO_MODE             "auto"
-#define GPS_STATUS_ENABLED    "true"
 
 // Battery
 #define BATTERY_MODE          KEY_PREFIX "battery.mode"

@@ -7,9 +7,9 @@
 bool isGpsStatusEnabled()
 {
     char str_value[PROPERTY_VALUE_MAX];
-    property_get(GPS_STATUS, str_value, "false");
+    property_get(GPS_STATUS, str_value, GPS_DEFAULT_STATUS);
 
-    int comp = strncmp(str_value, GPS_STATUS_ENABLED, strlen(GPS_STATUS_ENABLED));
+    int comp = strncmp(str_value, GPS_ENABLED, strlen(GPS_ENABLED));
     return comp == 0;
 }
 
@@ -37,7 +37,7 @@ void Dispatcher::setGpsStatus(const Request &request, Reply *reply)
     Status *status = reply->mutable_status();
     status->set_code(Status::Ok);
 
-    property_set(GPS_STATUS, gps_status ? GPS_STATUS_ENABLED : "false");
+    property_set(GPS_STATUS, gps_status ? GPS_ENABLED : GPS_DISABLED);
 }
 
 // Helper method that reads a double value, given its key and protobuf request object
@@ -90,7 +90,7 @@ void setDoubleParam(const char* key, const Request &request, Reply *reply,
 
     if (!isGpsStatusEnabled()) {
         // Enable GPS by forcing Status to true
-        property_set(GPS_STATUS, GPS_STATUS_ENABLED);
+        property_set(GPS_STATUS, GPS_ENABLED);
 
         // Inform the user of mode switching
         reply->set_type(Reply::None);
