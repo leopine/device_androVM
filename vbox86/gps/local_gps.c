@@ -1,41 +1,33 @@
-#include <stdio.h>
+#define LOG_TAG "local_gps"
+#include <cutils/properties.h>
+#include <cutils/log.h>
+
+#include <netinet/tcp.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <sys/select.h>
+#include <sys/socket.h>
+#include <sys/errno.h>
 #include <arpa/inet.h>
+
+#include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/select.h>
-#include <sys/errno.h>
-#include <sys/socket.h>
-#include <netinet/tcp.h>
 #include <pthread.h>
 
-#define LOG_TAG "local_gps"
-#include <cutils/log.h>
-#include <cutils/properties.h>
+#define __NO_PROTO
+#include "global.hpp"
 
 #define GPS_PORT 22470
 
-#define GPS_STATUS_PROPERTY "genymotion.gps.status"
-#define GPS_DISABLED "disabled"
-#define GPS_ENABLED "enabled"
-#define GPS_DEFAULT_STATUS GPS_DISABLED
-
-#define GPS_LATITUDE "genymotion.gps.latitude"
-#define GPS_LONGITUDE "genymotion.gps.longitude"
-#define GPS_ALTITUDE "genymotion.gps.altitude"
-#define GPS_BEARING "genymotion.gps.bearing"
-
-#define GPS_PRECISION_PROPERTY "genymotion.gps.precision"
-#define GPS_DEFAULT_PRECISION "1"
-
-#define GPS_UPDATE_PERIOD 5 /* period in sec between 2 gps fix emission */
+#define GPS_UPDATE_PERIOD 1 /* period in sec between 2 gps fix emission */
 
 #define STRING_GPGGA "$GPGGA,%02d%02d%02d,%02d%02d.%04d,%c,%02d%02d.%04d,%c,1,08,%f,%.1f,M,0.,M,,,*47\n"
 #define STRING_GPRMC "$GPRMC,%02d%02d%02d,A,%02d%02d.%04d,%c,%02d%02d.%04d,%c,%f,%f,%02d%02d%02d,%f,*47\n"
 
 static int wait_for_client(void) {
-    int ssocket, main_socket;
+    int server = -1;
+    int client = -1;
     struct sockaddr_in srv_addr;
     long haddr;
 
@@ -44,36 +36,36 @@ static int wait_for_client(void) {
     srv_addr.sin_addr.s_addr = INADDR_ANY;
     srv_addr.sin_port = htons(GPS_PORT);
 
-    if ((ssocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((server = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         SLOGE("Unable to create socket\n");
         exit(-1);
     }
 
     int yes = 1;
-    setsockopt(ssocket, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+    setsockopt(server, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
-    if (bind(ssocket, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) <0 ) {
+    if (bind(server, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) <0 ) {
         SLOGE("Unable to bind socket, errno=%d\n", errno);
         exit(-1);
     }
 
-    if (listen(ssocket, 1) < 0) {
+    if (listen(server, 1) < 0) {
         SLOGE("Unable to listen to socket, errno=%d\n", errno);
         exit(-1);
     }
 
-    main_socket = accept(ssocket, NULL, 0);
+    client = accept(server, NULL, 0);
 
-    if (main_socket < 0) {
+    if (client < 0) {
         SLOGE("Unable to accept socket for main conection, errno=%d\n", errno);
         exit(-1);
     }
 
-    return main_socket;
+    return client;
 }
 
 int main(int argc, char *argv[]) {
-    int main_socket = 0;
+    int client = 0;
 
     char gps_latitude[PROPERTY_VALUE_MAX];
     char gps_longitude[PROPERTY_VALUE_MAX];
@@ -90,11 +82,14 @@ int main(int argc, char *argv[]) {
     char o_clat, o_clng;
 
     // Listen for main connection
-    while ((main_socket = wait_for_client())) {
+    while ((client = wait_for_client())) {
 
         while (1) {
+            // 1 GPS info every GPS_UPDATE_PERIOD seconds
             sleep(GPS_UPDATE_PERIOD);
-            property_get(GPS_STATUS_PROPERTY, gps_status, GPS_DEFAULT_STATUS);
+
+            property_get(GPS_STATUS, gps_status, GPS_DEFAULT_STATUS);
+
             if (strcmp(gps_status, GPS_ENABLED) == 0) {
                 SLOGD("GPS enabled, parsing properties");
 
@@ -110,8 +105,7 @@ int main(int argc, char *argv[]) {
                 if (i_lat<0) {
                     o_lat = -i_lat;
                     o_clat = 'S';
-                }
-                else {
+                } else {
                     o_lat = i_lat;
                     o_clat = 'N';
                 }
@@ -123,8 +117,7 @@ int main(int argc, char *argv[]) {
                 if (i_lng<0) {
                     o_lng = -i_lng;
                     o_clng = 'W';
-                }
-                else {
+                } else {
                     o_lng = i_lng;
                     o_clng = 'E';
                 }
@@ -134,7 +127,7 @@ int main(int argc, char *argv[]) {
                 o_lng = 10000*(o_lng - o_lngmin);
 
                 /* HDOP (horizontal dilution of precision) */
-                property_get(GPS_PRECISION_PROPERTY, gps_precision, GPS_DEFAULT_PRECISION);
+                property_get(GPS_ACCURACY, gps_precision, GPS_DEFAULT_PRECISION);
                 float precision = atof(gps_precision);
                 if (precision < 0 || precision > 200) {
                     SLOGE("Invalid precision %s, should be [0..200]");
@@ -173,12 +166,12 @@ int main(int argc, char *argv[]) {
                 SLOGD("GGA command : %s", gpgga);
                 SLOGD("RMC command : %s", gprmc);
 
-                if (send(main_socket, gpgga, strlen(gpgga), MSG_NOSIGNAL) < 0) {
+                if (send(client, gpgga, strlen(gpgga), MSG_NOSIGNAL) < 0) {
                     SLOGE("Can't send GGA command");
                     break;
                 }
 
-                if (send(main_socket, gprmc, strlen(gprmc), MSG_NOSIGNAL) < 0) {
+                if (send(client, gprmc, strlen(gprmc), MSG_NOSIGNAL) < 0) {
                     SLOGE("Can't send RMC command");
                     break;
                 }

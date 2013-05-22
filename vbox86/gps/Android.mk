@@ -28,15 +28,18 @@ LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware
 LOCAL_SRC_FILES := gps_vbox86.c
 LOCAL_MODULE := gps.vbox86
 LOCAL_MODULE_TAGS := debug
+
 include $(BUILD_SHARED_LIBRARY)
 
 include $(CLEAR_VARS)
 
-LOCAL_SRC_FILES:= local_gps.c
+LOCAL_SRC_FILES := local_gps.c
 
-LOCAL_CFLAGS:=-O2 -g 
+LOCAL_C_INCLUDES += device/androVM/common/system/genyd
 
-LOCAL_MODULE:=local_gps
+LOCAL_CFLAGS := -O3 -g
+
+LOCAL_MODULE := local_gps
 LOCAL_SHARED_LIBRARIES := liblog libcutils
 LOCAL_MODULE_TAGS := optional
 
