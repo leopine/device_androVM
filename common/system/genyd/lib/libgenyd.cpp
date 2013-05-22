@@ -44,7 +44,9 @@ int LibGenyd::setProperty(const char *property, const char *value)
     } else {
         // Wait for child process
         wait(&status);
-        SLOGD("Setprop process exited  with status %d", WEXITSTATUS(status));
+        if (WEXITSTATUS(status) != 0) {
+            SLOGD("Setprop process exited  with status %d", WEXITSTATUS(status));
+        }
     }
     return status;
 }
@@ -69,7 +71,6 @@ int LibGenyd::useFakeValue(const char* path, char* buf, size_t size)
     // Check if /proc path start with the fake genymotion power supply one
     if (strncmp(path, GENYMOTION_FAKE_POWER_SUPPLY,
         strlen(GENYMOTION_FAKE_POWER_SUPPLY)) == 0) {
-        SLOGD("Path value must be overloaded: '%s'", path);
 
         // one fake value mean that we should switch to manual mode
         if (!isManualMode(BATTERY_MODE)) {
@@ -93,8 +94,6 @@ int LibGenyd::useFakeValue(const char* path, char* buf, size_t size)
 // Overload /proc values with genymotion configuration
 int LibGenyd::getValueFromProc(const char *path, char *buf, size_t size)
 {
-    SLOGD("Searching system value from '%s': '%s'", path, buf);
-
     LibGenyd &instance = LibGenyd::getInstance();
 
     LibGenyd::t_dispatcher_member sensorCallback = instance.getSensorCallback(path);
