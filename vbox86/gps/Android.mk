@@ -25,7 +25,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
 LOCAL_SHARED_LIBRARIES := liblog libcutils libhardware
-LOCAL_CFLAGS := -O3 -g
+LOCAL_CFLAGS := -O2
 LOCAL_SRC_FILES := gps_vbox86.c
 LOCAL_MODULE := gps.vbox86
 LOCAL_MODULE_TAGS := debug
@@ -38,7 +38,7 @@ LOCAL_SRC_FILES := local_gps.c
 
 LOCAL_C_INCLUDES += device/androVM/common/system/genyd
 
-LOCAL_CFLAGS := -O3 -g
+LOCAL_CFLAGS := -O2
 
 LOCAL_MODULE := local_gps
 LOCAL_SHARED_LIBRARIES := liblog libcutils
