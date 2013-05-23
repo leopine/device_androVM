@@ -37,7 +37,7 @@ static int start_server(void) {
 
     if ((server = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
         SLOGE("Unable to create socket\n");
-        exit(-1);
+        return -1;
     }
 
     int yes = 1;
@@ -45,7 +45,7 @@ static int start_server(void) {
 
     if (bind(server, (struct sockaddr *)&srv_addr, sizeof(srv_addr)) < 0) {
         SLOGE("Unable to bind socket, errno=%d\n", errno);
-        exit(-1);
+        return -1;
     }
 
     return server;
@@ -56,14 +56,14 @@ static int wait_for_client(int server) {
 
     if (listen(server, 1) < 0) {
         SLOGE("Unable to listen to socket, errno=%d\n", errno);
-        exit(-1);
+        return -1;
     }
 
     client = accept(server, NULL, 0);
 
     if (client < 0) {
         SLOGE("Unable to accept socket for main conection, errno=%d\n", errno);
-        exit(-1);
+        return -1;
     }
 
     return client;
@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
 
     if ((server = start_server()) == -1) {
         SLOGE("Unable to create socket\n");
-        exit(-1);
+        return 1;
     }
 
     // Listen for main connection
@@ -190,5 +190,5 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    return 0;
+    return (server == -1 || client != -1);
 }
