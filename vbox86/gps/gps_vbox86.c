@@ -246,7 +246,7 @@ static int nmea_reader_update_time(NmeaReader *r, Token *tok)
     tm.tm_isdst = -1;
 
     fix_time = mktime( &tm ) + r->utc_diff;
-    r->fix.timestamp = (long long)fix_time * 1000;
+    r->fix.timestamp = (long long)fix_time * 1000UL;
     return 0;
 }
 
