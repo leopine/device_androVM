@@ -69,7 +69,7 @@ static int nmea_tokenizer_init(NmeaTokenizer *t, const char *p, const char *end)
             end -= 1;
     }
 
-    // get rid of checksum at the end of the sentecne
+    // get rid of checksum at the end of the sentence
     if (end >= p+3 && end[-3] == '*') {
         end -= 3;
     }
