@@ -188,7 +188,12 @@ int main(int argc, char *argv[]) {
                 }
             }
         }
+
+        close(client);
+
     }
+
+    close(server);
 
     return (server == -1 || client != -1);
 }
