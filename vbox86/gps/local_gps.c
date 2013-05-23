@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
     while ((client = wait_for_client(server)) != -1) {
 
         while (1) {
-            // 1 GPS info every GPS_UPDATE_PERIOD seconds
+            // Update GPS info every GPS_UPDATE_PERIOD seconds
             sleep(GPS_UPDATE_PERIOD);
 
             property_get(GPS_STATUS, gps_status, GPS_DEFAULT_STATUS);
@@ -120,10 +120,11 @@ int main(int argc, char *argv[]) {
                     o_lat = i_lat;
                     o_clat = 'N';
                 }
+
                 o_latdeg = (int)o_lat;
-                o_lat = 60*(o_lat - o_latdeg);
+                o_lat = 60. * (o_lat - (double)o_latdeg);
                 o_latmin = (int) o_lat;
-                o_lat = 10000*(o_lat - o_latmin);
+                o_lat = 10000. * (o_lat - (double)o_latmin);
 
                 if (i_lng<0) {
                     o_lng = -i_lng;
@@ -132,15 +133,16 @@ int main(int argc, char *argv[]) {
                     o_lng = i_lng;
                     o_clng = 'E';
                 }
+
                 o_lngdeg = (int)o_lng;
-                o_lng = 60*(o_lng - o_lngdeg);
+                o_lng = 60. * (o_lng - (double)o_lngdeg);
                 o_lngmin = (int) o_lng;
-                o_lng = 10000*(o_lng - o_lngmin);
+                o_lng = 10000. * (o_lng - (double)o_lngmin);
 
                 /* HDOP (horizontal dilution of precision) */
                 property_get(GPS_ACCURACY, gps_precision, GPS_DEFAULT_ACCURACY);
                 float precision = atof(gps_precision);
-                if (precision < 0 || precision > 200) {
+                if (precision < 0. || precision > 200.) {
                     SLOGE("Invalid precision %s, should be [0..200]");
                     continue;
                 }
