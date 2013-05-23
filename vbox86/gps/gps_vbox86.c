@@ -59,14 +59,17 @@ static int nmea_tokenizer_init(NmeaTokenizer *t, const char *p, const char *end)
     char *q;
 
     // the initial '$' is optional
-    if (p < end && p[0] == '$')
+    if (p < end && p[0] == '$') {
         p += 1;
+    }
 
     // remove trailing newline
     if (end > p && end[-1] == '\n') {
         end -= 1;
-        if (end > p && end[-1] == '\r')
+
+        if (end > p && end[-1] == '\r') {
             end -= 1;
+        }
     }
 
     // get rid of checksum at the end of the sentence
@@ -78,8 +81,9 @@ static int nmea_tokenizer_init(NmeaTokenizer *t, const char *p, const char *end)
         const char*  q = p;
 
         q = memchr(p, ',', end-p);
-        if (q == NULL)
+        if (q == NULL) {
             q = end;
+        }
 
         if (q > p) {
             if (count < MAX_NMEA_TOKENS) {
@@ -90,8 +94,10 @@ static int nmea_tokenizer_init(NmeaTokenizer *t, const char *p, const char *end)
                 count += 1;
             }
         }
-        if (q < end)
+
+        if (q < end) {
             q += 1;
+        }
 
         p = q;
     }
@@ -124,12 +130,14 @@ static int str2int(const char *p, const char *end)
     for ( ; len > 0; len--, p++ ) {
         int c;
 
-        if (p >= end)
+        if (p >= end) {
             return -1;
+        }
 
         c = *p - '0';
-        if ((unsigned)c >= 10)
+        if ((unsigned)c >= 10) {
             return -1;
+        }
 
         result = result * 10 + c;
     }
@@ -221,8 +229,9 @@ static int nmea_reader_update_time(NmeaReader *r, Token *tok)
     struct tm  tm;
     time_t     fix_time;
 
-    if (!tok->init || tok->p + 6 > tok->end)
-        return 0;//-1;
+    if (!tok->init || tok->p + 6 > tok->end) {
+        return -1;
+    }
 
     if (r->utc_year < 0) {
         // no date yet, get current one
@@ -257,7 +266,7 @@ static int nmea_reader_update_date(NmeaReader *r, Token *date, Token *time)
 
     if (!tok->init || tok->p + 6 != tok->end) {
         D("date not properly formatted: '%.*s'", tok->end - tok->p, tok->p);
-        return 0;//-1;
+        return -1;
     }
 
     day = str2int(tok->p, tok->p + 2);
@@ -279,7 +288,7 @@ static int nmea_reader_update_date(NmeaReader *r, Token *date, Token *time)
 static int nmea_reader_update_accuracy(NmeaReader *r, Token *tok)
 {
     if (!tok->init) {
-        return 0;//-1;
+        return -1;
     }
 
     r->fix.accuracy = str2int(tok->p, tok->end);
@@ -297,10 +306,11 @@ static int nmea_reader_update_accuracy(NmeaReader *r, Token *tok)
 
 static double convert_from_hhmm(Token *tok)
 {
-    double  val     = str2float(tok->p, tok->end);
-    int     degrees = (int)(floor(val) / 100);
-    double  minutes = val - degrees*100.;
-    double  dcoord  = degrees + minutes / 60.0;
+    double val = str2float(tok->p, tok->end);
+    int degrees = (int)(floor(val) / 100);
+    double minutes = val - degrees*100.;
+    double dcoord = degrees + minutes / 60.0;
+
     return dcoord;
 }
 
@@ -317,7 +327,7 @@ static int nmea_reader_update_latlong(NmeaReader *r,
     tok = latitude;
     if (!tok->init || tok->p + 6 > tok->end) {
         D("latitude is too short: '%.*s'", tok->end-tok->p, tok->p);
-        return 0;//-1;
+        return -1;
     }
 
     lat = convert_from_hhmm(tok);
@@ -328,7 +338,7 @@ static int nmea_reader_update_latlong(NmeaReader *r,
     tok = longitude;
     if (!tok->init || tok->p + 6 > tok->end) {
         D("longitude is too short: '%.*s'", tok->end-tok->p, tok->p);
-        return 0;//-1;
+        return -1;
     }
 
     lon = convert_from_hhmm(tok);
@@ -349,7 +359,7 @@ static int nmea_reader_update_altitude(NmeaReader *r, Token *altitude, Token *un
     Token *tok = altitude;
 
     if (!tok->init || tok->p >= tok->end) {
-        return 0;//-1;
+        return -1;
     }
 
     r->fix.flags   |= GPS_LOCATION_HAS_ALTITUDE;
@@ -365,7 +375,7 @@ nmea_reader_update_bearing(NmeaReader *r, Token *bearing)
     Token *tok = bearing;
 
     if (!tok->init || tok->p >= tok->end) {
-        return 0;//-1;
+        return -1;
     }
 
     r->fix.flags   |= GPS_LOCATION_HAS_BEARING;
@@ -379,8 +389,9 @@ static int nmea_reader_update_speed(NmeaReader *r, Token *speed)
     double alt;
     Token *tok = speed;
 
-    if (!tok->init || tok->p >= tok->end)
-        return 0;//-1;
+    if (!tok->init || tok->p >= tok->end) {
+        return -1;
+    }
 
     r->fix.flags   |= GPS_LOCATION_HAS_SPEED;
     r->fix.speed    = str2float(tok->p, tok->end);
@@ -503,8 +514,7 @@ static void nmea_reader_parse(NmeaReader *r)
 }
 
 
-static void
-nmea_reader_addc( NmeaReader*  r, int  c )
+static void nmea_reader_addc( NmeaReader*  r, int  c )
 {
     if (r->overflow) {
         r->overflow = (c != '\n');
@@ -536,8 +546,7 @@ nmea_reader_addc( NmeaReader*  r, int  c )
 /*****************************************************************/
 
 
-static void
-gps_state_done( GpsState*  s )
+static void gps_state_done( GpsState*  s )
 {
     // tell the thread to quit, and wait for it
     char   cmd = CMD_QUIT;
@@ -576,16 +585,17 @@ gps_state_stop( GpsState*  s )
     char  cmd = CMD_STOP;
     int   ret;
 
-    do { ret=write( s->control[0], &cmd, 1 ); }
-    while (ret < 0 && errno == EINTR);
+    do {
+        ret = write(s->control[0], &cmd, 1);
+    } while (ret < 0 && errno == EINTR);
 
-    if (ret != 1)
+    if (ret != 1) {
         D("%s: could not send CMD_STOP command: ret=%d: %s",
           __FUNCTION__, ret, strerror(errno));
+    }
 }
 
-static void
-gps_update_status(GpsState *state, GpsStatusValue val)
+static void gps_update_status(GpsState *state, GpsStatusValue val)
 {
     if (state && state->callbacks.status_cb) {
         GpsStatus status;
@@ -594,13 +604,12 @@ gps_update_status(GpsState *state, GpsStatusValue val)
         status.size = sizeof(status);
         status.status = val;
         state->callbacks.status_cb(&status);
-    } else if (state) {
+    } else {
         D("%s: no status_cb available", __FUNCTION__);
     }
 }
 
-static int
-epoll_register( int  epoll_fd, int  fd )
+static int epoll_register( int  epoll_fd, int  fd )
 {
     struct epoll_event  ev;
     int                 ret, flags;
@@ -612,19 +621,20 @@ epoll_register( int  epoll_fd, int  fd )
     ev.events  = EPOLLIN;
     ev.data.fd = fd;
     do {
-        ret = epoll_ctl( epoll_fd, EPOLL_CTL_ADD, fd, &ev );
+        ret = epoll_ctl(epoll_fd, EPOLL_CTL_ADD, fd, &ev);
     } while (ret < 0 && errno == EINTR);
+
     return ret;
 }
 
 
-static int
-epoll_deregister( int  epoll_fd, int  fd )
+static int epoll_deregister(int  epoll_fd, int fd)
 {
     int  ret;
     do {
-        ret = epoll_ctl( epoll_fd, EPOLL_CTL_DEL, fd, NULL );
+        ret = epoll_ctl(epoll_fd, EPOLL_CTL_DEL, fd, NULL);
     } while (ret < 0 && errno == EINTR);
+
     return ret;
 }
 
@@ -654,8 +664,9 @@ static void gps_state_thread(void *arg)
 
         nevents = epoll_wait( epoll_fd, events, 2, -1 );
         if (nevents < 0) {
-            if (errno != EINTR)
+            if (errno != EINTR) {
                 ALOGE("epoll_wait() unexpected error: %s", strerror(errno));
+            }
             continue;
         }
         D("gps thread received %d events", nevents);
@@ -667,8 +678,7 @@ static void gps_state_thread(void *arg)
             if ((events[ne].events & EPOLLIN) != 0) {
                 int  fd = events[ne].data.fd;
 
-                if (fd == control_fd)
-                {
+                if (fd == control_fd) {
                     char  cmd = 255;
                     int   ret;
                     D("gps control fd event");
@@ -680,26 +690,24 @@ static void gps_state_thread(void *arg)
                         D("gps thread quitting on demand");
                         gps_update_status(state, GPS_STATUS_ENGINE_OFF);
                         return;
-                    }
-                    else if (cmd == CMD_START) {
+                    } else if (cmd == CMD_START) {
                         if (!started) {
                             D("gps thread starting  location_cb=%p", state->callbacks.location_cb);
                             started = 1;
                             gps_update_status(state, GPS_STATUS_SESSION_BEGIN);
                             nmea_reader_set_callback( reader, state->callbacks.location_cb );
                         }
-                    }
-                    else if (cmd == CMD_STOP) {
+                    } else if (cmd == CMD_STOP) {
                         if (started) {
                             D("gps thread stopping");
                             started = 0;
                             gps_update_status(state, GPS_STATUS_SESSION_END);
                             nmea_reader_set_callback( reader, NULL );
                         }
+                    } else {
+                        D("Unknown GPS command '%c'", cmd);
                     }
-                }
-                else if (fd == gps_fd)
-                {
+                } else if (fd == gps_fd) {
                     char  buff[128];
                     D("gps fd event");
                     for (;;) {
@@ -708,20 +716,21 @@ static void gps_state_thread(void *arg)
                         ret = recv(fd, buff, sizeof(buff), 0);
 
                         if (ret < 0) {
-                            if (errno == EINTR)
+                            if (errno == EINTR) {
                                 continue;
-                            if (errno != EWOULDBLOCK)
+                            }
+                            if (errno != EWOULDBLOCK) {
                                 ALOGE("error while reading from gps daemon socket: %s:", strerror(errno));
+                            }
                             break;
                         }
                         D("received %d bytes: %.*s", ret, ret, buff);
-                        for (nn = 0; nn < ret; nn++)
+                        for (nn = 0; nn < ret; nn++) {
                             nmea_reader_addc( reader, buff[nn] );
+                        }
                     }
                     D("gps fd event end");
-                }
-                else
-                {
+                } else {
                     ALOGE("epoll_wait() returned unkown fd %d ?", fd);
                 }
             }
