@@ -49,7 +49,6 @@ using Genymotion::Value;
 #define GPS_DISABLED          "disabled"
 #define GPS_ENABLED           "enabled"
 #define GPS_DEFAULT_STATUS    GPS_DISABLED
-#define GPS_DEFAULT_PRECISION "1"
-
+#define GPS_DEFAULT_ACCURACY  "1"
 
 #endif

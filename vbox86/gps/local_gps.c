@@ -138,7 +138,7 @@ int main(int argc, char *argv[]) {
                 o_lng = 10000*(o_lng - o_lngmin);
 
                 /* HDOP (horizontal dilution of precision) */
-                property_get(GPS_ACCURACY, gps_precision, GPS_DEFAULT_PRECISION);
+                property_get(GPS_ACCURACY, gps_precision, GPS_DEFAULT_ACCURACY);
                 float precision = atof(gps_precision);
                 if (precision < 0 || precision > 200) {
                     SLOGE("Invalid precision %s, should be [0..200]");

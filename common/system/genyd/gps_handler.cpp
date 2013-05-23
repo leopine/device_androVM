@@ -9,7 +9,7 @@ bool isGpsStatusEnabled()
     char str_value[PROPERTY_VALUE_MAX];
     property_get(GPS_STATUS, str_value, GPS_DEFAULT_STATUS);
 
-    int comp = strncmp(str_value, GPS_ENABLED, strlen(GPS_ENABLED));
+    int comp = strcmp(str_value, GPS_ENABLED);
     return comp == 0;
 }
 
