@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="hello">Hello World, androVMConfig!</string>
-    <string name="app_name">androVM Configuration</string>
+    <string name="app_name">Genymotion Configuration</string>
     <string name="prompt_keyboard">Keyboard type</string>
     <string name="prompt_res">Resolution</string>
     <string name="prompt_dpi">DPI</string>
