@@ -89,7 +89,7 @@ if [ $prop_hardware_opengl ]; then
   if [ $IPMGMT ]; then
     setprop androVM.gles 1
     prop_hardware_opengl_disable_render=`/system/bin/androVM-prop get hardware_opengl_disable_render`
-    if [ ! $prop_hardware_opengl_disable_render ]; then
+    if [ -z "$prop_hardware_opengl_disable_render" -o "$prop_hardware_opengl_disable_render" != "1" ]; then
       setprop androVM.gles.renderer 1
     fi
   else
