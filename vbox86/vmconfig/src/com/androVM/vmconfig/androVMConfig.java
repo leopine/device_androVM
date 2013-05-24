@@ -105,7 +105,7 @@ public class androVMConfig extends Activity {
         	}
         }
 
-        if ((cfg_opengl_disable_render != null) && (cfg_opengl_disable_render.length()>0)) {
+        if ((cfg_opengl_disable_render != null) && cfg_opengl_disable_render.equals("1")) {
             cb_opengl_disable_render.setChecked(true);
         }
 
