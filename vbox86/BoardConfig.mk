@@ -57,3 +57,6 @@ BOARD_HAVE_BLUETOOTH := true
 BUILD_EMULATOR_OPENGL := true
 BUILD_EMULATOR_OPENGL_DRIVER := true
 USE_OPENGL_RENDERER := true
+
+# Path to the Gapps file that will be use to install Google apps & co
+GAPPS_ARCHIVE_FILE := /srv/buildbot/bin/gapps/addon-4.1.1-20121117.tgz
