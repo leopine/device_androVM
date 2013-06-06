@@ -29,8 +29,8 @@ int LibGenyd::batteryCallback(const char *path, char *buff, size_t size)
         if (pos != std::string::npos && pos + begin->first.size() == haystack.size()) {
             // Retrieve value forced by callback
             int result = (this->*(begin->second))(buff, size);
-            SLOGD("%s Battery callback: Overloading file %s with content = '%s'",
-                  __FUNCTION__, path, buff);
+            //SLOGD("%s Battery callback: Overloading file %s with content = '%s'",
+            //      __FUNCTION__, path, buff);
             return result;
         }
         ++begin;
