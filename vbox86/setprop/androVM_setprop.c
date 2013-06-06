@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
-    ALOGE("Setting %s to %s", argv[1], argv[2]);
+    //ALOGE("Setting %s to %s", argv[1], argv[2]);
 
     return property_set(argv[1], argv[2]);
 }
