@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	}
 
 	while (fgets(mbuf, BUFSIZE, f_sock)) {
-	    char *pcmd, *p1, *p2, *pb, *pe;
+	    char *pcmd, *p1, *p2, *p3, *p4, *pb, *pe;
 
 	    pcmd = p1 = p2 = NULL;
 	    if (pe=strchr(mbuf,'\n'))
@@ -61,12 +61,21 @@ int main(int argc, char *argv[]) {
 		*pe='\0';
 		p2=pb=++pe;
 	    }
+	    if (pb && (pe=strchr(pb,':'))) {
+		*pe='\0';
+		p3=pb=++pe;
+	    }
+	    if (pb && (pe=strchr(pb,':'))) {
+		*pe='\0';
+		p4=pb=++pe;
+	    }
 	    if (!pcmd) 
 		continue;
             if (!strcmp(pcmd,"CONFIG")) {
                 if (!p1 || !p2)
                     continue;
-                // Create input devices
+
+                // Create ABS input device
                 if (!(uinp_fd = open("/dev/uinput", O_WRONLY|O_NDELAY))) {
 	          fprintf(stderr, "Unable to open /dev/uinput !\n");
 	          exit(-1);
@@ -82,8 +91,6 @@ int main(int argc, char *argv[]) {
                 uinp.absmin[1]=0;
                 uinp.absmax[1]=atoi(p2);
                 ioctl(uinp_fd, UI_SET_EVBIT, EV_KEY);
-                ioctl(uinp_fd, UI_SET_EVBIT, EV_REL);
-                ioctl(uinp_fd, UI_SET_RELBIT, REL_WHEEL);
                 ioctl(uinp_fd, UI_SET_EVBIT, EV_ABS);
                 ioctl(uinp_fd, UI_SET_ABSBIT, ABS_X);
                 ioctl(uinp_fd, UI_SET_ABSBIT, ABS_Y);
@@ -94,9 +101,12 @@ int main(int argc, char *argv[]) {
                 ioctl(uinp_fd, UI_SET_KEYBIT, BTN_TOUCH);
                 ioctl(uinp_fd, UI_SET_KEYBIT, BTN_LEFT);
                 ioctl(uinp_fd, UI_SET_KEYBIT, BTN_TOOL_PEN);
+                ioctl(uinp_fd, UI_SET_EVBIT, EV_REL);
+                ioctl(uinp_fd, UI_SET_RELBIT, REL_HWHEEL);
+                ioctl(uinp_fd, UI_SET_RELBIT, REL_WHEEL);
                 write(uinp_fd, &uinp, sizeof(uinp));
                 if (ioctl(uinp_fd, UI_DEV_CREATE)) {
-	            fprintf(stderr, "Unable to create uinput device...\n");
+	            fprintf(stderr, "Unable to create ABS uinput device...\n");
 	            exit(-1);
                 }
             }
@@ -119,14 +129,25 @@ int main(int argc, char *argv[]) {
 		write(uinp_fd, &event, sizeof(event));
 	    }
 	    else if (!strcmp(pcmd,"WHEEL")) {
-		if (!p1)
+		if (!p1 || !p2 || !p4 || !p4) 
 		    continue;
-                printf("Got WHEEL with value=%d\n", atoi(p1));
 		memset(&event, 0, sizeof(event));
 		gettimeofday(&event.time, NULL);
+		event.type = EV_ABS;
+		event.code = ABS_X;
+		event.value = atoi(p1);
+		write(uinp_fd, &event, sizeof(event));
+		event.type = EV_ABS;
+		event.code = ABS_Y;
+		event.value = atoi(p2);
+		write(uinp_fd, &event, sizeof(event));
 		event.type = EV_REL;
 		event.code = REL_WHEEL;
-		event.value = atoi(p1);
+		event.value = atoi(p3);
+		write(uinp_fd, &event, sizeof(event));
+		event.type = EV_REL;
+		event.code = REL_HWHEEL;
+		event.value = atoi(p4);
 		write(uinp_fd, &event, sizeof(event));
 		event.type = EV_SYN;
 		event.code = SYN_REPORT;
