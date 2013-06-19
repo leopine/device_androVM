@@ -77,7 +77,6 @@ PRODUCT_PACKAGES += \
     audio.primary.vbox86 \
     libaudioutils \
     mount.vboxsf \
-    hwcomposer.default  \
     AstroFileManager \
     Camera \
     camera.default \
@@ -110,6 +109,7 @@ PRODUCT_PACKAGES += \
     genyd \
     gps.vbox86 \
     local_gps \
+#    hwcomposer.default  \
 
 
 $(call inherit-product-if-exists,frameworks/base/build/tablet-dalvik-heap.mk)
