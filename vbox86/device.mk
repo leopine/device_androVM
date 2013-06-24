@@ -35,7 +35,6 @@ PRODUCT_COPY_FILES := \
     frameworks/native/data/etc/android.software.sip.voip.xml:system/etc/permissions/android.software.sip.voip.xml \
     frameworks/native/data/etc/android.hardware.usb.host.xml:system/etc/permissions/android.hardware.usb.host.xml \
     device/androVM/vbox86/fstab.vbox86:root/fstab.vbox86 \
-    development/data/etc/apns-conf.xml:system/etc/apns-conf.xml \
     device/androVM/vbox86/vold.conf:system/etc/vold.conf \
     device/androVM/vbox86/media_profiles.xml:system/etc/media_profiles.xml \
     device/androVM/vbox86/media_codecs.xml:system/etc/media_codecs.xml \
