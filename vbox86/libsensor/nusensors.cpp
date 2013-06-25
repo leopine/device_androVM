@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <hardware/sensors.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <dirent.h>
@@ -26,13 +25,16 @@
 
 #include <linux/input.h>
 
-#include <cutils/atomic.h>
-#include <cutils/log.h>
-#include <cutils/properties.h>
-
+#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+
+#include <cutils/log.h>
+#include <cutils/atomic.h>
+#include <cutils/sockets.h>
+#include <cutils/properties.h>
+
+#include <hardware/sensors.h>
 
 #include "nusensors.h"
 
@@ -72,57 +74,49 @@ static int64_t getTimestamp() {
 }
 
 static int poll__poll(struct sensors_poll_device_t *dev,
-        sensors_event_t* data, int count) {
+                      sensors_event_t* data, int count) {
     static int csocket = -1;
     int n = 0;
 
-    // ALOGE("poll() called for %d events", count);
+    ALOGD("poll() called for %d events", count);
 
-    // If needed, connect to sensor server on host
-
-socket_connect:
+ socket_connect:
     while (csocket < 0) {
-        char androVM_server_prop[PROPERTY_VALUE_MAX];
-        struct sockaddr_in srv_addr;
-        long haddr;
+        int ssocket;
 
-        for (;;) {
-            property_get("androVM.server.ip", androVM_server_prop, "");
-            if (strlen(androVM_server_prop)>0)
-                break;
-            sleep(1);
-        }
-        bzero(&srv_addr, sizeof(srv_addr));
-        srv_addr.sin_port = htons(22470);
-        srv_addr.sin_family = AF_INET;
-        haddr = inet_addr(androVM_server_prop);
-        if (haddr == -1) {
-            ALOGE("Unable to resolve addr");
-            return -1;
-        }
-        bcopy(&haddr, &srv_addr.sin_addr, sizeof(haddr));
+        sleep(1);
 
-        if ((csocket = socket(AF_INET, SOCK_STREAM, 0))<0) {
-            ALOGE("Unable to create socket");
-            return -1;
-        }
+        ssocket = socket_inaddr_any_server(22471, SOCK_STREAM);
 
-        if (connect(csocket, (struct sockaddr *)&srv_addr, sizeof(srv_addr))<0) {
-            ALOGE("Unable to connect to Sensors server...");
-            close(csocket);
-            csocket = -1;
-            sleep(10);
+        if (ssocket < 0) {
+            ALOGE("Unable to start listening server: %d", errno);
             continue;
         }
 
-        ALOGE("Connection OK to Sensors server");
+        csocket = accept(ssocket, NULL, NULL);
+
+        if (csocket < 0) {
+            ALOGE("Unable to accept connection: %d", errno);
+            close(ssocket);
+            continue;
+        }
+
+        close(ssocket);
+
+        ALOGI("Sensor server connected");
     }
 
     // Get the data
     while (1) {
-        struct vsensor_accel_data adata[count];
 
-        int sread = read(csocket, adata, sizeof(vsensor_accel_data)*count);
+        sleep(1);
+
+        t_sensor_data adata[count];
+
+        ALOGD("Waiting for %d events", count);
+
+        int sread = recv(csocket, adata, sizeof(*adata) * count, 0);
+
         if (sread < 0) {
             ALOGE("Error reading datas, errno=%d", errno);
             close(csocket);
@@ -135,28 +129,28 @@ socket_connect:
             csocket = -1;
             goto socket_connect;
         }
-        if ((sread % sizeof(vsensor_accel_data)) != 0) {
-            ALOGE("read() returned %d bytes, not a multiple of %d !", sread, sizeof(vsensor_accel_data));
+        if ((sread % sizeof(*adata)) != 0) {
+            ALOGD("read() returned %d bytes, not a multiple of %d !", sread, sizeof(vsensor_accel_data));
             continue;
         }
 
-        int nbEvents = sread/sizeof(vsensor_accel_data);
-        //ALOGE("%d accel events received", nbEvents);
+        int nbEvents = sread / sizeof(*adata);
+
+
         for (int i=0; i<nbEvents; i++) {
-            if (adata[i].id != SENSOR_TYPE_ACCELEROMETER) {
-                ALOGE("Unknown sensor type : %d !", adata[i].id);
+            if (adata[i].sensor != SENSOR_TYPE_ACCELEROMETER) {
+                ALOGI("Unknown sensor type : %d !", adata[i].sensor);
                 continue;
             }
-             
+
             data[i].version = sizeof(sensors_event_t);
             data[i].sensor = 0;
             data[i].type = SENSOR_TYPE_ACCELEROMETER;
             data[i].timestamp = getTimestamp();
             memset(data[i].data, 0, sizeof(data[i].data));
-            sscanf(adata[i].val_x, "%f", &(data[i].acceleration.x));
-            sscanf(adata[i].val_y, "%f", &(data[i].acceleration.y));
-            sscanf(adata[i].val_z, "%f", &(data[i].acceleration.z));
-            //ALOGE("Acceleration data: %f %f %f", data[i].acceleration.x, data[i].acceleration.y, data[i].acceleration.z);
+            data[i].acceleration.x = adata[i].x;
+            data[i].acceleration.y = adata[i].y;
+            data[i].acceleration.z = adata[i].z;
         }
 
         return nbEvents;

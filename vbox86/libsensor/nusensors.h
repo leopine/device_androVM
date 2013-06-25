@@ -58,6 +58,12 @@ int init_nusensors(hw_module_t const* module, hw_device_t** device);
 #define CONVERT_A_Y                 (CONVERT_A)
 #define CONVERT_A_Z                 (CONVERT_A)
 
+typedef struct s_sensor_data {
+    u_int64_t sensor;
+    double x;
+    double y;
+    double z;
+} t_sensor_data;
 
 __END_DECLS
 
