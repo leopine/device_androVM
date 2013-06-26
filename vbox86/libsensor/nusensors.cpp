@@ -14,133 +14,177 @@
  * limitations under the License.
  */
 
-#include <fcntl.h>
-#include <errno.h>
-#include <dirent.h>
-#include <math.h>
-#include <strings.h>
-
-#include <poll.h>
-#include <pthread.h>
-
-#include <linux/input.h>
-
-#include <arpa/inet.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-
 #include <cutils/log.h>
-#include <cutils/atomic.h>
 #include <cutils/sockets.h>
 #include <cutils/properties.h>
 
-#include <hardware/sensors.h>
-
 #include "nusensors.h"
 
-struct vsensor_accel_data {
-    unsigned char id;
-    unsigned char res1;
-    char val_x[16];
-    char val_y[16];
-    char val_z[16];
-};
+typedef struct s_sensor_data {
+    u_int64_t sensor;
+    double x;
+    double y;
+    double z;
+} t_sensor_data;
 
+static int server_sock = -1;
+static int client_sock = -1;
+
+static int64_t timeout = 200000000;
+
+static sensors_event_t **last_event = NULL;
 
 static int poll__close(struct hw_device_t *dev)
 {
-    if (dev)
+    ALOGD("poll__close(%p);", dev);
+
+    if (dev) {
         free(dev);
+    }
+
+    if (client_sock != -1) {
+        close(client_sock);
+    }
+
+    if (server_sock != -1) {
+        close(server_sock);
+    }
+
+    int i = 0;
+    while (i < SENSOR_MAX) {
+        if (last_event[i]) {
+            free(last_event[i]);
+        }
+        ++i;
+    }
+
+    free(last_event);
+
     return 0;
 }
 
-static int poll__activate(struct sensors_poll_device_t *dev,
-        int handle, int enabled) {
-    ALOGE("poll__activate() with handle=%d enabled=%d", handle, enabled);
+static int poll__activate(struct sensors_poll_device_t *dev, int handle, int enabled)
+{
+    ALOGD("poll__activate(%p, %d, %d);", dev, handle, enabled);
+
+    server_sock = socket_inaddr_any_server(22471, SOCK_STREAM);
+
+    if (server_sock < 0) {
+        ALOGE("Unable to start listening server: %d", errno);
+        return -1;
+    }
+
+    last_event = (sensors_event_t **)malloc(sizeof(*last_event) * SENSOR_MAX);
+
+    if (!last_event) {
+        return -1;
+    }
+
+    int i = 0;
+    while (i < SENSOR_MAX) {
+        last_event[i] = NULL;
+        ++i;
+    }
+
     return 0;
 }
 
-static int poll__setDelay(struct sensors_poll_device_t *dev,
-        int handle, int64_t ns) {
-    ALOGE("poll__setDelay() with handle=%d ns=%ld", handle, ns);
+static int poll__setDelay(struct sensors_poll_device_t *dev, int handle, int64_t ns)
+{
+    ALOGD("poll__setDelay(%p, %d, %lld);", dev, handle, ns);
+
+    timeout = ns;
+
     return 0;
 }
 
-static int64_t getTimestamp() {
+static int64_t getTimestamp(void) {
     struct timespec t;
+
     t.tv_sec = t.tv_nsec = 0;
     clock_gettime(CLOCK_MONOTONIC, &t);
+
     return int64_t(t.tv_sec)*1000000000LL + t.tv_nsec;
 }
 
-static int poll__poll(struct sensors_poll_device_t *dev,
-                      sensors_event_t* data, int count) {
-    static int csocket = -1;
-    int n = 0;
+static void waitAndAcceptNewClient(void)
+{
+    fd_set readfs;
+    struct timeval max_delay;
 
-    ALOGD("poll() called for %d events", count);
+    FD_ZERO(&readfs);
+    FD_SET(server_sock, &readfs);
 
- socket_connect:
-    while (csocket < 0) {
-        int ssocket;
+    max_delay.tv_sec = 0;
+    max_delay.tv_usec = 100000;
 
-        sleep(1);
+    int ret = select(server_sock + 1, &readfs, NULL, NULL, &max_delay);
 
-        ssocket = socket_inaddr_any_server(22471, SOCK_STREAM);
+    if (ret != -1 && FD_ISSET(server_sock, &readfs)) {
+        client_sock = accept(server_sock, NULL, NULL);
+    }
+}
 
-        if (ssocket < 0) {
-            ALOGE("Unable to start listening server: %d", errno);
-            continue;
+static int returnLastEvents(sensors_event_t *data, int count)
+{
+    int j; // Iterate over last events
+    int total; // Total events
+
+    j = 0;
+    total = 0;
+
+    while (total < count && j < SENSOR_MAX) {
+        if (last_event[j]) {
+            memcpy(&data[total], last_event[j], sizeof(*data));
+            ++total;
         }
-
-        csocket = accept(ssocket, NULL, NULL);
-
-        if (csocket < 0) {
-            ALOGE("Unable to accept connection: %d", errno);
-            close(ssocket);
-            continue;
-        }
-
-        close(ssocket);
-
-        ALOGI("Sensor server connected");
+        ++j;
     }
 
-    // Get the data
-    while (1) {
+    return total;
+}
 
-        sleep(1);
+static int readDataFromClient(sensors_event_t *data, int count)
+{
+    fd_set readfs;
+    struct timeval max_delay;
+
+    FD_ZERO(&readfs);
+    FD_SET(client_sock, &readfs);
+
+    max_delay.tv_sec = 0;
+    max_delay.tv_usec = (timeout / 1000) % 1000000;
+
+    int ret = select(client_sock + 1, &readfs, NULL, NULL, &max_delay);
+
+    if (ret != -1 && FD_ISSET(client_sock, &readfs)) {
 
         t_sensor_data adata[count];
 
-        ALOGD("Waiting for %d events", count);
+        int sread = recv(client_sock, adata, sizeof(*adata) * count, 0);
 
-        int sread = recv(csocket, adata, sizeof(*adata) * count, 0);
-
-        if (sread < 0) {
+        if (sread <= 0) {
             ALOGE("Error reading datas, errno=%d", errno);
-            close(csocket);
-            csocket = -1;
-            goto socket_connect;
+            close(client_sock);
+            client_sock = -1;
+            return returnLastEvents(data, count);
         }
-        if (sread == 0) {
-            ALOGE("connection closed, reconnecting...");
-            close(csocket);
-            csocket = -1;
-            goto socket_connect;
-        }
+
         if ((sread % sizeof(*adata)) != 0) {
-            ALOGD("read() returned %d bytes, not a multiple of %d !", sread, sizeof(vsensor_accel_data));
-            continue;
+            ALOGD("read() returned %d bytes, not a multiple of %d !", sread, sizeof(*adata));
+            return returnLastEvents(data, count);
         }
 
         int nbEvents = sread / sizeof(*adata);
 
-
-        for (int i=0; i<nbEvents; i++) {
+        for (int i = 0; i < nbEvents; i++) {
             if (adata[i].sensor != SENSOR_TYPE_ACCELEROMETER) {
-                ALOGI("Unknown sensor type : %d !", adata[i].sensor);
+                ALOGI("Unknown sensor type : %lld !", adata[i].sensor);
                 continue;
+            }
+
+            if (!last_event[adata[i].sensor]) {
+                last_event[adata[i].sensor] = (sensors_event_t *)malloc(sizeof(**last_event));
             }
 
             data[i].version = sizeof(sensors_event_t);
@@ -151,9 +195,28 @@ static int poll__poll(struct sensors_poll_device_t *dev,
             data[i].acceleration.x = adata[i].x;
             data[i].acceleration.y = adata[i].y;
             data[i].acceleration.z = adata[i].z;
+
+            // Save this event as the last good event for this sensor
+            if (last_event[adata[i].sensor]) {
+                memcpy(last_event[adata[i].sensor], &data[i], sizeof(**last_event));
+            }
         }
 
         return nbEvents;
+    } else {
+        return returnLastEvents(data, count);
+    }
+}
+
+static int poll__poll(struct sensors_poll_device_t *dev, sensors_event_t *data, int count)
+{
+    ALOGD("poll__poll(%p, %p, %d);", dev, data, count);
+
+    if (client_sock == -1) {
+        waitAndAcceptNewClient();
+        return returnLastEvents(data, count);
+    } else {
+        return readDataFromClient(data, count);
     }
 }
 

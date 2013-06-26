@@ -17,14 +17,6 @@
 #ifndef ANDROID_SENSORS_H
 #define ANDROID_SENSORS_H
 
-#include <stdint.h>
-#include <errno.h>
-#include <sys/cdefs.h>
-#include <sys/types.h>
-#include <math.h>
-
-#include <linux/input.h>
-
 #include <hardware/hardware.h>
 #include <hardware/sensors.h>
 
@@ -58,12 +50,7 @@ int init_nusensors(hw_module_t const* module, hw_device_t** device);
 #define CONVERT_A_Y                 (CONVERT_A)
 #define CONVERT_A_Z                 (CONVERT_A)
 
-typedef struct s_sensor_data {
-    u_int64_t sensor;
-    double x;
-    double y;
-    double z;
-} t_sensor_data;
+#define SENSOR_MAX                  (17)
 
 __END_DECLS
 
