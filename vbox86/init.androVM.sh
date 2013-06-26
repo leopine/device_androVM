@@ -104,11 +104,11 @@ fi
 # SDCARD
 if [ -b $vbox_sdcard_drive ]; then
   echo "Trying to mount $vbox_sdcard_drive" > /dev/tty0
-  mount -t vfat -o fmask=0000,dmask=0000 $vbox_sdcard_drive /mnt/sdcard
+  mount -t vfat -o fmask=0000,dmask=0000 $vbox_sdcard_drive /mnt/shell/emulated
   if [ $? -ne 0 ]; then
     echo "Unable to mount $vbox_sdcard_drive, try to create FAT" > /dev/tty0
     newfs_msdos $vbox_sdcard_drive
-    mount -t vfat -o fmask=0000,dmask=0000 $vbox_sdcard_drive /mnt/sdcard
+    mount -t vfat -o fmask=0000,dmask=0000 $vbox_sdcard_drive /mnt/shell/emulated
     if [ $? -ne 0 ]; then
       echo "Unable to create FAT" > /dev/tty0
     fi
