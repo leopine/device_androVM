@@ -51,7 +51,6 @@ PRODUCT_COPY_FILES := \
     device/androVM/vbox86/cfbcopyarea.ko:system/lib/cfbcopyarea.ko \
     device/androVM/vbox86/cfbfillrect.ko:system/lib/cfbfillrect.ko \
     device/androVM/vbox86/cfbimgblt.ko:system/lib/cfbimgblt.ko \
-    device/androVM/vbox86/fuse.ko:system/lib/fuse.ko \
     frameworks/base/data/keyboards/qwerty.kl:system/usr/keylayout/AT_Translated_Set_2_keyboard.kl \
     device/androVM/vbox86/androVM_Virtual_Input.kl:system/usr/keylayout/androVM_Virtual_Input.kl \
     device/androVM/vbox86/wpa_supplicant.conf:data/misc/wifi/wpa_supplicant.conf \

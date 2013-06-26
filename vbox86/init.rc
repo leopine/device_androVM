@@ -105,8 +105,6 @@ on fs
     mount_all /fstab.vbox86
 
 on post-fs
-    # load fuse for sdcard emulation
-    insmod /system/lib/fuse.ko
     # load vbox modules
     insmod /system/lib/vboxguest.ko
     insmod /system/lib/vboxsf.ko
@@ -485,6 +483,3 @@ service local_opengl /system/bin/local_opengl
 
 service local_gps /system/bin/local_gps
     class core
-
-service sdcard /system/bin/sdcard /data/media /mnt/shell/emulated 1023 1023
-    class late_start
