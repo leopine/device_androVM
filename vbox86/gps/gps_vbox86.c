@@ -33,8 +33,6 @@
 #include "gps_vbox86.h"
 #include "gps.h"
 
-#define  GPS_DEBUG  1
-
 #if GPS_DEBUG
 #  define  D(...)   ALOGD(__VA_ARGS__)
 #else

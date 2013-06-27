@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
             property_get(GPS_STATUS, gps_status, GPS_DEFAULT_STATUS);
 
             if (strcmp(gps_status, GPS_ENABLED) == 0) {
-                SLOGD("GPS enabled, parsing properties");
+                if (GPS_DEBUG) SLOGD("GPS enabled, parsing properties");
 
                 property_get(GPS_LATITUDE, gps_latitude, "0");
                 property_get(GPS_LONGITUDE, gps_longitude, "0");
@@ -176,8 +176,10 @@ int main(int argc, char *argv[]) {
                          tm.tm_mday, tm.tm_mon + 1, tm.tm_year % 100,
                          i_bearing);
 
-                SLOGD("GGA command : %s", gpgga);
-                SLOGD("RMC command : %s", gprmc);
+                if (GPS_DEBUG) {
+		    SLOGD("GGA command : %s", gpgga);
+		    SLOGD("RMC command : %s", gprmc);
+		}
 
                 if (send(client, gpgga, strlen(gpgga), MSG_NOSIGNAL) < 0) {
                     SLOGE("Can't send GGA command");
