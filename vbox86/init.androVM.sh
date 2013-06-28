@@ -85,6 +85,8 @@ insmod /system/lib/cfbfillrect.ko
 insmod /system/lib/cfbimgblt.ko
 insmod /system/lib/uvesafb.ko mode_option=$vbox_graph_mode scroll=redraw
 
+setprop ro.sf.lcd_density $vbox_dpi
+
 if [ $prop_hardware_opengl ]; then
   if [ $IPMGMT ]; then
     setprop androVM.gles 1
@@ -94,11 +96,8 @@ if [ $prop_hardware_opengl ]; then
     fi
   else
     echo "eth0 is not configured correctly - HARDWARE OPENGL IS DISABLED !!!"  > /dev/tty0
-    setprop ro.sf.lcd_density $vbox_dpi
     sleep 10
   fi
-else
-  setprop ro.sf.lcd_density $vbox_dpi
 fi
 
 # SDCARD
