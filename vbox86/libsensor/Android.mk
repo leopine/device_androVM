@@ -22,8 +22,9 @@ LOCAL_CFLAGS		:= -DLOG_TAG=\"Sensors\" -lpthread -ldl -O2
 
 LOCAL_C_INCLUDES	:= bionic external/stlport/stlport
 
-LOCAL_SRC_FILES		:= nusensors.cpp	\
-			   sensors.c
+LOCAL_SRC_FILES		:= geny_sensors.cpp		\
+			   sensor.cpp			\
+			   sensor_accelerometer.cpp
 
 LOCAL_MODULE_PATH	:= $(TARGET_OUT_SHARED_LIBRARIES)/hw
 
