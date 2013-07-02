@@ -14,7 +14,7 @@ private:
     AccelerometerSensor operator=(const AccelerometerSensor &);
 
 public:
-    virtual sensors_event_t getDefaultValue(void) const;
+    virtual void generateEvent(sensors_event_t *data, t_sensor_data rawData);
 
 };
 

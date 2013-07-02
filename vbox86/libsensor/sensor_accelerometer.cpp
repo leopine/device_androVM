@@ -1,5 +1,6 @@
 
 #include <string.h>
+#include <cutils/log.h>
 
 #include "sensor_accelerometer.hpp"
 
@@ -15,6 +16,15 @@ AccelerometerSensor::AccelerometerSensor(void)
     sensorCore.resolution = CONVERT_A;
     sensorCore.power = 0.57f;
     sensorCore.minDelay = 2000;
+
+    baseEvent.version = sizeof(baseEvent);
+    baseEvent.sensor = SENSORS_HANDLE_BASE + SENSOR_TYPE_ACCELEROMETER;
+    baseEvent.type = SENSOR_TYPE_ACCELEROMETER;
+    baseEvent.timestamp = getTimestamp();
+
+    baseEvent.acceleration.x = 0.;
+    baseEvent.acceleration.y = 0.;
+    baseEvent.acceleration.z = 0.;
 }
 
 AccelerometerSensor::~AccelerometerSensor(void)
@@ -22,20 +32,16 @@ AccelerometerSensor::~AccelerometerSensor(void)
 
 }
 
-
-sensors_event_t AccelerometerSensor::getDefaultValue(void) const
+void AccelerometerSensor::generateEvent(sensors_event_t *data, t_sensor_data rawData)
 {
-    sensors_event_t event;
+    memset(data, 0, sizeof(*data));
+    data->version = sizeof(sensors_event_t);
+    data->sensor = SENSORS_HANDLE_BASE + SENSOR_TYPE_ACCELEROMETER;
+    data->type = SENSOR_TYPE_ACCELEROMETER;
+    data->timestamp = getTimestamp();
+    data->acceleration.x = rawData.x;
+    data->acceleration.y = rawData.y;
+    data->acceleration.z = rawData.z;
 
-    memset(&event, 0, sizeof(event));
-
-    event.version = sizeof(event);
-    event.sensor = SENSORS_HANDLE_BASE + SENSOR_TYPE_ACCELEROMETER;
-    event.type = SENSOR_TYPE_ACCELEROMETER;
-
-    event.acceleration.x = 0.;
-    event.acceleration.y = 0.;
-    event.acceleration.z = 0.;
-
-    return event;
+    memcpy(&lastEvent, data, sizeof(lastEvent));
 }

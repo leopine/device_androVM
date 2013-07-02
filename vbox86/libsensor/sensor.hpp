@@ -10,6 +10,13 @@
 
 #include <hardware/sensors.h>
 
+typedef struct s_sensor_data {
+    u_int64_t sensor;
+    double x;
+    double y;
+    double z;
+} t_sensor_data;
+
 class Sensor {
 
  public:
@@ -17,14 +24,23 @@ class Sensor {
     virtual ~Sensor(void);
 
  protected:
+    sensors_event_t lastEvent;
+    sensors_event_t baseEvent;
     sensor_t sensorCore;
     bool enabled;
 
  public:
-    virtual sensors_event_t getDefaultValue(void) const = 0;
+    virtual void generateEvent(sensors_event_t *data, t_sensor_data rawData) = 0;
+    sensors_event_t *getBaseEvent(void);
+    sensors_event_t *getLastEvent(void);
     sensor_t getSensorCore(void) const;
     void setEnabled(bool enabled);
     bool isEnabled(void) const;
+
+protected:
+    // Get the current timestamp, in nanoseconds
+    int64_t getTimestamp(void) const;
+
 };
 
 #endif
