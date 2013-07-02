@@ -5,9 +5,6 @@
 #include <hardware/sensors.h>
 #include <map>
 
-#define LIBSENSOR_PORT (22471)
-#define DEFAULT_DELAY  (200000) // ms
-
 typedef struct sensor_t type_sensor_t;
 
 class Sensor;

@@ -17,8 +17,6 @@ static GenySensors genySensors;
 
 int GenySensors::activate(struct sensors_poll_device_t *dev, int handle, int enabled)
 {
-    (void)dev;
-
     genySensors.setSensorStatus(handle, enabled);
 
     return 0;
@@ -26,26 +24,17 @@ int GenySensors::activate(struct sensors_poll_device_t *dev, int handle, int ena
 
 int GenySensors::closeSensor(struct hw_device_t *dev)
 {
-    if (dev) {
-        free(dev);
-    }
-
     return 0;
 }
 
 int GenySensors::setDelay(struct sensors_poll_device_t *dev, int handle, int64_t ns)
 {
-    (void)dev;
-
-    // SLOGI("Delay set to %lld", ns);
     genySensors.setDelay(handle, ns);
     return 0;
 }
 
 int GenySensors::poll(struct sensors_poll_device_t *dev, sensors_event_t *data, int count)
 {
-    (void)dev;
-
     return genySensors.poll(data, count);;
 }
 
@@ -55,16 +44,12 @@ int GenySensors::poll(struct sensors_poll_device_t *dev, sensors_event_t *data, 
 
 int GenySensors::getSensorsList(struct sensors_module_t *module, struct sensor_t const **list)
 {
-    (void)module;
-
     *list = genySensors.getList();
     return genySensors.getNum();
 }
 
 static int open_sensors(const struct hw_module_t *module, const char *name, struct hw_device_t **device)
 {
-    (void)name;
-
     return GenySensors::initialize(module, device);
 }
 
@@ -122,16 +107,15 @@ int GenySensors::initialize(const hw_module_t *module, hw_device_t **device)
 //
 
 GenySensors::GenySensors(void) :
-    delay(DEFAULT_DELAY),
+    delay(200000),
     clientSock(-1),
     serverSock(-1),
     numSensors(1)
 {
-    serverSock = socket_inaddr_any_server(LIBSENSOR_PORT, SOCK_STREAM);
+    serverSock = socket_inaddr_any_server(22471, SOCK_STREAM);
 
     if (serverSock < 0) {
-        SLOGE("Unable to start listening server.");
-        return;
+        SLOGE("Unable to start listening server: %d", errno);
     }
 
     sensors[SENSOR_TYPE_ACCELEROMETER] = new AccelerometerSensor();
@@ -182,20 +166,11 @@ int GenySensors::poll(sensors_event_t *data, int count)
             FD_SET(serverSock, &readfs);
         }
 
-        ret = select(maxfs + 1, &readfs, NULL, NULL, &max_delay);
+        ret = select(maxfs + 1, &readfs, NULL, NULL, (clientSock == -1) ? NULL : &max_delay);
         // SLOGD("select() returns %d", ret);
 
         if (ret == -1) {
-            if (clientSock == -1) {
-                close(serverSock);
-                SLOGE("Server closed");
-                exit(EXIT_FAILURE);
-            } else {
-                close(clientSock);
-                clientSock = -1;
-                SLOGE("Client disconected");
-                continue;
-            }
+            return 0;
         }
 
         if (clientSock == -1 && FD_ISSET(serverSock, &readfs)) {
@@ -224,7 +199,7 @@ int GenySensors::readData(sensors_event_t *data, int count)
     t_sensor_data rawData[count];
     int eventCount;
     int readSize;
-    int i = 0;
+    int i;
 
     readSize = recv(clientSock, rawData, sizeof(*rawData) * count, 0);
 
@@ -241,14 +216,18 @@ int GenySensors::readData(sensors_event_t *data, int count)
     }
 
     eventCount = readSize / sizeof(*rawData);
+    i = 0;
 
-    for (i = 0 ; i < eventCount ; ++i) {
+    while (i < eventCount) {
         if (sensors.find(rawData[i].sensor) == sensors.end()) {
             SLOGI("Unknown sensor type : %lld !", rawData[i].sensor);
+            ++i;
             continue;
         }
 
         sensors[rawData[i].sensor]->generateEvent(&data[i], rawData[i]);
+
+        ++i;
     }
 
     if (i) {
@@ -264,13 +243,15 @@ int GenySensors::lastData(sensors_event_t *data, int count)
     std::map<int, Sensor *>::iterator begin = sensors.begin();
     std::map<int, Sensor *>::iterator end = sensors.end();
 
-    for ( ; begin != end && i < count ; ++begin, ++i) {
+    while (begin != end && i < count) {
         Sensor *sensor = begin->second;
         if (sensor->isEnabled()) {
             memcpy(&data[i], sensor->getLastEvent(), sizeof(data[i]));
         } else {
             memcpy(&data[i], sensor->getBaseEvent(), sizeof(data[i]));
         }
+        ++begin;
+        ++i;
     }
 
     return i;

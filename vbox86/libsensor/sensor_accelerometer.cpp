@@ -15,7 +15,7 @@ AccelerometerSensor::AccelerometerSensor(void)
     sensorCore.maxRange = MAX_RANGE_A;
     sensorCore.resolution = CONVERT_A;
     sensorCore.power = 0.57f;
-    sensorCore.minDelay = 5000; // ms
+    sensorCore.minDelay = 2000;
 
     baseEvent.version = sizeof(baseEvent);
     baseEvent.sensor = SENSORS_HANDLE_BASE + SENSOR_TYPE_ACCELEROMETER;
