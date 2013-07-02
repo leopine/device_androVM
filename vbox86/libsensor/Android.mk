@@ -14,26 +14,23 @@
 # limitations under the License.
 
 
-LOCAL_PATH:= $(call my-dir)
+LOCAL_PATH		:= $(call my-dir)
 
-# HAL module implemenation stored in
-# hw/<COPYPIX_HARDWARE_MODULE_ID>.<ro.board.platform>.so
 include $(CLEAR_VARS)
- 
-LOCAL_CFLAGS := -DLOG_TAG=\"Sensors\" -lpthread -ldl
 
-LOCAL_C_INCLUDES := bionic \
-                external/stlport/stlport
+LOCAL_CFLAGS		:= -DLOG_TAG=\"Sensors\" -lpthread -ldl -O2
 
-LOCAL_SRC_FILES := 				\
-		nusensors.cpp 			\
-		sensors.c 			\
+LOCAL_C_INCLUDES	:= bionic external/stlport/stlport
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+LOCAL_SRC_FILES		:= geny_sensors.cpp		\
+			   sensor.cpp			\
+			   sensor_accelerometer.cpp
 
-LOCAL_MODULE_TAGS := optional
-LOCAL_SHARED_LIBRARIES := liblog libcutils libstlport
+LOCAL_MODULE_PATH	:= $(TARGET_OUT_SHARED_LIBRARIES)/hw
 
-LOCAL_MODULE := sensors.vbox86
+LOCAL_MODULE_TAGS	:= optional
+LOCAL_SHARED_LIBRARIES	:= liblog libcutils libstlport
+
+LOCAL_MODULE		:= sensors.vbox86
 
 include $(BUILD_SHARED_LIBRARY)
