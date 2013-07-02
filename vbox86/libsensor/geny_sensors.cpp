@@ -167,6 +167,7 @@ int GenySensors::poll(sensors_event_t *data, int count)
         }
 
         ret = select(maxfs + 1, &readfs, NULL, NULL, (clientSock == -1) ? NULL : &max_delay);
+        // SLOGD("select() returns %d", ret);
 
         if (ret == -1) {
             return 0;
@@ -206,12 +207,12 @@ int GenySensors::readData(sensors_event_t *data, int count)
         ALOGE("Error reading datas, errno=%d", errno);
         close(clientSock);
         clientSock = -1;
-        return 0;
+        return lastData(data, count);
     }
 
     if ((readSize % sizeof(*rawData)) != 0) {
         ALOGD("read() returned %d bytes, not a multiple of %d !", readSize, sizeof(*rawData));
-        return 0;
+        return lastData(data, count);
     }
 
     eventCount = readSize / sizeof(*rawData);
@@ -245,9 +246,9 @@ int GenySensors::lastData(sensors_event_t *data, int count)
     while (begin != end && i < count) {
         Sensor *sensor = begin->second;
         if (sensor->isEnabled()) {
-        memcpy(&data[i], sensor->getLastEvent(), sizeof(data[i]));
+            memcpy(&data[i], sensor->getLastEvent(), sizeof(data[i]));
         } else {
-        memcpy(&data[i], sensor->getBaseEvent(), sizeof(data[i]));
+            memcpy(&data[i], sensor->getBaseEvent(), sizeof(data[i]));
         }
         ++begin;
         ++i;
