@@ -7,4 +7,4 @@ rild.libargs=-d /dev/ttyS0
 dalvik.vm.heapsize=256m
 persist.service.adb.enable=1
 ro.secure=0
-ro.opengles.version=65537
+ro.opengles.version=131072
