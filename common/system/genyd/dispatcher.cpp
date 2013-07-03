@@ -78,7 +78,7 @@ void Dispatcher::treatGetParam(const Request &request, Reply *reply)
     } else {
         reply->set_type(Reply::Error);
         Status *status = reply->mutable_status();
-        status->set_code(Status::GenericError);
+        status->set_code(Status::NotImplemented);
     }
 }
 
@@ -110,7 +110,7 @@ void Dispatcher::treatSetParam(const Request &request, Reply *reply)
     } else {
         reply->set_type(Reply::Error);
         Status *status = reply->mutable_status();
-        status->set_code(Status::GenericError);
+        status->set_code(Status::NotImplemented);
     }
 }
 
