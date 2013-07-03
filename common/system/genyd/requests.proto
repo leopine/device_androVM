@@ -46,9 +46,7 @@ message Parameter {
     GpsAltitude        = 9;  // meters:  float in [-10000; 10000]
     GpsAccuracy        = 10; // meters:  float in [0; 200]
     GpsBearing         = 11; // degrees: float in [0; 360[
-    AccemerometerX     = 12; // acceleration: float in m/s^2
-    AccemerometerY     = 13; // acceleration: float in m/s^2
-    AccemerometerZ     = 14; // acceleration: float in m/s^2
+    Accelerometer      = 12; // acceleration: string "%f|%f|%f" (float in m/s^2)
   }
 
   required Type  type = 1;

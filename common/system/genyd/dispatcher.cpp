@@ -16,6 +16,7 @@ Dispatcher::Dispatcher(void)
     getCallbacks[Parameter::GpsAltitude] = &Dispatcher::getGpsAltitude;
     getCallbacks[Parameter::GpsAccuracy] = &Dispatcher::getGpsAccuracy;
     getCallbacks[Parameter::GpsBearing] = &Dispatcher::getGpsBearing;
+    getCallbacks[Parameter::Accelerometer] = &Dispatcher::getAccelerometerValues;
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
@@ -27,6 +28,8 @@ Dispatcher::Dispatcher(void)
     setCallbacks[Parameter::GpsAltitude] = &Dispatcher::setGpsAltitude;
     setCallbacks[Parameter::GpsAccuracy] = &Dispatcher::setGpsAccuracy;
     setCallbacks[Parameter::GpsBearing] = &Dispatcher::setGpsBearing;
+    setCallbacks[Parameter::GpsBearing] = &Dispatcher::setGpsBearing;
+    setCallbacks[Parameter::Accelerometer] = &Dispatcher::setAccelerometerValues;
 }
 
 Dispatcher::~Dispatcher(void)
