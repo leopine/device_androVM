@@ -122,10 +122,11 @@ int GenySensors::initialize(const hw_module_t *module, hw_device_t **device)
 
 GenySensors::GenySensors(void) :
     delay(DEFAULT_DELAY),
-    clientSock(-1),
     serverSock(-1),
     numSensors(1)
 {
+    memset(&clientsSocks, 0,sizeof(clientsSocks));
+
     serverSock = socket_inaddr_any_server(LIBSENSOR_PORT, SOCK_STREAM);
 
     if (serverSock < 0) {
@@ -162,7 +163,7 @@ void GenySensors::setSensorStatus(int handle, bool enabled)
 int GenySensors::poll(sensors_event_t *data, int count)
 {
     int ret;
-    int maxfs;
+    int maxfd;
     fd_set readfs;
     struct timeval max_delay;
 
@@ -170,94 +171,134 @@ int GenySensors::poll(sensors_event_t *data, int count)
     max_delay.tv_usec = delay;
 
     while (1) {
+        maxfd = serverSock;
 
         FD_ZERO(&readfs);
 
-        if (clientSock != -1) {
-            maxfs = clientSock;
-            FD_SET(clientSock, &readfs);
-        } else {
-            maxfs = serverSock;
-            FD_SET(serverSock, &readfs);
+        FD_SET(serverSock, &readfs);
+
+        // Add connected sockets to the list of sockets to watch
+        for (int i = 0; i < MAX_CLIENTS; i++) {
+            if (clientsSocks[i] > 0) {
+                FD_SET(clientsSocks[i], &readfs);
+                // make sure we stored the biggest fd
+                if (clientsSocks[i] > maxfd) {
+                    maxfd = clientsSocks[i];
+                }
+            }
         }
 
-        ret = select(maxfs + 1, &readfs, NULL, NULL, &max_delay);
+        ret = select(maxfd + 1, &readfs, NULL, NULL, &max_delay);
         // SLOGD("select() returns %d", ret);
 
-        if (ret == -1) {
-            if (clientSock == -1) {
+        if (ret < 0) {
+            if (maxfd == serverSock) {
                 close(serverSock);
-                SLOGE("Server closed");
+                SLOGE("Server closed connection, exiting. (errno=%d)", errno);
                 exit(EXIT_FAILURE);
             } else {
-                close(clientSock);
-                clientSock = -1;
-                SLOGE("Client disconected");
+                // Something's wrong, disconnect every clients but keep server cnx
+                for (int c = 0; c < MAX_CLIENTS; c++) {
+                    if (clientsSocks[c] > 0) {
+                        close(clientsSocks[c]);
+                        clientsSocks[c] = 0;
+                    }
+                }
+                SLOGE("Select fail, disconnect all clients (errno=%d)", errno);
                 continue;
             }
         }
 
-        if (clientSock == -1 && FD_ISSET(serverSock, &readfs)) {
+        if (FD_ISSET(serverSock, &readfs)) {
             acceptNewClient();
-        } else if (clientSock != -1 && FD_ISSET(clientSock, &readfs)) {
-            return readData(data, count);
-        } else {
-            return lastData(data, count);
+	}
+
+        int events_read = 0;
+        for (int c = 0; c < MAX_CLIENTS; c++) {
+            if (FD_ISSET(clientsSocks[c], &readfs)) {
+                events_read += readData(&clientsSocks[c],
+                                      &data[events_read],/* first empty slot */
+                                      count - events_read /* space left */);
+            }
+            if (count == events_read) {
+                // Stop events read, we have read enough
+                break;
+            }
         }
+        // if no client write data, we should lastRead
+        if (events_read == 0) {
+            return useLastData(data, count);
+        }
+
+        // return read events number
+        return events_read;
     }
 
     return 0;
 }
 
-void GenySensors::acceptNewClient(void)
+int GenySensors::acceptNewClient(void)
 {
-    clientSock = accept(serverSock, NULL, NULL);
-
+    int j = 0;
+    int clientSock = accept(serverSock, NULL, NULL);
     if (clientSock == -1) {
-        SLOGD("Can't accept new client");
+        SLOGD("Client connection refused (errno=%d)", errno);
+        return -1;
     }
+
+    // Pick a slot in the client sockets list
+    for (j = 0; j < MAX_CLIENTS; j++) {
+        if (clientsSocks[j] == 0) {
+            clientsSocks[j] = clientSock;
+            SLOGD("Client connection accepted (%d)", clientSock);
+            break;
+        }
+    }
+    // No space left in the client sockets table
+    if (j >= MAX_CLIENTS) {
+        SLOGE("Too many clients, connection refused");
+        return -1;
+    }
+    return 0;
 }
 
-int GenySensors::readData(sensors_event_t *data, int count)
+int GenySensors::readData(int *socket_p, sensors_event_t *data, int count)
 {
     t_sensor_data rawData[count];
-    int eventCount;
+    int eventsToRead, eventsRead = 0;
     int readSize;
     int i = 0;
 
-    readSize = recv(clientSock, rawData, sizeof(*rawData) * count, 0);
+    readSize = recv(*socket_p, rawData, sizeof(*rawData) * count, 0);
 
     if (readSize <= 0) {
-        ALOGE("Error reading datas, errno=%d", errno);
-        close(clientSock);
-        clientSock = -1;
-        return lastData(data, count);
+        SLOGE("Error reading datas, errno=%d", errno);
+        close(*socket_p);
+        *socket_p = 0;
+        return 0;
     }
 
     if ((readSize % sizeof(*rawData)) != 0) {
-        ALOGD("read() returned %d bytes, not a multiple of %d !", readSize, sizeof(*rawData));
-        return lastData(data, count);
+        SLOGD("read() returned %d bytes, not a multiple of %d !", readSize, sizeof(*rawData));
+        return 0;
     }
 
-    eventCount = readSize / sizeof(*rawData);
+    eventsToRead = readSize / sizeof(*rawData);
 
-    for (i = 0 ; i < eventCount ; ++i) {
+    for (i = 0, eventsRead = 0 ; i < eventsToRead ; ++i) {
         if (sensors.find(rawData[i].sensor) == sensors.end()) {
             SLOGI("Unknown sensor type : %lld !", rawData[i].sensor);
             continue;
         }
-
-        sensors[rawData[i].sensor]->generateEvent(&data[i], rawData[i]);
+        // Write event in the sensor
+        sensors[rawData[i].sensor]->generateEvent(&data[eventsRead], rawData[i]);
+        eventsRead++;
     }
 
-    if (i) {
-        return i;
-    } else {
-        return lastData(data, count);
-    }
+    return eventsRead;
 }
 
-int GenySensors::lastData(sensors_event_t *data, int count)
+int GenySensors::useLastData(sensors_event_t *data, int count)
 {
     int i = 0;
     std::map<int, Sensor *>::iterator begin = sensors.begin();
