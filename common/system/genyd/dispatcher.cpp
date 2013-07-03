@@ -28,7 +28,6 @@ Dispatcher::Dispatcher(void)
     setCallbacks[Parameter::GpsAltitude] = &Dispatcher::setGpsAltitude;
     setCallbacks[Parameter::GpsAccuracy] = &Dispatcher::setGpsAccuracy;
     setCallbacks[Parameter::GpsBearing] = &Dispatcher::setGpsBearing;
-    setCallbacks[Parameter::GpsBearing] = &Dispatcher::setGpsBearing;
     setCallbacks[Parameter::Accelerometer] = &Dispatcher::setAccelerometerValues;
 }
 
