@@ -111,6 +111,17 @@ private:
     // Answer "Get/Set GPS Bearing" request
     void getGpsBearing(const Request &request, Reply *reply);
     void setGpsBearing(const Request &request, Reply *reply);
+
+
+    ///////////////////////////////
+    // Accelerometer requests    //
+    // accelerometer_handler.cpp //
+    ///////////////////////////////
+
+    // Answer "Get/Set Accelerometer Values" request
+    void getAccelerometerValues(const Request &request, Reply *reply);
+    void setAccelerometerValues(const Request &request, Reply *reply);
+
 };
 
 #endif

@@ -36,6 +36,7 @@ LOCAL_SRC_FILES		:= main.cpp				\
 			   socket.cpp           		\
 			   dispatcher.cpp			\
 			   battery_handler.cpp			\
+			   accelerometer_handler.cpp		\
 			   gps_handler.cpp                      \
 		           $(call all-proto-files-under, .)
 
@@ -45,7 +46,8 @@ LOCAL_C_INCLUDES	:= $(KERNEL_HEADERS)       		  \
 			   bionic                  		  \
 			   external/stlport/stlport		  \
 			   external/protobuf/src		  \
-			   device/androVM/common/system/genyd/lib
+			   device/androVM/common/system/genyd/lib \
+			   device/androVM/vbox86/libsensor
 
 LOCAL_MODULE_TAGS	:= optional
 
