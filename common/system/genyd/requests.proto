@@ -6,6 +6,7 @@ message Status {
     GenericError      = 1;
     InvalidRequest    = 2;
     OkWithInformation = 3;
+    NotImplemented    = 4;
   }
 
   required Code code = 2;
@@ -45,6 +46,9 @@ message Parameter {
     GpsAltitude        = 9;  // meters:  float in [-10000; 10000]
     GpsAccuracy        = 10; // meters:  float in [0; 200]
     GpsBearing         = 11; // degrees: float in [0; 360[
+    AccemerometerX     = 12; // acceleration: float in m/s^2
+    AccemerometerY     = 13; // acceleration: float in m/s^2
+    AccemerometerZ     = 14; // acceleration: float in m/s^2
   }
 
   required Type  type = 1;
