@@ -10,6 +10,9 @@
 
 #include <hardware/sensors.h>
 
+#define NO_PROTOBUF
+#include "global.hpp"
+
 typedef struct s_sensor_data {
     u_int64_t sensor;
     double x;
@@ -40,6 +43,9 @@ class Sensor {
 protected:
     // Get the current timestamp, in nanoseconds
     int64_t getTimestamp(void) const;
+
+    // Function to write property
+    static int setProperty(const char *property, const char *value);
 
 };
 

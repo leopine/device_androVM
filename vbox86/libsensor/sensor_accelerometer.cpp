@@ -1,6 +1,7 @@
 
 #include <string.h>
 #include <cutils/log.h>
+#include <cutils/properties.h>
 
 #include "sensor_accelerometer.hpp"
 
@@ -44,6 +45,17 @@ void AccelerometerSensor::generateEvent(sensors_event_t *data, t_sensor_data raw
     data->acceleration.x = rawData.x;
     data->acceleration.y = rawData.y;
     data->acceleration.z = rawData.z;
+
+    char property[PROPERTY_VALUE_MAX];
+    // Save X acceleration
+    sprintf(property, "%lf", rawData.x);
+    Sensor::setProperty(ACCELEROMETER_X, property);
+    // Save Y acceleration
+    sprintf(property, "%lf", rawData.y);
+    Sensor::setProperty(ACCELEROMETER_Y, property);
+    // Save Z acceleration
+    sprintf(property, "%lf", rawData.z);
+    Sensor::setProperty(ACCELEROMETER_Z, property);
 
     memcpy(&lastEvent, data, sizeof(lastEvent));
 }
