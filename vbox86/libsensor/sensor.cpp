@@ -7,6 +7,7 @@
 Sensor::Sensor(void)
 {
     memset(&baseEvent, 0, sizeof(baseEvent));
+    memset(&lastEvent, 0, sizeof(lastEvent));
 }
 
 Sensor::~Sensor(void)

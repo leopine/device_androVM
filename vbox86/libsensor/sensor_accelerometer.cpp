@@ -17,14 +17,15 @@ AccelerometerSensor::AccelerometerSensor(void)
     sensorCore.power = 0.57f;
     sensorCore.minDelay = 5000; // ms
 
-    baseEvent.version = sizeof(baseEvent);
+    baseEvent.version = sizeof(sensors_event_t);
     baseEvent.sensor = SENSORS_HANDLE_BASE + SENSOR_TYPE_ACCELEROMETER;
     baseEvent.type = SENSOR_TYPE_ACCELEROMETER;
     baseEvent.timestamp = getTimestamp();
-
     baseEvent.acceleration.x = 0.;
     baseEvent.acceleration.y = 0.;
     baseEvent.acceleration.z = 0.;
+
+    memcpy(&lastEvent, &baseEvent, sizeof(lastEvent));
 }
 
 AccelerometerSensor::~AccelerometerSensor(void)
@@ -35,6 +36,7 @@ AccelerometerSensor::~AccelerometerSensor(void)
 void AccelerometerSensor::generateEvent(sensors_event_t *data, t_sensor_data rawData)
 {
     memset(data, 0, sizeof(*data));
+
     data->version = sizeof(sensors_event_t);
     data->sensor = SENSORS_HANDLE_BASE + SENSOR_TYPE_ACCELEROMETER;
     data->type = SENSOR_TYPE_ACCELEROMETER;

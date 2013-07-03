@@ -37,7 +37,6 @@ int GenySensors::setDelay(struct sensors_poll_device_t *dev, int handle, int64_t
 {
     (void)dev;
 
-    // SLOGI("Delay set to %lld", ns);
     genySensors.setDelay(handle, ns);
     return 0;
 }
@@ -46,7 +45,7 @@ int GenySensors::poll(struct sensors_poll_device_t *dev, sensors_event_t *data, 
 {
     (void)dev;
 
-    return genySensors.poll(data, count);;
+    return genySensors.poll(data, count);
 }
 
 //
@@ -135,7 +134,7 @@ GenySensors::GenySensors(void) :
     }
 
     sensors[SENSOR_TYPE_ACCELEROMETER] = new AccelerometerSensor();
-    sensorList = new type_sensor_t[numSensors];
+    sensorList = new sensor_t[numSensors];
 
     sensorList[0] = sensors[SENSOR_TYPE_ACCELEROMETER]->getSensorCore();
 }
