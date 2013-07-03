@@ -8,6 +8,8 @@
 #define LIBSENSOR_PORT (22471)
 #define DEFAULT_DELAY  (200000) // ms
 
+#define MAX_CLIENTS 8
+
 class Sensor;
 
 class GenySensors {
@@ -21,7 +23,7 @@ private:
     GenySensors operator=(const GenySensors &);
 
     int delay;
-    int clientSock;
+    int clientsSocks[MAX_CLIENTS];
     int serverSock;
     int numSensors;
     struct sensor_t *sensorList;
@@ -45,11 +47,11 @@ private:
     // Wait for events
     int poll(sensors_event_t *data, int count);
     // Connect a new client
-    void acceptNewClient(void);
+    int acceptNewClient(void);
     // Read sensor data from socket
-    int readData(sensors_event_t *data, int count);
-    // Return last sensor data
-    int lastData(sensors_event_t *data, int count);
+    int readData(int *socket, sensors_event_t *data, int count);
+    // Return last sensor data if nothing read
+    int useLastData(sensors_event_t *data, int count);
     // Set the delay for a given sensor
     void setDelay(int handle, int64_t ns);
 
