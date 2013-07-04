@@ -5,7 +5,6 @@
 #include <hardware/sensors.h>
 #include <map>
 
-#define LIBSENSOR_PORT (22471)
 #define DEFAULT_DELAY  (200000) // ms
 
 #define MAX_CLIENTS 8
