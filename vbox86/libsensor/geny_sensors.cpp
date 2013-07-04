@@ -272,7 +272,7 @@ int GenySensors::readData(int *socket_p, sensors_event_t *data, int count)
     readSize = recv(*socket_p, rawData, sizeof(*rawData) * count, 0);
 
     if (readSize <= 0) {
-        SLOGE("Error reading datas, errno=%d", errno);
+        //SLOGD("Closing client connection (%d)", errno);
         close(*socket_p);
         *socket_p = 0;
         return 0;
