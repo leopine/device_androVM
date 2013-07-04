@@ -18,6 +18,9 @@ using Genymotion::Value;
 
 #endif
 
+#define LIBSENSOR_PORT (22471)
+#define LIBSENSOR_IP   "127.0.0.1"
+
 // Property keys naming convention
 #define KEY_PREFIX            "genyd."
 
