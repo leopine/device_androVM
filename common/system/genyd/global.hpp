@@ -50,9 +50,9 @@ using Genymotion::Value;
 #define GPS_BEARING           KEY_PREFIX "gps.bearing"
 
 // ACCELEROMETER
-#define ACCELEROMETER_X       KEY_PREFIX "gps.acceletometer.x"
-#define ACCELEROMETER_Y       KEY_PREFIX "gps.acceletometer.y"
-#define ACCELEROMETER_Z       KEY_PREFIX "gps.acceletometer.z"
+#define ACCELEROMETER_X       KEY_PREFIX "accelerometer.x"
+#define ACCELEROMETER_Y       KEY_PREFIX "accelerometer.y"
+#define ACCELEROMETER_Z       KEY_PREFIX "accelerometer.z"
 
 #define GPS_DISABLED          "disabled"
 #define GPS_ENABLED           "enabled"
