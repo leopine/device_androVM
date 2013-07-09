@@ -35,9 +35,10 @@ LOCAL_SRC_FILES		:= main.cpp				\
 			   genyd.cpp				\
 			   socket.cpp           		\
 			   dispatcher.cpp			\
-			   battery_handler.cpp			\
-			   accelerometer_handler.cpp		\
 			   gps_handler.cpp                      \
+			   battery_handler.cpp			\
+			   capabilities_handler.cpp		\
+			   accelerometer_handler.cpp		\
 		           $(call all-proto-files-under, .)
 
 LOCAL_MODULE		:= genyd

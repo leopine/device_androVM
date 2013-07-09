@@ -141,6 +141,9 @@ Reply *Dispatcher::dispatchRequest(const Request &request)
     case Request::GetParam:
         treatGetParam(request, reply);
         break;
+    case Request::Capabilities:
+        treatCapabilities(request, reply);
+        break;
     default:
         unknownRequest(request, reply);
         break;

@@ -33,7 +33,7 @@ using Genymotion::Value;
 #define MANUAL_MODE           "manual"
 #define AUTO_MODE             "auto"
 
-// Battery
+// BATTERY
 #define BATTERY_MODE          KEY_PREFIX "battery.mode"
 #define BATTERY_FULL          KEY_PREFIX "battery.full"
 #define BATTERY_LEVEL         KEY_PREFIX "battery.level"
@@ -58,5 +58,11 @@ using Genymotion::Value;
 #define GPS_ENABLED           "enabled"
 #define GPS_DEFAULT_STATUS    GPS_DISABLED
 #define GPS_DEFAULT_ACCURACY  "1"
+
+// CAPABILITIES
+#define CAPABILITY_PREFIX        "ro.genymotion.capability."
+#define CAPABILITY_BATTERY       CAPABILITY_PREFIX "battery"
+#define CAPABILITY_GPS           CAPABILITY_PREFIX "gps"
+#define CAPABILITY_ACCELEROMETER CAPABILITY_PREFIX "accelerometer"
 
 #endif

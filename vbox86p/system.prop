@@ -8,3 +8,11 @@ dalvik.vm.heapsize=256m
 persist.service.adb.enable=1
 ro.secure=0
 ro.opengles.version=131072
+
+#
+# Capabilities
+#
+
+ro.genymotion.capability.battery=on
+ro.genymotion.capability.gps=on
+ro.genymotion.capability.accelerometer=on

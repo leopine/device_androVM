@@ -59,6 +59,7 @@ message Request {
     Ping            = 1;
     GetParam        = 2;
     SetParam        = 3;
+    Capabilities    = 4;
   }
 
   required  Type       type        = 1;
