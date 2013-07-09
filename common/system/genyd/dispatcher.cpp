@@ -17,6 +17,7 @@ Dispatcher::Dispatcher(void)
     getCallbacks[Parameter::GpsAccuracy] = &Dispatcher::getGpsAccuracy;
     getCallbacks[Parameter::GpsBearing] = &Dispatcher::getGpsBearing;
     getCallbacks[Parameter::Accelerometer] = &Dispatcher::getAccelerometerValues;
+    getCallbacks[Parameter::Capabilities] = &Dispatcher::getCapabilities;
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
@@ -140,9 +141,6 @@ Reply *Dispatcher::dispatchRequest(const Request &request)
         break;
     case Request::GetParam:
         treatGetParam(request, reply);
-        break;
-    case Request::Capabilities:
-        treatCapabilities(request, reply);
         break;
     default:
         unknownRequest(request, reply);

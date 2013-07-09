@@ -12,7 +12,7 @@ static inline std::string getProp(const char *key)
     return value;
 }
 
-static std::string getCapabilities(void)
+static std::string getCapabilitiesJSON(void)
 {
     std::string capabilities = "{";
     capabilities += "\"battery\" : \"" + getProp(CAPABILITY_BATTERY) + "\", ";
@@ -23,7 +23,7 @@ static std::string getCapabilities(void)
     return capabilities;
 }
 
-void Dispatcher::treatCapabilities(const Request &request, Reply *reply)
+void Dispatcher::getCapabilities(const Request &request, Reply *reply)
 {
     (void)request;
     SLOGD("Received Capabilities");
@@ -33,5 +33,5 @@ void Dispatcher::treatCapabilities(const Request &request, Reply *reply)
     status->set_code(Status::Ok);
     Value *value = reply->mutable_value();
     value->set_type(Value::String);
-    value->set_stringvalue(getCapabilities());
+    value->set_stringvalue(getCapabilitiesJSON());
 }

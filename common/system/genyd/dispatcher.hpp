@@ -39,9 +39,6 @@ private:
     // Answer "SetParam" requests
     void treatSetParam(const Request &request, Reply *reply);
 
-    // Answer "Capabilities" request
-    void treatCapabilities(const Request &request, Reply *reply);
-
     // Fallback for unknown requests
     void unknownRequest(const Request &request, Reply *reply);
 
@@ -55,7 +52,8 @@ private:
     // Answer "GetParam AndroidVersion" request
     void getAndroidVersion(const Request &request, Reply *reply);
 
-
+    // Answer "GetParam Capabilities" request
+    void getCapabilities(const Request &request, Reply *reply);
 
 
     /////////////////////////
