@@ -44,7 +44,6 @@ private:
 
 
 
-
     /////////////////////////
     // Generic requests    //
     /////////////////////////
@@ -52,6 +51,8 @@ private:
     // Answer "GetParam AndroidVersion" request
     void getAndroidVersion(const Request &request, Reply *reply);
 
+    // Answer "GetParam GenymotionVersion" request
+    void getGenymotionVersion(const Request &request, Reply *reply);
 
 
 
