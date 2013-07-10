@@ -33,6 +33,9 @@ using Genymotion::Value;
 #define MANUAL_MODE           "manual"
 #define AUTO_MODE             "auto"
 
+#define ANDROID_VERSION       "ro.build.version.release"
+#define GENYMOTION_VERSION    "ro.genymotion.version"
+
 // BATTERY
 #define BATTERY_MODE          KEY_PREFIX "battery.mode"
 #define BATTERY_FULL          KEY_PREFIX "battery.full"

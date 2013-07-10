@@ -58,7 +58,7 @@ void Dispatcher::getAndroidVersion(const Request &request, Reply *reply)
     value->set_type(Value::String);
 
     char property[PROPERTY_VALUE_MAX];
-    property_get("ro.build.version.release", property, "Unknown");
+    property_get(ANDROID_VERSION, property, "Unknown");
     value->set_stringvalue(property);
 }
 
@@ -73,7 +73,7 @@ void Dispatcher::getGenymotionVersion(const Request &request, Reply *reply)
     value->set_type(Value::String);
 
     char property[PROPERTY_VALUE_MAX];
-    property_get("ro.genymotion.version", property, "Unknown");
+    property_get(GENYMOTION_VERSION, property, "Unknown");
     value->set_stringvalue(property);
 }
 
