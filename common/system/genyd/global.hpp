@@ -59,4 +59,6 @@ using Genymotion::Value;
 #define GPS_DEFAULT_STATUS    GPS_DISABLED
 #define GPS_DEFAULT_ACCURACY  "1"
 
+#define ANDROID_VERSION       "ro.build.version.release"
+#define GENYMOTION_VERSION    "ro.genymotion.version"
 #endif
