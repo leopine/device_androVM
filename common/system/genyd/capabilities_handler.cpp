@@ -2,22 +2,22 @@
 
 #include "dispatcher.hpp"
 
-#define TOSTRING(str) #str
-
-static inline std::string getProp(const char *key)
+static inline std::string getcapability(const char *key)
 {
     char value[PROPERTY_VALUE_MAX];
-    property_get(GPS_STATUS, value, "off");
+    property_get(key, value, "off");
 
     return value;
 }
 
 static std::string getCapabilitiesJSON(void)
 {
-    std::string capabilities = "{";
-    capabilities += "\"battery\" : \"" + getProp(CAPABILITY_BATTERY) + "\", ";
-    capabilities += "\"gps\" : \"" + getProp(CAPABILITY_GPS) + "\", ";
-    capabilities += "\"accelerometer\" : \"" + getProp(CAPABILITY_ACCELEROMETER) + "\", ";
+    std::string capabilities;
+
+    capabilities += "{";
+    capabilities += "\"battery\" : \"" + getcapability(CAPABILITY_BATTERY) + "\", ";
+    capabilities += "\"gps\" : \"" + getcapability(CAPABILITY_GPS) + "\", ";
+    capabilities += "\"accelerometer\" : \"" + getcapability(CAPABILITY_ACCELEROMETER) + "\", ";
     capabilities += "}";
 
     return capabilities;
@@ -26,7 +26,6 @@ static std::string getCapabilitiesJSON(void)
 void Dispatcher::getCapabilities(const Request &request, Reply *reply)
 {
     (void)request;
-    SLOGD("Received Capabilities");
 
     reply->set_type(Reply::Value);
     Status *status = reply->mutable_status();

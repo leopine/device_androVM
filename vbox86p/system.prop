@@ -13,6 +13,6 @@ ro.opengles.version=131072
 # Capabilities
 #
 
-ro.genymotion.capability.battery=on
-ro.genymotion.capability.gps=on
-ro.genymotion.capability.accelerometer=on
+ro.genyd.caps.bat=on
+ro.genyd.caps.gps=on
+ro.genyd.caps.acc=on

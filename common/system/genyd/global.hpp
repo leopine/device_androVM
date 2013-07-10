@@ -60,9 +60,9 @@ using Genymotion::Value;
 #define GPS_DEFAULT_ACCURACY  "1"
 
 // CAPABILITIES
-#define CAPABILITY_PREFIX        "ro.genymotion.capability."
-#define CAPABILITY_BATTERY       CAPABILITY_PREFIX "battery"
+#define CAPABILITY_PREFIX        "ro.genyd.caps."
+#define CAPABILITY_BATTERY       CAPABILITY_PREFIX "bat"
 #define CAPABILITY_GPS           CAPABILITY_PREFIX "gps"
-#define CAPABILITY_ACCELEROMETER CAPABILITY_PREFIX "accelerometer"
+#define CAPABILITY_ACCELEROMETER CAPABILITY_PREFIX "acc"
 
 #endif
