@@ -44,7 +44,6 @@ private:
 
 
 
-
     /////////////////////////
     // Generic requests    //
     /////////////////////////
@@ -54,6 +53,9 @@ private:
 
     // Answer "GetParam Capabilities" request
     void getCapabilities(const Request &request, Reply *reply);
+
+    // Answer "GetParam GenymotionVersion" request
+    void getGenymotionVersion(const Request &request, Reply *reply);
 
 
     /////////////////////////
