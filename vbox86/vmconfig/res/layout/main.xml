@@ -156,25 +156,7 @@
         
     </LinearLayout>
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content"
-    android:orientation="horizontal" >
-    
-        <CheckBox
-        android:id="@+id/cb_statusbar"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:onClick="onCBClick_statusbar" />
-        
-        <TextView
-        android:id="@+id/tv_statusbar"
-	    android:layout_width="wrap_content"
-	    android:layout_height="wrap_content"
-	    android:text="@string/statusbar" />
-    	
-    </LinearLayout>
-    
+
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
