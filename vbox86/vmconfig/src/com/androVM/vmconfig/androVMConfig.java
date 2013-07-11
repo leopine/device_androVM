@@ -39,7 +39,6 @@ public class androVMConfig extends Activity {
         EditText et_opengl_force_IP = (EditText) findViewById(R.id.et_opengl_force_IP);
     	CheckBox cb_keyboard = (CheckBox) findViewById(R.id.cb_keyboard);
     	Spinner sp_keyboard = (Spinner) findViewById(R.id.sp_keyboard);
-    	CheckBox cb_statusbar = (CheckBox) findViewById(R.id.cb_statusbar);
     	CheckBox cb_su_bypass = (CheckBox) findViewById(R.id.cb_su_bypass);
     	 
     	TextConfig = new androVMTextConfig();
@@ -131,14 +130,6 @@ public class androVMConfig extends Activity {
         	}
         }
         
-        cb_statusbar.setChecked(false);
-        if ((cfg_statusbar != null) && (cfg_statusbar.length()>0)) {
-        	try {
-        		cb_statusbar.setChecked(true);
-        	} catch (NumberFormatException e) {
-        	}
-        }
-
         cb_su_bypass.setChecked(false);
         if ((cfg_su_bypass != null) && (cfg_su_bypass.length()>0)) {
         	try {
@@ -295,15 +286,6 @@ public class androVMConfig extends Activity {
     	}
     	else
     		TextConfig.removeValue("keyboard_disable");
-    	
-    	// Statusbar
-    	CheckBox cb_statusbar = (CheckBox) findViewById(R.id.cb_statusbar);
-    	
-    	if (cb_statusbar.isChecked()) {
-    		TextConfig.setValue("statusbar_present", "1");
-    	}
-    	else
-    		TextConfig.removeValue("statusbar_present");
     	
     	// su bypass
     	CheckBox cb_su_bypass = (CheckBox) findViewById(R.id.cb_su_bypass);
