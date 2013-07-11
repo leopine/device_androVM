@@ -69,8 +69,9 @@ if [ $prop_keyboard_disable ]; then
   setprop androVM.keyboard_disable $prop_keyboard_disable
 fi
 
-prop_statusbar_present=`/system/bin/androVM-prop get statusbar_present`
-if [ $prop_statusbar_present ]; then
+prop_force_navbar=`/system/bin/androVM-prop get genymotion_force_navbar`
+if [ -n "$prop_force_navbar" -a "$prop_force_navbar" == "1" ]; then
+  # No hw buttons => add virtual navbar
   setprop qemu.hw.mainkeys 0
 fi
 
