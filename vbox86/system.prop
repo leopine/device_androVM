@@ -1,0 +1,19 @@
+#
+# system.prop for Genymotion
+#
+
+rild.libpath=/system/lib/libreference-ril.so
+rild.libargs=-d /dev/ttyS0
+dalvik.vm.heapsize=256m
+persist.service.adb.enable=1
+ro.secure=0
+ro.opengles.version=131072
+ro.genymotion.version=1.1.0
+
+#
+# Capabilities
+#
+
+ro.genyd.caps.bat=on
+ro.genyd.caps.gps=on
+ro.genyd.caps.acc=on

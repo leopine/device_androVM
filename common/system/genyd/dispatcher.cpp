@@ -7,6 +7,7 @@ Dispatcher::Dispatcher(void)
 {
     // "GetParam" callbacks list
     getCallbacks[Parameter::AndroidVersion] = &Dispatcher::getAndroidVersion;
+    getCallbacks[Parameter::GenymotionVersion] = &Dispatcher::getGenymotionVersion;
     getCallbacks[Parameter::BatteryStatus] = &Dispatcher::getBatteryStatus;
     getCallbacks[Parameter::BatteryLevel] = &Dispatcher::getBatteryLevel;
     getCallbacks[Parameter::BatteryMode] = &Dispatcher::isBatteryManual;
@@ -17,6 +18,7 @@ Dispatcher::Dispatcher(void)
     getCallbacks[Parameter::GpsAccuracy] = &Dispatcher::getGpsAccuracy;
     getCallbacks[Parameter::GpsBearing] = &Dispatcher::getGpsBearing;
     getCallbacks[Parameter::Accelerometer] = &Dispatcher::getAccelerometerValues;
+    getCallbacks[Parameter::Capabilities] = &Dispatcher::getCapabilities;
 
     // "SetParam" callback list
     setCallbacks[Parameter::BatteryStatus] = &Dispatcher::setBatteryStatus;
@@ -56,7 +58,22 @@ void Dispatcher::getAndroidVersion(const Request &request, Reply *reply)
     value->set_type(Value::String);
 
     char property[PROPERTY_VALUE_MAX];
-    property_get("ro.build.version.release", property, "Unknown");
+    property_get(ANDROID_VERSION, property, "Unknown");
+    value->set_stringvalue(property);
+}
+
+void Dispatcher::getGenymotionVersion(const Request &request, Reply *reply)
+{
+    SLOGD("Received Get GenymotionVersion");
+
+    reply->set_type(Reply::Value);
+    Status *status = reply->mutable_status();
+    status->set_code(Status::Ok);
+    Value *value = reply->mutable_value();
+    value->set_type(Value::String);
+
+    char property[PROPERTY_VALUE_MAX];
+    property_get(GENYMOTION_VERSION, property, "Unknown");
     value->set_stringvalue(property);
 }
 
