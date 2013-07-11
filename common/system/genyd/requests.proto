@@ -47,7 +47,8 @@ message Parameter {
     GpsAccuracy        = 10; // meters:  float in [0; 200]
     GpsBearing         = 11; // degrees: float in [0; 360[
     Accelerometer      = 12; // acceleration: string "%f|%f|%f" (float in m/s^2)
-    GenymotionVersion  = 13;
+    GenymotionVersion  = 13; // string
+    Capabilities       = 14; // JSON string
   }
 
   required Type  type = 1;

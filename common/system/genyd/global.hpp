@@ -33,7 +33,10 @@ using Genymotion::Value;
 #define MANUAL_MODE           "manual"
 #define AUTO_MODE             "auto"
 
-// Battery
+#define ANDROID_VERSION       "ro.build.version.release"
+#define GENYMOTION_VERSION    "ro.genymotion.version"
+
+// BATTERY
 #define BATTERY_MODE          KEY_PREFIX "battery.mode"
 #define BATTERY_FULL          KEY_PREFIX "battery.full"
 #define BATTERY_LEVEL         KEY_PREFIX "battery.level"
@@ -59,6 +62,10 @@ using Genymotion::Value;
 #define GPS_DEFAULT_STATUS    GPS_DISABLED
 #define GPS_DEFAULT_ACCURACY  "1"
 
-#define ANDROID_VERSION       "ro.build.version.release"
-#define GENYMOTION_VERSION    "ro.genymotion.version"
+// CAPABILITIES
+#define CAPABILITY_PREFIX        "ro.genyd.caps."
+#define CAPABILITY_BATTERY       CAPABILITY_PREFIX "bat"
+#define CAPABILITY_GPS           CAPABILITY_PREFIX "gps"
+#define CAPABILITY_ACCELEROMETER CAPABILITY_PREFIX "acc"
+
 #endif
