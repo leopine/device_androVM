@@ -130,4 +130,11 @@ if [ ! $abi3_set ]; then
   fi
 fi
 
+# Update system versions
+android_version=`getprop ro.build.version.release`
+genymotion_version=`getprop ro.genymotion.version`
+/system/bin/androVM-prop set android_version "$android_version"
+/system/bin/androVM-prop set genymotion_version "$genymotion_version"
+
+# Finalize init
 setprop androVM.inited 1
