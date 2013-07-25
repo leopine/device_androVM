@@ -167,7 +167,7 @@ int main(int argc, char *argv[]) {
                     event.value = 0;
                     write(uinp_fd, &event, sizeof(event));
                 } else if (curr_state == STATE_PINCH_TO_ZOOM) {
-                    int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, delta = 0;
+                    int xpos, ypos, up_finger_x, up_finger_y, dw_finger_x, dw_finger_y, delta = 0;
 #if DEBUG_MT
                     SLOGD("MOUSE: State pinch to zoom: orientation:%d x:%s y:%s fixed:%d", orientation,
                           p1, p2, last_fixed_pos);
@@ -178,50 +178,54 @@ int main(int argc, char *argv[]) {
                     // Compute fingers new position
                     switch(orientation) {
                     case 90:
-                        delta = - last_fixed_pos + ypos;
-                        l_finger_x = xpos;
-                        l_finger_y = last_fixed_pos + centeroffset - delta;
-                        r_finger_x = xpos;
-                        r_finger_y = last_fixed_pos - centeroffset + delta;
-                        if (l_finger_y < r_finger_y) {
-                            l_finger_y = r_finger_y = last_fixed_pos;
+                        /* going up / decrease xpos should increase delta / fingers spacing */
+                        delta = - last_fixed_pos + xpos;
+                        up_finger_x = last_fixed_pos - centeroffset - delta;
+                        up_finger_y = ypos;
+                        dw_finger_x = last_fixed_pos + centeroffset + delta;
+                        dw_finger_y = ypos;
+                        if (dw_finger_x < up_finger_x) {
+                            dw_finger_x = up_finger_x = last_fixed_pos;
                         }
                         break;
                     case 180:
-                        delta = - last_fixed_pos + xpos;
-                        l_finger_x = last_fixed_pos + centeroffset + delta;
-                        l_finger_y = ypos;
-                        r_finger_x = last_fixed_pos - centeroffset - delta;
-                        r_finger_y = ypos;
-                        if (r_finger_x > l_finger_x) {
-                            l_finger_x = r_finger_x = last_fixed_pos;
+                        /* going up / increase ypos should increase delta / fingers spacing */
+                        delta = ypos - last_fixed_pos;
+                        up_finger_x = xpos;
+                        up_finger_y = last_fixed_pos + centeroffset + delta;
+                        dw_finger_x = xpos;
+                        dw_finger_y = last_fixed_pos - centeroffset - delta;
+                        if (up_finger_y < dw_finger_y) {
+                            dw_finger_y = up_finger_y = last_fixed_pos;
                         }
                         break;
                     case 270:
-                        delta = last_fixed_pos - ypos;
-                        l_finger_x = xpos;
-                        l_finger_y = last_fixed_pos - centeroffset + delta;
-                        r_finger_x = xpos;
-                        r_finger_y = last_fixed_pos + centeroffset - delta;
-                        if (l_finger_y > r_finger_y) {
-                            l_finger_y = r_finger_y = last_fixed_pos;
+                        /* going up / increase xpos should increase delta / fingers spacing */
+                        delta = - xpos + last_fixed_pos;
+                        up_finger_x = last_fixed_pos + centeroffset + delta;
+                        up_finger_y = ypos;
+                        dw_finger_x = last_fixed_pos - centeroffset - delta;
+                        dw_finger_y = ypos;
+                        if (dw_finger_x > up_finger_x) {
+                            dw_finger_x = up_finger_x = last_fixed_pos;
                         }
                         break;
                     case 0:
                     default:
-                        delta = (last_fixed_pos - xpos);
-                        l_finger_x = last_fixed_pos - centeroffset - delta;
-                        l_finger_y = ypos;
-                        r_finger_x = last_fixed_pos + centeroffset + delta;
-                        r_finger_y = ypos;
-                        if (l_finger_x > r_finger_x) {
-                            l_finger_x = r_finger_x = last_fixed_pos;
+                        /* going up / decrease ypos should increase delta / fingers spacing */
+                        delta = last_fixed_pos - ypos;
+                        up_finger_x = xpos;
+                        up_finger_y = last_fixed_pos - centeroffset - delta;
+                        dw_finger_x = xpos;
+                        dw_finger_y = last_fixed_pos + centeroffset + delta;
+                        if (dw_finger_y < up_finger_y) {
+                            dw_finger_y = up_finger_y = last_fixed_pos;
                         }
                         break;
                     }
 #if DEBUG_MT
-                    SLOGD("MOUSE: right finger x:%d, y:%d left finger x:%d, y:%d",
-                          r_finger_x, r_finger_y, l_finger_x, l_finger_y);
+                    SLOGD("MOUSE: up finger x:%d, y:%d down finger x:%d, y:%d",
+                          up_finger_x, up_finger_y, dw_finger_x, dw_finger_y);
 #endif /* DEBUG_MT */
 
                     memset(&event, 0, sizeof(event));
@@ -230,11 +234,11 @@ int main(int argc, char *argv[]) {
                     // First finger
                     event.type = EV_ABS;
                     event.code = ABS_MT_POSITION_X;
-                    event.value = l_finger_x;
+                    event.value = up_finger_x;
                     write(uinp_fd, &event, sizeof(event));
                     event.type = EV_ABS;
                     event.code = ABS_MT_POSITION_Y;
-                    event.value = l_finger_y;
+                    event.value = up_finger_y;
                     write(uinp_fd, &event, sizeof(event));
                     event.type = EV_SYN;
                     event.code = SYN_MT_REPORT;
@@ -244,11 +248,11 @@ int main(int argc, char *argv[]) {
                     // Second finger
                     event.type = EV_ABS;
                     event.code = ABS_MT_POSITION_X;
-                    event.value = r_finger_x;
+                    event.value = dw_finger_x;
                     write(uinp_fd, &event, sizeof(event));
                     event.type = EV_ABS;
                     event.code = ABS_MT_POSITION_Y;
-                    event.value = r_finger_y;
+                    event.value = dw_finger_y;
                     write(uinp_fd, &event, sizeof(event));
                     event.type = EV_SYN;
                     event.code = SYN_MT_REPORT;
@@ -352,7 +356,7 @@ int main(int argc, char *argv[]) {
             }
             /**** MOUSE PINCH TO ZOOM PRESSED ****/
             else if (!strcmp(pcmd,"MSPPR")) {
-		int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y;
+		int xpos, ypos, up_finger_x, up_finger_y, dw_finger_x, dw_finger_y;
                 if (!p1 || !p2 || !p3)
                     continue;
 #if DEBUG_MT
@@ -369,14 +373,14 @@ int main(int argc, char *argv[]) {
                 /* Save current X (or Y) fixed value to compute finger spacing in MOUSE event
                    handler, without altering pointer position */
                 if (orientation == 0 || orientation == 180) {
-                    last_fixed_pos = xpos;
-                } else {
                     last_fixed_pos = ypos;
+                } else {
+                    last_fixed_pos = xpos;
                 }
 
                 // Compute fingers starting spacing
                 centeroffset = DEFAULT_FINGERS_OFFSET;
-                // Make sure the centeroffset won't make the right finger position negative
+                // Make sure the centeroffset won't make one of the finger position negative
                 // because the framework doesn't like that
                 if (last_fixed_pos - centeroffset < 0) {
                     centeroffset = last_fixed_pos;
@@ -385,29 +389,29 @@ int main(int argc, char *argv[]) {
                 // Compute fingers position
                 switch(orientation) {
                 case 90:
-                    l_finger_x = xpos;
-                    l_finger_y = ypos + centeroffset;
-                    r_finger_x = xpos;
-                    r_finger_y = ypos - centeroffset;
+                    up_finger_x = xpos - centeroffset;
+                    up_finger_y = ypos;
+                    dw_finger_x = xpos + centeroffset;
+                    dw_finger_y = ypos;
                     break;
                 case 180:
-                    l_finger_x = xpos + centeroffset;
-                    l_finger_y = ypos;
-                    r_finger_x = xpos - centeroffset;
-                    r_finger_y = ypos;
+                    up_finger_x = xpos;
+                    up_finger_y = ypos + centeroffset;
+                    dw_finger_x = xpos;
+                    dw_finger_y = ypos - centeroffset;
                     break;
                 case 270:
-                    l_finger_x = xpos;
-                    l_finger_y = ypos - centeroffset;
-                    r_finger_x = xpos;
-                    r_finger_y = ypos + centeroffset;
+                    up_finger_x = xpos + centeroffset;
+                    up_finger_y = ypos;
+                    dw_finger_x = xpos - centeroffset;
+                    dw_finger_y = ypos;
                     break;
                 case 0:
                 default:
-                    l_finger_x = xpos - centeroffset;
-                    l_finger_y = ypos;
-                    r_finger_x = xpos + centeroffset;
-                    r_finger_y = ypos;
+                    up_finger_x = xpos;
+                    up_finger_y = ypos - centeroffset;
+                    dw_finger_x = xpos;
+                    dw_finger_y = ypos + centeroffset;
                     break;
                 }
 
@@ -426,11 +430,11 @@ int main(int argc, char *argv[]) {
                 // First finger
                 event.type = EV_ABS;
                 event.code = ABS_MT_POSITION_X;
-                event.value = r_finger_x;
+                event.value = up_finger_x;
                 write(uinp_fd, &event, sizeof(event));
                 event.type = EV_ABS;
                 event.code = ABS_MT_POSITION_Y;
-                event.value = r_finger_y;
+                event.value = up_finger_y;
                 write(uinp_fd, &event, sizeof(event));
                 event.type = EV_SYN;
                 event.code = SYN_MT_REPORT;
@@ -440,11 +444,11 @@ int main(int argc, char *argv[]) {
                 // Second finger
                 event.type = EV_ABS;
                 event.code = ABS_MT_POSITION_X;
-                event.value = l_finger_x;
+                event.value = dw_finger_x;
                 write(uinp_fd, &event, sizeof(event));
                 event.type = EV_ABS;
                 event.code = ABS_MT_POSITION_Y;
-                event.value = l_finger_y;
+                event.value = dw_finger_y;
                 write(uinp_fd, &event, sizeof(event));
                 event.type = EV_SYN;
                 event.code = SYN_MT_REPORT;
