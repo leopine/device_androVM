@@ -40,7 +40,8 @@ int main(int argc, char *argv[]) {
     state curr_state = STATE_NO_CLICK;
 
     /* These are specifics to pinch to zoom feature */
-    int last_fixed_pos; /* the coordinate that should be fixed when pinching on this axis */
+    int last_fixed_xpos; /* the coordinate that should be fixed when pinching on this axis */
+    int last_fixed_ypos; /* the coordinate that should be fixed when pinching on this axis */
     int centeroffset; /* the offset between the cursor position and each fingers */
     int orientation; /* the current orientation of the device */
 
@@ -169,8 +170,8 @@ int main(int argc, char *argv[]) {
                 } else if (curr_state == STATE_PINCH_TO_ZOOM) {
                     int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, delta = 0;
 #if DEBUG_MT
-                    SLOGD("MOUSE: State pinch to zoom: orientation:%d x:%s y:%s fixed:%d", orientation,
-                          p1, p2, last_fixed_pos);
+                    SLOGD("MOUSE: State pinch to zoom: orientation:%d x:%s y:%s fixed x:%d y:%d",
+                          orientation, p1, p2, last_fixed_xpos, last_fixed_ypos);
 #endif /* DEBUG_MT */
                     xpos = atoi(p1);
                     ypos = atoi(p2);
@@ -178,44 +179,48 @@ int main(int argc, char *argv[]) {
                     // Compute fingers new position
                     switch(orientation) {
                     case 90:
-                        delta = - last_fixed_pos + ypos;
-                        l_finger_x = xpos;
-                        l_finger_y = last_fixed_pos + centeroffset - delta;
-                        r_finger_x = xpos;
-                        r_finger_y = last_fixed_pos - centeroffset + delta;
+                        /* Mouse up / x decrease should increase delta / fingers spacing */
+                        delta = last_fixed_xpos - xpos;
+                        l_finger_x = last_fixed_xpos;
+                        l_finger_y = last_fixed_ypos + centeroffset - delta;
+                        r_finger_x = last_fixed_xpos;
+                        r_finger_y = last_fixed_ypos - centeroffset + delta;
                         if (l_finger_y < r_finger_y) {
-                            l_finger_y = r_finger_y = last_fixed_pos;
+                            l_finger_y = r_finger_y = last_fixed_ypos;
                         }
                         break;
                     case 180:
-                        delta = - last_fixed_pos + xpos;
-                        l_finger_x = last_fixed_pos + centeroffset + delta;
-                        l_finger_y = ypos;
-                        r_finger_x = last_fixed_pos - centeroffset - delta;
-                        r_finger_y = ypos;
+                        /* Mouse up / y increase should increase delta / fingers spacing */
+                        delta = ypos - last_fixed_ypos;
+                        l_finger_x = last_fixed_xpos + centeroffset + delta;
+                        l_finger_y = last_fixed_ypos;
+                        r_finger_x = last_fixed_xpos - centeroffset - delta;
+                        r_finger_y = last_fixed_ypos;
                         if (r_finger_x > l_finger_x) {
-                            l_finger_x = r_finger_x = last_fixed_pos;
+                            l_finger_x = r_finger_x = last_fixed_xpos;
                         }
                         break;
                     case 270:
-                        delta = last_fixed_pos - ypos;
-                        l_finger_x = xpos;
-                        l_finger_y = last_fixed_pos - centeroffset + delta;
-                        r_finger_x = xpos;
-                        r_finger_y = last_fixed_pos + centeroffset - delta;
+                        /* Mouse up / x increase should increase delta / fingers spacing */
+                        delta = xpos - last_fixed_xpos;
+                        l_finger_x = last_fixed_xpos;
+                        l_finger_y = last_fixed_ypos - centeroffset + delta;
+                        r_finger_x = last_fixed_xpos;
+                        r_finger_y = last_fixed_ypos + centeroffset - delta;
                         if (l_finger_y > r_finger_y) {
-                            l_finger_y = r_finger_y = last_fixed_pos;
+                            l_finger_y = r_finger_y = last_fixed_ypos;
                         }
                         break;
                     case 0:
                     default:
-                        delta = (last_fixed_pos - xpos);
-                        l_finger_x = last_fixed_pos - centeroffset - delta;
-                        l_finger_y = ypos;
-                        r_finger_x = last_fixed_pos + centeroffset + delta;
-                        r_finger_y = ypos;
+                        /* Mouse up / y decrease should increase delta / fingers spacing */
+                        delta = last_fixed_ypos - ypos;
+                        l_finger_x = last_fixed_xpos - centeroffset - delta;
+                        l_finger_y = last_fixed_ypos;
+                        r_finger_x = last_fixed_xpos + centeroffset + delta;
+                        r_finger_y = last_fixed_ypos;
                         if (l_finger_x > r_finger_x) {
-                            l_finger_x = r_finger_x = last_fixed_pos;
+                            l_finger_x = r_finger_x = last_fixed_xpos;
                         }
                         break;
                     }
@@ -368,18 +373,21 @@ int main(int argc, char *argv[]) {
 
                 /* Save current X (or Y) fixed value to compute finger spacing in MOUSE event
                    handler, without altering pointer position */
-                if (orientation == 0 || orientation == 180) {
-                    last_fixed_pos = xpos;
-                } else {
-                    last_fixed_pos = ypos;
-                }
+                last_fixed_xpos = xpos;
+                last_fixed_ypos = ypos;
 
                 // Compute fingers starting spacing
                 centeroffset = DEFAULT_FINGERS_OFFSET;
                 // Make sure the centeroffset won't make the right finger position negative
                 // because the framework doesn't like that
-                if (last_fixed_pos - centeroffset < 0) {
-                    centeroffset = last_fixed_pos;
+                if (orientation == 0 || orientation == 180) {
+                    if (last_fixed_xpos - centeroffset < 0) {
+                        centeroffset = last_fixed_xpos;
+                    }
+                } else {
+                    if (last_fixed_ypos - centeroffset < 0) {
+                        centeroffset = last_fixed_ypos;
+                    }
                 }
 
                 // Compute fingers position
