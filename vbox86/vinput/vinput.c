@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 
 #include <cutils/properties.h>
 #include <cutils/sockets.h>
@@ -15,8 +16,13 @@
 #include <linux/uinput.h>
 
 #define DEBUG_MT 0
+/* horizontal offset between each fingers and the cursor */
+#define PINCH_TO_ZOOM_FINGERS_OFFSET 200
+#define ROTATION_FINGERS_OFFSET      50
 
-#define DEFAULT_FINGERS_OFFSET 200
+/* Make sure to report modifications in player event_manager.hpp */
+#define MULTITOUCH_ZOOM         1
+#define MULTITOUCH_ROTATION     2
 
 int main(int argc, char *argv[]) {
     int uinp_fd;
@@ -33,14 +39,16 @@ int main(int argc, char *argv[]) {
      * right behavior on "MOUSE" movements events
      */
     typedef enum {
-	STATE_NO_CLICK = 0,
-	STATE_PINCH_TO_ZOOM,
-	STATE_CLICKED
-    } state;
-    state curr_state = STATE_NO_CLICK;
+        MOUSE_STATE_NO_CLICK = 0,
+        MOUSE_STATE_CLICKED,
+        MOUSE_STATE_PINCH_TO_ZOOM,
+        MOUSE_STATE_ROTATION
+    } mouse_state_t;
+    mouse_state_t mouse_state = MOUSE_STATE_NO_CLICK;
 
     /* These are specifics to pinch to zoom feature */
-    int last_fixed_pos; /* the coordinate that should be fixed when pinching on this axis */
+    int last_fixed_xpos; /* the coordinate that should be fixed when pinching on this axis */
+    int last_fixed_ypos; /* the coordinate that should be fixed when pinching on this axis */
     int centeroffset; /* the offset between the cursor position and each fingers */
     int orientation; /* the current orientation of the device */
 
@@ -144,7 +152,7 @@ int main(int argc, char *argv[]) {
                 if (!p1 || !p2)
                     continue;
 
-                if (curr_state == STATE_CLICKED) {
+                if (mouse_state == MOUSE_STATE_CLICKED) {
                     memset(&event, 0, sizeof(event));
                     gettimeofday(&event.time, NULL);
 
@@ -166,62 +174,109 @@ int main(int argc, char *argv[]) {
                     event.code = SYN_REPORT;
                     event.value = 0;
                     write(uinp_fd, &event, sizeof(event));
-                } else if (curr_state == STATE_PINCH_TO_ZOOM) {
+                } else if (mouse_state == MOUSE_STATE_ROTATION || mouse_state == MOUSE_STATE_PINCH_TO_ZOOM) {
                     int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, delta = 0;
 #if DEBUG_MT
-                    SLOGD("MOUSE: State pinch to zoom: orientation:%d x:%s y:%s fixed:%d", orientation,
-                          p1, p2, last_fixed_pos);
+                    SLOGD("MOUSE: multitouch mode %d orientation:%d x:%s y:%s saved x:%d saved y:%d",
+                          mouse_state, orientation, p1, p2, last_fixed_xpos, last_fixed_ypos);
 #endif /* DEBUG_MT */
                     xpos = atoi(p1);
                     ypos = atoi(p2);
 
                     // Compute fingers new position
-                    switch(orientation) {
-                    case 90:
-                        delta = - last_fixed_pos + ypos;
-                        l_finger_x = xpos;
-                        l_finger_y = last_fixed_pos + centeroffset - delta;
-                        r_finger_x = xpos;
-                        r_finger_y = last_fixed_pos - centeroffset + delta;
-                        if (l_finger_y < r_finger_y) {
-                            l_finger_y = r_finger_y = last_fixed_pos;
+                    if (mouse_state == MOUSE_STATE_PINCH_TO_ZOOM) {
+                        switch(orientation) {
+                        case 90:
+                            delta = - last_fixed_ypos + ypos;
+                            l_finger_x = xpos;
+                            l_finger_y = last_fixed_ypos + centeroffset - delta;
+                            r_finger_x = xpos;
+                            r_finger_y = last_fixed_ypos - centeroffset + delta;
+                            if (l_finger_y < r_finger_y) {
+                                l_finger_y = r_finger_y = last_fixed_ypos;
+                            }
+                            break;
+                        case 180:
+                            delta = - last_fixed_xpos + xpos;
+                            l_finger_x = last_fixed_xpos + centeroffset + delta;
+                            l_finger_y = ypos;
+                            r_finger_x = last_fixed_xpos - centeroffset - delta;
+                            r_finger_y = ypos;
+                            if (r_finger_x > l_finger_x) {
+                                l_finger_x = r_finger_x = last_fixed_xpos;
+                            }
+                            break;
+                        case 270:
+                            delta = last_fixed_ypos - ypos;
+                            l_finger_x = xpos;
+                            l_finger_y = last_fixed_ypos - centeroffset + delta;
+                            r_finger_x = xpos;
+                            r_finger_y = last_fixed_ypos + centeroffset - delta;
+                            if (l_finger_y > r_finger_y) {
+                                l_finger_y = r_finger_y = last_fixed_ypos;
+                            }
+                            break;
+                        case 0:
+                        default:
+                            delta = (last_fixed_xpos - xpos);
+                            l_finger_x = last_fixed_xpos - centeroffset - delta;
+                            l_finger_y = ypos;
+                            r_finger_x = last_fixed_xpos + centeroffset + delta;
+                            r_finger_y = ypos;
+                            if (l_finger_x > r_finger_x) {
+                                l_finger_x = r_finger_x = last_fixed_xpos;
+                            }
+                            break;
                         }
-                        break;
-                    case 180:
-                        delta = - last_fixed_pos + xpos;
-                        l_finger_x = last_fixed_pos + centeroffset + delta;
-                        l_finger_y = ypos;
-                        r_finger_x = last_fixed_pos - centeroffset - delta;
-                        r_finger_y = ypos;
-                        if (r_finger_x > l_finger_x) {
-                            l_finger_x = r_finger_x = last_fixed_pos;
+                    } else if (mouse_state == MOUSE_STATE_ROTATION) {
+                        int degree_angle, xdelta, ydelta;
+
+                        switch(orientation) {
+                        case 90:
+                            degree_angle = last_fixed_ypos - ypos;
+                            xdelta = centeroffset/*radius*/ * sin(degree_angle * M_PI / 180.0);
+                            ydelta = centeroffset/*radius*/ * cos(degree_angle * M_PI / 180.0);
+                            l_finger_x = last_fixed_xpos + (int)xdelta;
+                            l_finger_y = last_fixed_ypos + (int)ydelta;
+                            r_finger_x = last_fixed_xpos - (int)xdelta;
+                            r_finger_y = last_fixed_ypos - (int)ydelta;
+                            break;
+                        case 180:
+                            degree_angle = xpos - last_fixed_xpos;
+                            xdelta = centeroffset/*radius*/ * cos(degree_angle * M_PI / 180.0);
+                            ydelta = centeroffset/*radius*/ * sin(degree_angle * M_PI / 180.0);
+                            l_finger_x = last_fixed_xpos - (int)xdelta;
+                            l_finger_y = last_fixed_ypos + (int)ydelta;
+                            r_finger_x = last_fixed_xpos + (int)xdelta;
+                            r_finger_y = last_fixed_ypos - (int)ydelta;
+                            break;
+                        case 270:
+                            degree_angle = ypos - last_fixed_ypos;
+                            xdelta = centeroffset/*radius*/ * sin(degree_angle * M_PI / 180.0);
+                            ydelta = centeroffset/*radius*/ * cos(degree_angle * M_PI / 180.0);
+                            l_finger_x = last_fixed_xpos - (int)xdelta;
+                            l_finger_y = last_fixed_ypos - (int)ydelta;
+                            r_finger_x = last_fixed_xpos + (int)xdelta;
+                            r_finger_y = last_fixed_ypos + (int)ydelta;
+                            break;
+                        case 0:
+                        default:
+                            degree_angle = last_fixed_xpos - xpos;
+                            xdelta = centeroffset/*radius*/ * cos(degree_angle * M_PI / 180.0);
+                            ydelta = centeroffset/*radius*/ * sin(degree_angle * M_PI / 180.0);
+                            l_finger_x = last_fixed_xpos - (int)xdelta;
+                            l_finger_y = last_fixed_ypos + (int)ydelta;
+                            r_finger_x = last_fixed_xpos + (int)xdelta;
+                            r_finger_y = last_fixed_ypos - (int)ydelta;
+                            break;
                         }
-                        break;
-                    case 270:
-                        delta = last_fixed_pos - ypos;
-                        l_finger_x = xpos;
-                        l_finger_y = last_fixed_pos - centeroffset + delta;
-                        r_finger_x = xpos;
-                        r_finger_y = last_fixed_pos + centeroffset - delta;
-                        if (l_finger_y > r_finger_y) {
-                            l_finger_y = r_finger_y = last_fixed_pos;
-                        }
-                        break;
-                    case 0:
-                    default:
-                        delta = (last_fixed_pos - xpos);
-                        l_finger_x = last_fixed_pos - centeroffset - delta;
-                        l_finger_y = ypos;
-                        r_finger_x = last_fixed_pos + centeroffset + delta;
-                        r_finger_y = ypos;
-                        if (l_finger_x > r_finger_x) {
-                            l_finger_x = r_finger_x = last_fixed_pos;
-                        }
-                        break;
+                    } else {
+                        /* should never happen */
+                        continue;
                     }
 #if DEBUG_MT
-                    SLOGD("MOUSE: right finger x:%d, y:%d left finger x:%d, y:%d",
-                          r_finger_x, r_finger_y, l_finger_x, l_finger_y);
+                    SLOGD("MOUSE: right finger x:%d, y:%d left finger x:%d, y:%d, delta:%d",
+                          r_finger_x, r_finger_y, l_finger_x, l_finger_y, delta);
 #endif /* DEBUG_MT */
 
                     memset(&event, 0, sizeof(event));
@@ -290,7 +345,7 @@ int main(int argc, char *argv[]) {
             else if (!strcmp(pcmd,"MSBPR")) {
                 if (!p1 || !p2)
                     continue;
-                curr_state = STATE_CLICKED;
+                mouse_state = MOUSE_STATE_CLICKED;
 
                 memset(&event, 0, sizeof(event));
                 gettimeofday(&event.time, NULL);
@@ -327,8 +382,8 @@ int main(int argc, char *argv[]) {
             else if (!strcmp(pcmd,"MSBRL")) {
                 if (!p1 || !p2)
                     continue;
-                // reset state on release
-                curr_state = STATE_NO_CLICK;
+                // reset mouse state on release
+                mouse_state = MOUSE_STATE_NO_CLICK;
                 memset(&event, 0, sizeof(event));
                 gettimeofday(&event.time, NULL);
 
@@ -350,39 +405,49 @@ int main(int argc, char *argv[]) {
                 event.value = 0;
                 write(uinp_fd, &event, sizeof(event));
             }
-            /**** MOUSE PINCH TO ZOOM PRESSED ****/
-            else if (!strcmp(pcmd,"MSPPR")) {
-		int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y;
-                if (!p1 || !p2 || !p3)
+            /**** MOUSE MULTITOUCH PRESSED ****/
+            else if (!strcmp(pcmd,"MSMTPR")) {
+		int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, mode;
+                if (!p1 || !p2 || !p3 || !p4)
                     continue;
 #if DEBUG_MT
-                SLOGD("MSPPR:%s:%s:%s", p1, p2, p3);
+                SLOGD("MSMTPR:%s:%s:%s:%s", p1, p2, p3, p4);
 #endif /* DEBUG_MT */
 
                 xpos = atoi(p1);
                 ypos = atoi(p2);
                 orientation = atoi(p3);
+                mode = atoi(p4);
 
-                /* switch state to pinch to zoom mode */
-                curr_state = STATE_PINCH_TO_ZOOM;
-
-                /* Save current X (or Y) fixed value to compute finger spacing in MOUSE event
+                /* Save current X and Y values to compute finger spacing in MOUSE event
                    handler, without altering pointer position */
-                if (orientation == 0 || orientation == 180) {
-                    last_fixed_pos = xpos;
-                } else {
-                    last_fixed_pos = ypos;
+                last_fixed_xpos = xpos;
+                last_fixed_ypos = ypos;
+
+                /* switch mouse state according to selected mode */
+                switch (mode) {
+                case MULTITOUCH_ZOOM:
+                    mouse_state = MOUSE_STATE_PINCH_TO_ZOOM;
+                    centeroffset = PINCH_TO_ZOOM_FINGERS_OFFSET;
+                    break;
+                case MULTITOUCH_ROTATION:
+                    mouse_state = MOUSE_STATE_ROTATION;
+                    centeroffset = ROTATION_FINGERS_OFFSET;
+                    break;
+                default:
+                    /* ignore unknown mode */
+                    continue;
                 }
 
-                // Compute fingers starting spacing
-                centeroffset = DEFAULT_FINGERS_OFFSET;
-                // Make sure the centeroffset won't make the right finger position negative
-                // because the framework doesn't like that
-                if (last_fixed_pos - centeroffset < 0) {
-                    centeroffset = last_fixed_pos;
+                // Make sure the centeroffset won't make the finger go out of the screen when rotated
+                if (last_fixed_xpos - centeroffset < 0) {
+                    centeroffset = last_fixed_xpos;
+                }
+                if (last_fixed_ypos - centeroffset < 0) {
+                    centeroffset = last_fixed_ypos;
                 }
 
-                // Compute fingers position
+                // Compute fingers horizontal position
                 switch(orientation) {
                 case 90:
                     l_finger_x = xpos;
@@ -456,16 +521,16 @@ int main(int argc, char *argv[]) {
                 event.value = 0;
                 write(uinp_fd, &event, sizeof(event));
             }
-            /**** MOUSE PINCH TO ZOOM RELEASED ****/
-            else if (!strcmp(pcmd,"MSPRL")) {
+            /**** MOUSE MULTITOUCH RELEASED ****/
+            else if (!strcmp(pcmd,"MSMTRL")) {
                 if (!p1 || !p2)
                     continue;
 #if DEBUG_MT
-                SLOGD("MSPRL:%s:%s", p1, p2);
+                SLOGD("MSMTRL:%s:%s", p1, p2);
 #endif /* DEBUG_MT */
 
-                // reset state on release
-                curr_state = STATE_NO_CLICK;
+                // reset mouse state on release
+                mouse_state = MOUSE_STATE_NO_CLICK;
 
                 memset(&event, 0, sizeof(event));
                 gettimeofday(&event.time, NULL);
