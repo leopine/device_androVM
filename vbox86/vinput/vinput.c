@@ -19,6 +19,7 @@
 /* horizontal offset between each fingers and the cursor */
 #define PINCH_TO_ZOOM_FINGERS_OFFSET 200
 #define ROTATION_FINGERS_OFFSET      50
+#define PINCH_FACTOR                 0.5
 
 /* If you modify this, make sure to report modifications in player event_manager.hpp */
 #define MULTITOUCH_MODE_ZOOM         1
@@ -187,44 +188,52 @@ int main(int argc, char *argv[]) {
                     if (mouse_state == MOUSE_STATE_PINCH_TO_ZOOM) {
                         switch(orientation) {
                         case 90:
-                            delta = - last_fixed_ypos + ypos;
+                            delta = (ypos - last_fixed_ypos) * PINCH_FACTOR;
                             l_finger_x = xpos;
                             l_finger_y = last_fixed_ypos + centeroffset - delta;
                             r_finger_x = xpos;
                             r_finger_y = last_fixed_ypos - centeroffset + delta;
                             if (l_finger_y < r_finger_y) {
-                                l_finger_y = r_finger_y = last_fixed_ypos;
+                                l_finger_y = last_fixed_ypos;
+                                /* Google earth doesn't like when fingers are merged */
+                                r_finger_y = l_finger_y + 1;
                             }
                             break;
                         case 180:
-                            delta = - last_fixed_xpos + xpos;
+                            delta = (xpos - last_fixed_xpos) * PINCH_FACTOR;
                             l_finger_x = last_fixed_xpos + centeroffset + delta;
                             l_finger_y = ypos;
                             r_finger_x = last_fixed_xpos - centeroffset - delta;
                             r_finger_y = ypos;
                             if (r_finger_x > l_finger_x) {
-                                l_finger_x = r_finger_x = last_fixed_xpos;
+                                r_finger_x = last_fixed_xpos;
+                                /* Google earth doesn't like when fingers are merged */
+                                l_finger_x = r_finger_x + 1;
                             }
                             break;
                         case 270:
-                            delta = last_fixed_ypos - ypos;
+                            delta = (last_fixed_ypos - ypos) * PINCH_FACTOR;
                             l_finger_x = xpos;
                             l_finger_y = last_fixed_ypos - centeroffset + delta;
                             r_finger_x = xpos;
                             r_finger_y = last_fixed_ypos + centeroffset - delta;
-                            if (l_finger_y > r_finger_y) {
-                                l_finger_y = r_finger_y = last_fixed_ypos;
+                            if (l_finger_y >= r_finger_y) {
+                                l_finger_y = last_fixed_ypos;
+                                /* Google earth doesn't like when fingers are merged */
+                                r_finger_x = l_finger_y + 1;
                             }
                             break;
                         case 0:
                         default:
-                            delta = (last_fixed_xpos - xpos);
+                            delta = (last_fixed_xpos - xpos) * PINCH_FACTOR;
                             l_finger_x = last_fixed_xpos - centeroffset - delta;
                             l_finger_y = ypos;
                             r_finger_x = last_fixed_xpos + centeroffset + delta;
                             r_finger_y = ypos;
-                            if (l_finger_x > r_finger_x) {
-                                l_finger_x = r_finger_x = last_fixed_xpos;
+                            if (l_finger_x >= r_finger_x) {
+                                l_finger_x = last_fixed_xpos;
+                                /* Google earth doesn't like when fingers are merged */
+                                r_finger_x = l_finger_x + 1;
                             }
                             break;
                         }
