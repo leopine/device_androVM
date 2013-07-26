@@ -20,9 +20,9 @@
 #define PINCH_TO_ZOOM_FINGERS_OFFSET 200
 #define ROTATION_FINGERS_OFFSET      50
 
-/* Make sure to report modifications in player event_manager.hpp */
-#define MULTITOUCH_ZOOM         1
-#define MULTITOUCH_ROTATION     2
+/* If you modify this, make sure to report modifications in player event_manager.hpp */
+#define MULTITOUCH_MODE_ZOOM         1
+#define MULTITOUCH_MODE_ROTATION     2
 
 int main(int argc, char *argv[]) {
     int uinp_fd;
@@ -108,6 +108,9 @@ int main(int argc, char *argv[]) {
             }
             if (!pcmd)
                 continue;
+            memset(&event, 0, sizeof(event));
+            gettimeofday(&event.time, NULL);
+
             if (!strcmp(pcmd,"CONFIG")) {
                 if (!p1 || !p2)
                     continue;
@@ -153,9 +156,6 @@ int main(int argc, char *argv[]) {
                     continue;
 
                 if (mouse_state == MOUSE_STATE_CLICKED) {
-                    memset(&event, 0, sizeof(event));
-                    gettimeofday(&event.time, NULL);
-
                     event.type = EV_ABS;
                     event.code = ABS_MT_POSITION_X;
                     event.value = atoi(p1);
@@ -279,9 +279,6 @@ int main(int argc, char *argv[]) {
                           r_finger_x, r_finger_y, l_finger_x, l_finger_y, delta);
 #endif /* DEBUG_MT */
 
-                    memset(&event, 0, sizeof(event));
-                    gettimeofday(&event.time, NULL);
-
                     // First finger
                     event.type = EV_ABS;
                     event.code = ABS_MT_POSITION_X;
@@ -319,8 +316,6 @@ int main(int argc, char *argv[]) {
             else if (!strcmp(pcmd,"WHEEL")) {
                 if (!p1 || !p2 || !p3 || !p4)
                     continue;
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
                 event.type = EV_ABS;
                 event.code = ABS_MT_POSITION_X;
                 event.value = atoi(p1);
@@ -346,9 +341,6 @@ int main(int argc, char *argv[]) {
                 if (!p1 || !p2)
                     continue;
                 mouse_state = MOUSE_STATE_CLICKED;
-
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
 
                 event.type = EV_KEY;
                 event.code = BTN_TOUCH;
@@ -384,8 +376,6 @@ int main(int argc, char *argv[]) {
                     continue;
                 // reset mouse state on release
                 mouse_state = MOUSE_STATE_NO_CLICK;
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
 
                 event.type = EV_KEY;
                 event.code = BTN_TOUCH;
@@ -426,11 +416,11 @@ int main(int argc, char *argv[]) {
 
                 /* switch mouse state according to selected mode */
                 switch (mode) {
-                case MULTITOUCH_ZOOM:
+                case MULTITOUCH_MODE_ZOOM:
                     mouse_state = MOUSE_STATE_PINCH_TO_ZOOM;
                     centeroffset = PINCH_TO_ZOOM_FINGERS_OFFSET;
                     break;
-                case MULTITOUCH_ROTATION:
+                case MULTITOUCH_MODE_ROTATION:
                     mouse_state = MOUSE_STATE_ROTATION;
                     centeroffset = ROTATION_FINGERS_OFFSET;
                     break;
@@ -475,9 +465,6 @@ int main(int argc, char *argv[]) {
                     r_finger_y = ypos;
                     break;
                 }
-
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
 
                 event.type = EV_KEY;
                 event.code = BTN_TOUCH;
@@ -532,9 +519,6 @@ int main(int argc, char *argv[]) {
                 // reset mouse state on release
                 mouse_state = MOUSE_STATE_NO_CLICK;
 
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
-
                 // We just need to send an empty report
                 event.type = EV_KEY;
                 event.code = BTN_TOUCH;
@@ -557,8 +541,6 @@ int main(int argc, char *argv[]) {
             else if (!strcmp(pcmd,"KBDPR")) {
                 if (!p1 || !p2)
                     continue;
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
                 event.type = EV_KEY;
                 event.code = atoi(p1);
                 event.value = 1;
@@ -571,8 +553,6 @@ int main(int argc, char *argv[]) {
             else if (!strcmp(pcmd,"KBDRL")) {
                 if (!p1 || !p2)
                     continue;
-                memset(&event, 0, sizeof(event));
-                gettimeofday(&event.time, NULL);
                 event.type = EV_KEY;
                 event.code = atoi(p1);
                 event.value = 0;
