@@ -49,7 +49,7 @@ public class androVMConfig extends Activity {
         String cfg_dpi = TextConfig.getValue("vbox_dpi");
         String cfg_opengl_disable_render = TextConfig.getValue("hardware_opengl_disable_render");
         String cfg_opengl_force_IP = TextConfig.getValue("hardware_opengl_force_IP");
-        String cfg_keyboard = TextConfig.getValue("keyboard_disable");
+        String cfg_keyboard = TextConfig.getValue("vkeyboard_mode");
         String cfg_su_bypass = TextConfig.getValue("su_bypass");
 
         String[] listRes = getResources().getStringArray(R.array.list_resolutions);
@@ -273,12 +273,12 @@ public class androVMConfig extends Activity {
             Spinner sp_keyboard = (Spinner) findViewById(R.id.sp_keyboard);
             long keyboard_select = sp_keyboard.getSelectedItemId();
             if (keyboard_select == 1)
-                TextConfig.setValue("keyboard_disable", "2");
+                TextConfig.setValue("vkeyboard_mode", "2");
             else
-                TextConfig.removeValue("keyboard_disable");
+                TextConfig.removeValue("vkeyboard_mode");
         }
         else
-            TextConfig.removeValue("keyboard_disable");
+            TextConfig.removeValue("vkeyboard_mode");
 
         // su bypass
         CheckBox cb_su_bypass = (CheckBox) findViewById(R.id.cb_su_bypass);
