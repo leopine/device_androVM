@@ -63,10 +63,10 @@ if [ $prop_vbox_sdcard_drive ]; then
   setprop androVM.vbox_sdcard_drive $prop_vbox_sdcard_drive
 fi
 
-prop_keyboard_disable=`/system/bin/androVM-prop get keyboard_disable`
-if [ $prop_keyboard_disable ]; then
-  keyboard_disable=$prop_keyboard_disable
-  setprop androVM.keyboard_disable $prop_keyboard_disable
+prop_vkeyboard_mode=`/system/bin/androVM-prop get vkeyboard_mode`
+if [ $prop_vkeyboard_mode ]; then
+  vkeyboard_mode=$prop_vkeyboard_mode
+  setprop androVM.vkeyboard_mode $prop_vkeyboard_mode
 fi
 
 prop_force_navbar=`/system/bin/androVM-prop get genymotion_force_navbar`
