@@ -46,27 +46,27 @@ else
 fi
 
 prop_vbox_graph_mode=`/system/bin/androVM-prop get vbox_graph_mode`
-if [ $prop_vbox_graph_mode ]; then
-  vbox_graph_mode=$prop_vbox_graph_mode
-  setprop androVM.vbox_graph_mode $prop_vbox_graph_mode
+if [ -n "$prop_vbox_graph_mode" ]; then
+  vbox_graph_mode="$prop_vbox_graph_mode"
+  setprop androVM.vbox_graph_mode "$prop_vbox_graph_mode"
 fi
 
 prop_vbox_dpi=`/system/bin/androVM-prop get vbox_dpi`
-if [ $prop_vbox_dpi ]; then
-  vbox_dpi=$prop_vbox_dpi
-  setprop androVM.vbox_dpi $prop_vbox_dpi
+if [ -n "$prop_vbox_dpi" ]; then
+  vbox_dpi="$prop_vbox_dpi"
+  setprop androVM.vbox_dpi "$prop_vbox_dpi"
 fi
 
 prop_vbox_sdcard_drive=`/system/bin/androVM-prop get vbox_sdcard_drive`
-if [ $prop_vbox_sdcard_drive ]; then
-  vbox_sdcard_drive=$prop_vbox_sdcard_drive
-  setprop androVM.vbox_sdcard_drive $prop_vbox_sdcard_drive
+if [ -n "$prop_vbox_sdcard_drive" ]; then
+  vbox_sdcard_drive="$prop_vbox_sdcard_drive"
+  setprop androVM.vbox_sdcard_drive "$prop_vbox_sdcard_drive"
 fi
 
 prop_vkeyboard_mode=`/system/bin/androVM-prop get vkeyboard_mode`
-if [ $prop_vkeyboard_mode ]; then
-  vkeyboard_mode=$prop_vkeyboard_mode
-  setprop androVM.vkeyboard_mode $prop_vkeyboard_mode
+if [ -n "$prop_vkeyboard_mode" ]; then
+  vkeyboard_mode="$prop_vkeyboard_mode"
+  setprop androVM.vkeyboard_mode "$prop_vkeyboard_mode"
 fi
 
 prop_force_navbar=`/system/bin/androVM-prop get genymotion_force_navbar`
