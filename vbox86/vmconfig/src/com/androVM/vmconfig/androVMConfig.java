@@ -119,7 +119,7 @@ public class androVMConfig extends Activity {
         sp_keyboard.setEnabled(false);
         if ((cfg_keyboard != null) && (cfg_keyboard.length()>0)) {
             try {
-                sp_keyboard.setSelection(Integer.parseInt(cfg_keyboard) % 2);
+                sp_keyboard.setSelection((Integer.parseInt(cfg_keyboard) > 0) ? 1 : 0);
                 sp_keyboard.setEnabled(true);
                 cb_keyboard.setChecked(true);
             } catch (NumberFormatException e) {
