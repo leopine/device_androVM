@@ -95,7 +95,6 @@ PRODUCT_PACKAGES += \
     vmconfig \
     vinput \
     vinput_seamless \
-    get_androVM_host \
     local_opengl \
     netperf \
     netserver \
