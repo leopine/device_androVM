@@ -21,7 +21,7 @@ PRODUCT_PROPERTY_OVERRIDES := \
     ro.ril.hsxpa=1 \
     ro.ril.gprsclass=10 \
     wifi.interface=eth1
-  
+
 LOCAL_KERNEL := device/androVM/vbox86/kernel-vbox86
 
 PRODUCT_COPY_FILES := \
@@ -77,7 +77,7 @@ PRODUCT_PACKAGES += \
     libaudioutils \
     mount.vboxsf \
     AstroFileManager \
-    Camera \
+    LegacyCamera \
     camera.default \
     busybox \
     v86d \
