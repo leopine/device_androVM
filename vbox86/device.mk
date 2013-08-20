@@ -78,7 +78,7 @@ PRODUCT_PACKAGES += \
     mount.vboxsf \
     AstroFileManager \
     LegacyCamera \
-    camera.default \
+    camera.vbox86 \
     busybox \
     v86d \
     tinyplay \
