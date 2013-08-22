@@ -1,0 +1,1 @@
+../../../../../development/tools/emulator/system/camera/EmulatedCameraDevice.h
