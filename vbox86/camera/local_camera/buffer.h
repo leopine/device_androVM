@@ -1,4 +1,5 @@
-
+#ifndef LOCAL_SERVER_BUFFER_H
+#define LOCAL_SERVER_BUFFER_H
 
 #define DEFAULT_BUFFER_SIZE 4096
 #define READ_BUFFER_SIZE    1024
@@ -39,3 +40,5 @@ int add_to_buffer(buffer_t *buffer, const char *src, int len);
  * @return 0 on success, -1 on error
  */
 int remove_from_buffer(buffer_t *buffer, int len);
+
+#endif /* LOCAL_SERVER_BUFFER_H */

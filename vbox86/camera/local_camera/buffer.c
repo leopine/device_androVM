@@ -2,9 +2,8 @@
 #include <stdio.h>
 #include <strings.h>
 
-#include <cutils/log.h>
-
 #include "buffer.h"
+#include "global.h"
 
 int init_buffer(buffer_t *buffer, const char *id)
 {
@@ -32,7 +31,7 @@ void delete_buffer(buffer_t *buffer)
 
 void empty_buffer(buffer_t *buffer)
 {
-    SLOGD("empty buffer: '%s'", buffer->id);
+    LOGD("empty buffer: '%s'", buffer->id);
     buffer->p_start = buffer->p_end = buffer->ptr;
     buffer->len = 0;
 
@@ -41,17 +40,17 @@ void empty_buffer(buffer_t *buffer)
 
 static int grow_buffer(buffer_t *buffer)
 {
-    SLOGD("grow buffer: '%s'", buffer->id);
+    LOGD("grow buffer: '%s'", buffer->id);
     SLOGE("NOT IMPLEMENTED YET");
     return -1;
 }
 
 int add_to_buffer(buffer_t *buffer, const char *src, int len)
 {
-    SLOGD("Add %d bytes to buffer:'%s'", len, buffer->id);
+    LOGD("Add %d bytes to buffer:'%s'", len, buffer->id);
     while (((buffer->ptr + buffer->size) - buffer->p_end) < len) {
         /* grow buffer */
-        SLOGD("Need to grow buffer:%s", buffer->id);
+        LOGD("Need to grow buffer:%s", buffer->id);
         if (grow_buffer(buffer)) {
             SLOGE("Failed to allocate space for reception buffer: '%s'",
                   buffer->id);
@@ -68,11 +67,11 @@ int add_to_buffer(buffer_t *buffer, const char *src, int len)
 
 int remove_from_buffer(buffer_t *buffer, int len)
 {
-    SLOGD("Remove %d bytes from buffer: '%'", len, buffer->id);
+    LOGD("Remove %d bytes from buffer: '%'", len, buffer->id);
     if (len > buffer->len) {
         SLOGE("something's wrong with %s, buffer=%s, len=%d, to remove=%d\n",
                __FUNCTION__, buffer->id, buffer->len , len);
-        SLOGD("Empty buffer anyway");
+        LOGD("Empty buffer anyway");
         empty_buffer(buffer);
         return -1;
     }

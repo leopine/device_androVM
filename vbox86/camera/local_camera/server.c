@@ -2,10 +2,11 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <strings.h>
 #include <errno.h>
-#include <cutils/log.h>
 
 #include "server.h"
+#include "global.h"
 
 int create_listening_socket(int port, uint32_t ip)
 {
