@@ -491,3 +491,6 @@ service local_opengl /system/bin/local_opengl
 
 service local_gps /system/bin/local_gps
     class core
+
+service local_camera /system/bin/local_camera
+    class core
