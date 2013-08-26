@@ -13,8 +13,6 @@
 # limitations under the License.
 
 LOCAL_PATH := $(call my-dir)
-# build local_camera too
-include $(call all-subdir-makefiles)
 
 include $(CLEAR_VARS)
 
@@ -47,18 +45,18 @@ LOCAL_SRC_FILES := \
 	EmulatedBaseCamera.cpp \
 	EmulatedCamera.cpp \
 	EmulatedCameraDevice.cpp \
-	EmulatedQemuCamera.cpp \
-	EmulatedQemuCameraDevice.cpp \
+	EmulatedGenyCamera.cpp \
+	EmulatedGenyCameraDevice.cpp \
 	EmulatedFakeCamera.cpp \
 	EmulatedFakeCameraDevice.cpp \
 	Converters.cpp \
 	PreviewWindow.cpp \
 	CallbackNotifier.cpp \
 	QemuClient.cpp \
+	GenyClient.cpp \
 	JpegCompressor.cpp \
 	EmulatedCamera2.cpp \
 	EmulatedFakeCamera2.cpp \
-	EmulatedQemuCamera2.cpp \
 	fake-pipeline2/Scene.cpp \
 	fake-pipeline2/Sensor.cpp \
 	fake-pipeline2/JpegCompressor.cpp
