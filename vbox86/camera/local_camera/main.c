@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -27,12 +28,31 @@
  */
 
 
-int main(void)
+int main(int argc, char *argv[])
 {
-    int player_sock, hw_sock, hw_fd;
+    int player_sock, hw_sock, hw_fd, c;
+    int player_port = DEFAULT_PLAYER_PORT;
+    int hw_port = DEFAULT_LOCAL_PORT;
+
+    /* read listening ports from arguments if any */
+    opterr = 0;
+    while ((c = getopt (argc, argv, "l:p:h")) != -1) {
+        switch (c) {
+        case 'l':
+            hw_port = atoi(optarg);
+            break;
+        case 'p':
+            player_port = atoi(optarg);
+            break;
+        case 'h':
+        default:
+            fprintf(stderr, "Options are -l [local port for android] -p [player port]");
+            return 0;
+        }
+    }
 
     /* initialize listening socket, Android side */
-    hw_sock = create_listening_socket(HW_PORT, INADDR_LOOPBACK);
+    hw_sock = create_listening_socket(hw_port, INADDR_LOOPBACK);
     if (hw_sock < 0) {
         SLOGE("Unable to create android hw side socket");
         return -1;
@@ -47,7 +67,7 @@ int main(void)
     LOGD("Hw connected fd:%d", hw_fd);
 
     /* now that Android is connected, listen for the player connection */
-    player_sock = create_listening_socket(PLAYER_PORT, INADDR_ANY);
+    player_sock = create_listening_socket(player_port, INADDR_ANY);
     if (player_sock < 0) {
         SLOGE("Unable to create player socket");
         return -1;
