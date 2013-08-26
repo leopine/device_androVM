@@ -17,46 +17,41 @@
  *
  * [Android] --- 127.0.0.1:HW_PORT - [ local_camera ] - 0.0.0.0:PLAYER_PORT ---- [Genymotion]
  *
- * It waits for Genymotion player to connect and will than wait for every connection from Android (hw).
+ * the first one to connect is the Android side, which connect on boot, then it waits for
+ * Genymotion player to connect.
  *
  * When the two part are connected, messages are forwarded between them without any modifications
- * If connection is lost from the Android part, which happen every time webcam is not used,
- * we listen again for its connection.
- * If connection is lost from the player, we exit local_camera, and Android will restart it.
+ *  o If connection is lost from the player, we listen again for its connection.
+ *  o If connection is lost from the android side, we exit local_camera, and Android will restart it.
  *
  */
 
 
 int main(void)
 {
-    int player_sock, hw_sock;
+    int player_sock, hw_sock, hw_fd;
 
-    /* initialize listening sockets */
-    player_sock = create_listening_socket(PLAYER_PORT, INADDR_ANY);
-    if (player_sock < 0) {
-        SLOGE("Unable to create player socket");
-        return -1;
-    }
-
+    /* initialize listening socket, Android side */
     hw_sock = create_listening_socket(HW_PORT, INADDR_LOOPBACK);
     if (hw_sock < 0) {
         SLOGE("Unable to create android hw side socket");
         return -1;
     }
 
-    /* Wait for player connection */
-    struct sockaddr_in player_cli_addr;
-    bzero(&player_cli_addr, sizeof(struct sockaddr_in));
-    socklen_t player_cli_addr_len = 0;
-    int player_fd;
-
-    player_fd = accept(player_sock, (struct sockaddr *)&player_cli_addr,
-                       &player_cli_addr_len);
-    if (player_fd < 0) {
-        SLOGE("Failed to connect player: %d (%s)", errno, strerror(errno));
+    /* Accept connection from android */
+    hw_fd = accept(hw_sock, NULL, 0);
+    if (hw_fd < 0) {
+        SLOGE("Failed to connect hw client %d (%s)", errno, strerror(errno));
         return -1;
     }
-    LOGD("Player connected ! (fd:%d)", player_fd);
+    LOGD("Hw connected fd:%d", hw_fd);
+
+    /* now that Android is connected, listen for the player connection */
+    player_sock = create_listening_socket(PLAYER_PORT, INADDR_ANY);
+    if (player_sock < 0) {
+        SLOGE("Unable to create player socket");
+        return -1;
+    }
 
     /* handle our 2 reception buffers */
     buffer_t player_buffer;
@@ -71,25 +66,25 @@ int main(void)
         return 1;
     }
 
-
     /* Now wait for the hw to connect/disconnect/reconnect etc. */
     while (1) {
-        struct sockaddr_in hw_cli_addr;
-        socklen_t hw_cli_addr_len;
-        int hw_fd, max_fd;
+        struct sockaddr_in player_cli_addr;
+        bzero(&player_cli_addr, sizeof(struct sockaddr_in));
+        socklen_t player_cli_addr_len = 0;
+        int player_fd, max_fd;
+
+        LOGD("Waiting for player");
+        player_fd = accept(player_sock, (struct sockaddr *)&player_cli_addr,
+                           &player_cli_addr_len);
+        if (player_fd < 0) {
+            SLOGE("Failed to connect player: %d (%s)", errno, strerror(errno));
+            return -1;
+        }
+        LOGD("Player connected fd:%d", player_fd);
+
         fd_set rfds, wfds;
         char read_buffer[READ_BUFFER_SIZE + 1];
         int read_len;
-
-        LOGD("Waiting for client");
-        hw_fd = accept(hw_sock, (struct sockaddr *)&hw_cli_addr,
-                           &hw_cli_addr_len);
-        if (hw_fd < 0) {
-            SLOGE("Failed to connect hw client %d(%s)", errno, strerror(errno));
-            /* retry */
-            continue;
-        }
-        LOGD("Hw connected fd:%d", hw_fd);
 
         /* the two sides are connected, forward every request from A to B and
            from B to A */
@@ -199,9 +194,9 @@ int main(void)
             /* hw needs to talk to player */
             if (hw_buffer.len > 0) FD_SET(player_fd, &wfds);
         }
-        close(hw_fd);
+        close(player_fd);
     }
-    close(player_fd);
+    close(hw_fd);
 
     delete_buffer(&player_buffer);
     delete_buffer(&hw_buffer);
