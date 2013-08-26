@@ -53,6 +53,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
     /* TODO: we might remove this code, because fake camera might be emulated by
        the player */
     if (isBackFakeCameraEmulationOn()) {
+        ALOGV("Backcamera is using fake image");
         /* Camera ID. */
         const int camera_id = mEmulatedCameraNum;
         /* Use fake camera to emulate back-facing camera. */
@@ -105,6 +106,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
     }
 
     if (isFrontFakeCameraEmulationOn()) {
+        ALOGV("Frontcamera is using fake image");
         /* Camera ID. */
         const int camera_id = mEmulatedCameraNum;
         /* Use fake camera to emulate front-facing camera. */
@@ -156,6 +158,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
         }
     }
 
+    /* TODO: mFakeCameraNum is not used right now */
     ALOGV("%d cameras are being emulated. %d of them are fake cameras.",
           mEmulatedCameraNum, mFakeCameraNum);
 
@@ -295,7 +298,7 @@ void EmulatedCameraFactory::createGenyCameras()
     EmulatedGenyCamera* geny_cam =
         new EmulatedGenyCamera(index, &HAL_MODULE_INFO_SYM.common);
     if (NULL != geny_cam) {
-        res = geny_cam->Initialize("back", 24800/*DEFAULT_BACK_CAMERA_PORT*/);
+        res = geny_cam->Initialize("back", 24801/*DEFAULT_BACK_CAMERA_PORT*/);
         if (res == NO_ERROR) {
             mEmulatedCameras[index] = geny_cam;
             index++;
@@ -310,7 +313,7 @@ void EmulatedCameraFactory::createGenyCameras()
     /* Create and initialize front camera. */
     geny_cam = new EmulatedGenyCamera(index, &HAL_MODULE_INFO_SYM.common);
     if (NULL != geny_cam) {
-        res = geny_cam->Initialize("front", 24810/*DEFAULT_FRONT_CAMERA_PORT*/);
+        res = geny_cam->Initialize("front", 24811/*DEFAULT_FRONT_CAMERA_PORT*/);
         if (res == NO_ERROR) {
             mEmulatedCameras[index] = geny_cam;
             index++;
