@@ -492,5 +492,8 @@ service local_opengl /system/bin/local_opengl
 service local_gps /system/bin/local_gps
     class core
 
-service local_camera /system/bin/local_camera
+service back_camera /system/bin/local_camera -l24801 -p24800
+    class core
+
+service front_camera /system/bin/local_camera -l24811 -p24810
     class core
