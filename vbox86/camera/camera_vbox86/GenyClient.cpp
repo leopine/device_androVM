@@ -19,7 +19,7 @@
  * services in the emulator via local_camera srv socket.
  */
 
-#define LOG_NDEBUG 1
+#define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_GenyClient"
 #include <cutils/log.h>
 #include <sys/types.h>
@@ -29,7 +29,7 @@
 #include "EmulatedCamera.h"
 #include "GenyClient.h"
 
-#define LOG_QUERIES 0
+#define LOG_QUERIES 1
 #if LOG_QUERIES
 #define LOGQ(...)   ALOGD(__VA_ARGS__)
 #else
@@ -61,7 +61,6 @@ GenyClient::~GenyClient()
 status_t GenyClient::connectClient(const int local_srv_port)
 {
     struct sockaddr_in so_addr;
-    int fds = -1;
     ALOGV("%s: port %d", __FUNCTION__, local_srv_port);
 
     /* Make sure that client is not connected already. */
@@ -71,8 +70,8 @@ status_t GenyClient::connectClient(const int local_srv_port)
     }
 
     /* Connect to the local_camera server */
-    fds = socket(AF_INET, SOCK_STREAM, 0);
-    if (fds < 0) {
+    mSocketFD = socket(AF_INET, SOCK_STREAM, 0);
+    if (mSocketFD < 0) {
         ALOGE("%s: Unable to create socket to the camera service port %d: %s",
              __FUNCTION__, local_srv_port, strerror(errno));
         return errno ? errno : EINVAL;
@@ -83,8 +82,7 @@ status_t GenyClient::connectClient(const int local_srv_port)
     so_addr.sin_port = htons(local_srv_port);
     so_addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-    mSocketFD = connect(fds, (struct sockaddr *)&so_addr, sizeof(so_addr));
-    if (mSocketFD < 0) {
+    if (connect(mSocketFD, (struct sockaddr *)&so_addr, sizeof(so_addr)) < 0) {
         ALOGE("%s: Unable to connect to the camera service port %d: %s",
              __FUNCTION__, local_srv_port, strerror(errno));
         return errno ? errno : EINVAL;
@@ -110,9 +108,9 @@ status_t GenyClient::sendMessage(const void* data, size_t data_size)
         return EINVAL;
     }
 
-    LOGQ("Sending '%.*s'", data_size, data);
+    LOGQ("Sending '%.*s' on fd:%d", data_size, data, mSocketFD);
 
-    int wr_res = write(mSocketFD, data, data_size);
+    int wr_res = send(mSocketFD, data, data_size, MSG_NOSIGNAL);
     if (wr_res != data_size) {
         ALOGE("%s: Unable to write message %d (size=%d): %s",
               __FUNCTION__, wr_res, data_size, strerror(errno));
@@ -177,6 +175,8 @@ status_t GenyClient::receiveMessage(void** data, size_t* data_size)
 
 status_t GenyClient::doQuery(QemuQuery* query)
 {
+    LOGQ("%s", __FUNCTION__);
+
     /* Make sure that query has been successfuly constructed. */
     if (query->mQueryDeliveryStatus != NO_ERROR) {
         ALOGE("%s: Query is invalid", __FUNCTION__);
@@ -225,7 +225,7 @@ const char CameraGenyClient::mQueryConnect[]    = "connect";
 /* Disconnect from the camera device. */
 const char CameraGenyClient::mQueryDisconnect[] = "disconnect";
 /* Query info from the webcam. */
-const char CameraGenyClient::mQueryInfo[]      = "infos";
+const char CameraGenyClient::mQueryInfo[]       = "infos";
 /* Start capturing video from the camera device. */
 const char CameraGenyClient::mQueryStart[]      = "start";
 /* Stop capturing video from the camera device. */
@@ -295,7 +295,7 @@ status_t CameraGenyClient::queryInfo(uint32_t *p_pixel_format,
     /* TODO: parse info string */
 
     ALOGE("Parsing not implemented");
-    memcpy(p_pixel_format, "RGBA", 4);
+    memcpy(p_pixel_format, "YU12", 4);
     *p_width = 640;
     *p_height = 480;
     return NO_ERROR;
