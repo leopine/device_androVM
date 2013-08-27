@@ -65,6 +65,30 @@ status_t EmulatedGenyCameraDevice::Initialize(const char* device_name, const int
     return res;
 }
 
+
+status_t EmulatedGenyCameraDevice::getDeviceInfo(char **p_info_str)
+{
+    ALOGV("%s", __FUNCTION__);
+    Mutex::Autolock locker(&mObjectLock);
+    if (!isInitialized()) {
+        ALOGE("%s: Geny camera device is not initialized.", __FUNCTION__);
+        return EINVAL;
+    }
+
+    status_t res = mGenyClient.queryInfo(p_info_str);
+    if (res == NO_ERROR) {
+        ALOGV("%s: Geny camera device infos :'%s'",
+             __FUNCTION__, *p_info_str);
+    } else {
+        ALOGE("%s: Unable to get device info '%s'",
+             __FUNCTION__, (const char*)mDeviceName);
+    }
+
+    return res;
+
+}
+
+
 /****************************************************************************
  * Emulated camera device abstract interface implementation.
  ***************************************************************************/
@@ -208,6 +232,7 @@ status_t EmulatedGenyCameraDevice::stopDevice()
 
     return res;
 }
+
 
 /****************************************************************************
  * EmulatedCameraDevice virtual overrides

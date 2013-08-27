@@ -156,11 +156,11 @@ public:
 
     /* Queries camera info.
      * Param:
-     *  p_pixel_format, p_width, p_height - return infos from the camera
+     *  p_info_string - return an allocated string containing device info
      * Return:
      *  NO_ERROR on success, or an appropriate error status on failure.
      */
-    status_t queryInfo(uint32_t *p_pixel_format, int *p_width, int *p_height);
+    status_t queryInfo(char **p_info_string);
 
     /* Queries camera to start capturing video.
      * Param:

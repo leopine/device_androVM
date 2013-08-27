@@ -51,6 +51,15 @@ public:
      */
     status_t Initialize(const char *device_name, const int local_srv_port);
 
+    /* Get device info from the player.
+     * Param:
+     *  p_info_str - an address to store the allocated information string that
+     *               will be returned by the player
+     * Return:
+     *  NO_ERROR on success, or an appropriate error status.
+     */
+    status_t getDeviceInfo(char **p_info_str);
+
     /***************************************************************************
      * Emulated camera device abstract interface implementation.
      * See declarations of these methods in EmulatedCameraDevice class for

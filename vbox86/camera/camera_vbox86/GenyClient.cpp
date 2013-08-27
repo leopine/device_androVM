@@ -282,13 +282,11 @@ status_t CameraGenyClient::queryDisconnect()
     return res;
 }
 
-status_t CameraGenyClient::queryInfo(uint32_t *p_pixel_format,
-                                      int *p_width,
-                                      int *p_height)
+status_t CameraGenyClient::queryInfo(char **p_info_string)
 {
     ALOGV("%s", __FUNCTION__);
 
-    if (!p_pixel_format || !p_width || !p_height) {
+    if (!p_info_string) {
         ALOGE("%s: invalid parameter", __FUNCTION__);
     }
 
@@ -305,12 +303,13 @@ status_t CameraGenyClient::queryInfo(uint32_t *p_pixel_format,
         return EINVAL;
     }
 
-    /* TODO: parse info string */
+    *p_info_string = (char *)malloc(query.mReplyDataSize + 1);
+    if (!*p_info_string) {
+        ALOGE("%s: Failed to allocated info buffer", __FUNCTION__);
+        return ENOMEM;
+    }
+    snprintf(*p_info_string, query.mReplyDataSize + 1, "%s", query.mReplyData);
 
-    ALOGE("Parsing not implemented");
-    memcpy(p_pixel_format, "YU12", 4);
-    *p_width = 640;
-    *p_height = 480;
     return NO_ERROR;
 }
 
