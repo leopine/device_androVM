@@ -19,7 +19,7 @@
  * services in the emulator via local_camera srv socket.
  */
 
-#define LOG_NDEBUG 0
+//#define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_GenyClient"
 #include <cutils/log.h>
 #include <sys/types.h>
@@ -29,7 +29,7 @@
 #include "EmulatedCamera.h"
 #include "GenyClient.h"
 
-#define LOG_QUERIES 1
+#define LOG_QUERIES 0
 #if LOG_QUERIES
 #define LOGQ(...)   ALOGD(__VA_ARGS__)
 #else
@@ -160,17 +160,29 @@ status_t GenyClient::receiveMessage(void** data, size_t* data_size)
              __FUNCTION__, payload_size);
         return ENOMEM;
     }
-    rd_res = read(mSocketFD, *data, payload_size);
-    if (static_cast<size_t>(rd_res) == payload_size) {
-        *data_size = payload_size;
-        return NO_ERROR;
-    } else {
+
+    int payload_read = 0;
+    int payload_left = payload_size;
+    char *ptr = (char *)*data;
+    while ((rd_res = read(mSocketFD, ptr, payload_left)) > 0) {
+        payload_left -= rd_res;
+        payload_read += rd_res;
+        ptr += rd_res;
+
+        if (static_cast<size_t>(payload_read) == payload_size) {
+            *data_size = payload_size;
+            return NO_ERROR;
+        }
+    }
+
+    if (static_cast<size_t>(payload_read) != payload_size) {
         ALOGE("%s: Read size %d doesnt match expected payload size %d: %s",
-             __FUNCTION__, rd_res, payload_size, strerror(errno));
+             __FUNCTION__, payload_read, payload_size, strerror(errno));
         free(*data);
         *data = NULL;
         return errno ? errno : EIO;
     }
+    return NO_ERROR;
 }
 
 status_t GenyClient::doQuery(QemuQuery* query)
@@ -192,8 +204,9 @@ status_t GenyClient::doQuery(QemuQuery* query)
         res = receiveMessage(reinterpret_cast<void**>(&query->mReplyBuffer),
                       &query->mReplySize);
         if (res == NO_ERROR) {
-            LOGQ("Response to query '%s': Status = '%.2s', %d bytes in response",
-                 query->mQuery, query->mReplyBuffer, query->mReplySize);
+            LOGQ("Response to query '%s': Status = '%*.s', %d bytes in response",
+                 query->mQuery, query->mReplySize, query->mReplyBuffer,
+                 query->mReplySize);
         } else {
             ALOGE("%s Response to query '%s' has failed: %s",
                  __FUNCTION__, query->mQuery, strerror(res));
