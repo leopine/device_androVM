@@ -167,6 +167,7 @@ int main(int argc, char *argv[])
             if (FD_ISSET(player_fd, &rfds)) {
                 /* read data coming from the player */
                 read_len = read(player_fd, read_buffer, sizeof(read_buffer));
+
                 if (read_len <= 0) {
                     /* TODO */
                     SLOGE("We have a problem with the player connection %d (%s)",
@@ -180,12 +181,14 @@ int main(int argc, char *argv[])
                     /* TODO */
                     return 1;
                 }
+
                 LOGD("We have bufferized (player side): (%.*s)",
                       player_buffer.len, player_buffer.p_start);
             }
             if (FD_ISSET(hw_fd, &rfds)) {
                 /* read data coming from the hw */
                 read_len = read(hw_fd, read_buffer, sizeof(read_buffer));
+
                 if (read_len <= 0) {
                     SLOGE("We have a problem with the hw connection %d (%s)",
                            errno, strerror(errno));
@@ -198,6 +201,7 @@ int main(int argc, char *argv[])
                     /* TODO */
                     return 1;
                 }
+
                 LOGD("We have bufferized (hw side): (%.*s)",
                       hw_buffer.len, hw_buffer.p_start);
             }

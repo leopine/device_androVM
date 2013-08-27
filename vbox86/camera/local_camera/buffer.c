@@ -40,9 +40,26 @@ void empty_buffer(buffer_t *buffer)
 
 static int grow_buffer(buffer_t *buffer)
 {
-    LOGD("grow buffer: '%s'", buffer->id);
-    SLOGE("NOT IMPLEMENTED YET");
-    return -1;
+    LOGD("%s:buffer %s", buffer->id);
+
+    LOGD("Double buffer size %d", buffer->size);
+    char *new_buffer = malloc(buffer->size * 2);
+    if (!new_buffer) {
+        SLOGE("Failed to allocate new buffer");
+        return -1;
+    }
+    buffer->size *= 2;
+
+    /* Replace old buffer with new one */
+    memcpy(new_buffer, buffer->p_start, buffer->len);
+    free(buffer->ptr);
+    buffer->ptr = new_buffer;
+
+    /* replace pointers value */
+    buffer->p_start = new_buffer;
+    buffer->p_end = buffer->ptr + buffer->len;
+
+    return 0;
 }
 
 int add_to_buffer(buffer_t *buffer, const char *src, int len)
