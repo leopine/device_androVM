@@ -25,6 +25,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include "EmulatedCamera.h"
 #include "GenyClient.h"
@@ -87,6 +88,19 @@ status_t GenyClient::connectClient(const int local_srv_port)
              __FUNCTION__, local_srv_port, strerror(errno));
         return errno ? errno : EINVAL;
     }
+
+    /* Add timeout to read and write operations */
+    struct timeval tv;
+    tv.tv_sec = 2;  /* 2 Secs Timeout */
+    tv.tv_usec = 0;
+    setsockopt(mSocketFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,
+               sizeof(struct timeval));
+
+    /* enable TCP NO DELAY too */
+    int    flag;
+    flag = 1;
+    setsockopt(mSocketFD, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag,
+               sizeof(flag));
 
     return NO_ERROR;
 }

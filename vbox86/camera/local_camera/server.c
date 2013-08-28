@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <strings.h>
 #include <errno.h>
@@ -27,6 +28,10 @@ int create_listening_socket(int port, uint32_t ip)
     /* make sure port is reuse if not previously closed */
     int yes = 1;
     setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
+    /* Enable TCP NO DELAY */
+    int opt_nodelay;
+    opt_nodelay = 1;
+    setsockopt(s, IPPROTO_TCP, TCP_NODELAY, &opt_nodelay, sizeof(opt_nodelay));
 
     /* Bind to socket*/
     if (bind(s, (struct sockaddr *)&sockaddr, sizeof(sockaddr)) < 0) {
