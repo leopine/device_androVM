@@ -165,7 +165,6 @@ status_t EmulatedGenyCamera::setParameters(const char *parms)
     return EmulatedCamera::setParameters(parms);
 }
 
-
 status_t EmulatedGenyCamera::parseXYFromList(const char *dims_list, int &x, int &y)
 {
     /*
@@ -174,15 +173,10 @@ status_t EmulatedGenyCamera::parseXYFromList(const char *dims_list, int &x, int 
     char first_dim[128];
     /* Dimensions are separated with ',' */
     const char* c = strchr(dims_list, ',');
-    if (c == NULL) {
-        strncpy(first_dim, dims_list, strlen(dims_list));
-        first_dim[sizeof(first_dim)-1] = '\0';
-    } else if (static_cast<size_t>(c - dims_list) < sizeof(first_dim)) {
-        memcpy(first_dim, dims_list, c - dims_list);
-        first_dim[c - dims_list] = '\0';
+    if (c != NULL) {
+        snprintf(first_dim, sizeof(first_dim), "%.*s", c - dims_list, dims_list);
     } else {
-        memcpy(first_dim, dims_list, strlen(dims_list));
-        first_dim[strlen(first_dim)-1] = '\0';
+        snprintf(first_dim, sizeof(first_dim), "%s", dims_list);
     }
 
     /* Width and height are separated with 'x' */
