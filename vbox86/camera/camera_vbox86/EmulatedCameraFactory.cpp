@@ -311,8 +311,6 @@ void EmulatedCameraFactory::createGenyCameras()
     }
 
     /* Create and initialize front camera. */
-
-#if 0 // TODO: Disable front camera for now, but we must find a solution to endless connection process
     geny_cam = new EmulatedGenyCamera(index, &HAL_MODULE_INFO_SYM.common);
     if (NULL != geny_cam) {
         res = geny_cam->Initialize("front", 24811/*DEFAULT_FRONT_CAMERA_PORT*/);
@@ -326,7 +324,7 @@ void EmulatedCameraFactory::createGenyCameras()
         ALOGE("%s: Unable to instantiate Front Camera",
               __FUNCTION__);
     }
-#endif
+
     mEmulatedCameraNum = index;
 }
 
