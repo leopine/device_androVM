@@ -20,6 +20,7 @@
 #define LOG_NDEBUG 0
 #define LOG_TAG "EmulatedCamera_GenyCamera"
 #include <cutils/log.h>
+#include <cutils/properties.h>
 #include "EmulatedGenyCamera.h"
 #include "EmulatedCameraFactory.h"
 
@@ -43,7 +44,7 @@ EmulatedGenyCamera::~EmulatedGenyCamera()
  * EmulatedCamera virtual overrides.
  ***************************************************************************/
 
-    status_t EmulatedGenyCamera::Initialize(const char* device_name, const int local_srv_port)
+status_t EmulatedGenyCamera::Initialize(const char* device_name, const int local_srv_port)
 {
     ALOGV("%s:\n   initializing %s camera on local srv port %d",
           __FUNCTION__, device_name, local_srv_port);
@@ -110,36 +111,13 @@ EmulatedGenyCamera::~EmulatedGenyCamera()
     mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, dim_start);
     mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, dim_start);
 
-    /*
-     * Parse and set first usable resolution
-     */
-    char first_dim[128];
-    /* Dimensions are separated with ',' */
-    const char* c = strchr(dim_start, ',');
-    if (c == NULL) {
-        strncpy(first_dim, dim_start, sizeof(dim_start));
-        first_dim[sizeof(first_dim)-1] = '\0';
-    } else if (static_cast<size_t>(c - dim_start) < sizeof(first_dim)) {
-        memcpy(first_dim, dim_start, c - dim_start);
-        first_dim[c - dim_start] = '\0';
-    } else {
-        memcpy(first_dim, dim_start, sizeof(dim_start));
-        first_dim[sizeof(first_dim)-1] = '\0';
+    int x, y;
+    if (parseXYFromList(dim_start, x, y) != NO_ERROR) {
+        x = 320;
+        y = 240;
+        ALOGE("%s: failed to parse first resolution, defaulting to %dx%d",
+              __FUNCTION__, x, y);
     }
-
-    /* Width and height are separated with 'x' */
-    char* sep = strchr(first_dim, 'x');
-    if (sep == NULL) {
-        ALOGE("%s: Invalid first dimension format in %s",
-             __FUNCTION__, dim_start);
-        free(info_str);
-        return EINVAL;
-    }
-
-    *sep = '\0';
-    const int x = atoi(first_dim);
-    const int y = atoi(sep + 1);
-
     mParameters.setPreviewSize(x, y);
     mParameters.setPictureSize(x, y);
 
@@ -153,6 +131,73 @@ EmulatedGenyCamera::~EmulatedGenyCamera()
 EmulatedCameraDevice* EmulatedGenyCamera::getCameraDevice()
 {
     return &mGenyCameraDevice;
+}
+
+status_t EmulatedGenyCamera::startPreview()
+{
+    /* Overload parameters if needed */
+    char prop[PROPERTY_VALUE_MAX];
+    if ((property_get("genyd.camera.preview.dims", prop, NULL) > 0)) {
+        int x, y;
+        if (parseXYFromList(prop, x, y) == NO_ERROR) {
+            /* Override Initialization configuration */
+            mParameters.setPreviewSize(x, y);
+            mParameters.setPictureSize(x, y);
+            ALOGV("%s: Camera overload properties with %dx%d resolution",
+                  __FUNCTION__, x, y);
+
+        } else {
+            ALOGE("%s: Wrong resolution format specified in prop: %s",
+                  __FUNCTION__, prop);
+        }
+    }
+
+    /* Call parent method */
+    return EmulatedCamera::startPreview();
+}
+
+/* Function useful for debugging */
+status_t EmulatedGenyCamera::setParameters(const char *parms)
+{
+    /* Overload parent EmulateCamera setParameters */
+    ALOGV("%s: overriding parent method, params: %s",
+          __FUNCTION__, parms);
+    return EmulatedCamera::setParameters(parms);
+}
+
+
+status_t EmulatedGenyCamera::parseXYFromList(const char *dims_list, int &x, int &y)
+{
+    /*
+     * Parse first usable resolution in the input list (..x..,..x..,etc.)
+     */
+    char first_dim[128];
+    /* Dimensions are separated with ',' */
+    const char* c = strchr(dims_list, ',');
+    if (c == NULL) {
+        strncpy(first_dim, dims_list, strlen(dims_list));
+        first_dim[sizeof(first_dim)-1] = '\0';
+    } else if (static_cast<size_t>(c - dims_list) < sizeof(first_dim)) {
+        memcpy(first_dim, dims_list, c - dims_list);
+        first_dim[c - dims_list] = '\0';
+    } else {
+        memcpy(first_dim, dims_list, strlen(dims_list));
+        first_dim[strlen(first_dim)-1] = '\0';
+    }
+
+    /* Width and height are separated with 'x' */
+    char* sep = strchr(first_dim, 'x');
+    if (sep == NULL) {
+        ALOGE("%s: Invalid first dimension format in %s",
+             __FUNCTION__, dims_list);
+        return EINVAL;
+    }
+
+    *sep = '\0';
+    x = atoi(first_dim);
+    y = atoi(sep + 1);
+
+    return NO_ERROR;
 }
 
 };  /* namespace android */

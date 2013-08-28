@@ -51,7 +51,7 @@ EmulatedCameraFactory::EmulatedCameraFactory()
 
     /* If fake camera(s) is(are) activated add them to the list of camera */
     /* TODO: we might remove this code, because fake camera might be emulated by
-       the player */
+       the player, and the fake camera just crash the default Camera app right now */
     if (isBackFakeCameraEmulationOn()) {
         ALOGV("Backcamera is using fake image");
         /* Camera ID. */

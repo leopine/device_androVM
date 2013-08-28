@@ -42,7 +42,9 @@ public:
 public:
     /* Initializes EmulatedGenyCamera instance. */
     status_t Initialize(const char* device_name, const int local_srv_port);
-
+    /* Override parent to alter preview parameters if needed */
+    status_t startPreview(void);
+    status_t setParameters(const char *parms);
 
     /***************************************************************************
      * EmulatedCamera abstract API implementation.
@@ -53,8 +55,11 @@ protected:
      */
     EmulatedCameraDevice* getCameraDevice();
 
+    /* Tool function to parse resolution X Y from a resolution list. */
+    status_t parseXYFromList(const char *dims_list, int &x, int &y);
+
     /***************************************************************************
-     * Data memebers.
+     * Data members.
      **************************************************************************/
 
 protected:
