@@ -26,8 +26,10 @@
 #define DEBUG_LATENCY 0
 #if DEBUG_LATENCY
 #define LOG_LAT(...) ALOGD(__VA_ARGS__)
+#define IFDEBUG_TIME_MS (systemTime() / 1000000L)
 #else
 #define LOG_LAT(...) (void(0))
+#define IFDEBUG_TIME_MS 0
 #endif /* DEBUG_LATENCY */
 
 namespace android {
@@ -293,15 +295,19 @@ bool EmulatedGenyCameraDevice::inWorkerThread()
                                                  mWhiteBalanceScale[2],
                                                  mExposureCompensation);
 
-    now_msec = systemTime() / 1000000L;
+    now_msec = IFDEBUG_TIME_MS;
     LOG_LAT("%s: Reply received at %d", __FUNCTION__, now_msec);
+
     if (query_res == NO_ERROR) {
         /* Timestamp the current frame, and notify the camera HAL. */
         mCurFrameTimestamp = systemTime(SYSTEM_TIME_MONOTONIC);
-        now_msec = systemTime() / 1000000L;
+
+        now_msec = IFDEBUG_TIME_MS;
         LOG_LAT("%s: Notify HAL at %d", __FUNCTION__, now_msec);
+
         mCameraHAL->onNextFrameAvailable(mCurrentFrame, mCurFrameTimestamp, this);
-        now_msec = systemTime() / 1000000L;
+
+        now_msec = IFDEBUG_TIME_MS;
         LOG_LAT("%s: Finished at %d , (total:%d ms)", __FUNCTION__,
               now_msec,
               now_msec - mLastFrame);
