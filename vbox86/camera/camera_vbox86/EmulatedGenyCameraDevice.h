@@ -120,6 +120,7 @@ private:
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */
     static const int    mEmulatedFPS = 25;//50;
+    int32_t mLastFrame;
 };
 
 }; /* namespace android */

@@ -23,12 +23,20 @@
 #include "EmulatedGenyCamera.h"
 #include "EmulatedGenyCameraDevice.h"
 
+#define DEBUG_LATENCY 0
+#if DEBUG_LATENCY
+#define LOG_LAT(...) ALOGD(__VA_ARGS__)
+#else
+#define LOG_LAT(...) (void(0))
+#endif /* DEBUG_LATENCY */
+
 namespace android {
 
 EmulatedGenyCameraDevice::EmulatedGenyCameraDevice(EmulatedGenyCamera* camera_hal)
     : EmulatedCameraDevice(camera_hal),
       mGenyClient(),
-      mPreviewFrame(NULL)
+      mPreviewFrame(NULL),
+      mLastFrame(0)
 {
 }
 
@@ -255,14 +263,27 @@ status_t EmulatedGenyCameraDevice::getCurrentPreviewFrame(void* buffer)
 
 bool EmulatedGenyCameraDevice::inWorkerThread()
 {
+    int32_t now_msec;
+
+    now_msec = systemTime() / 1000000L;
+    LOG_LAT("%s: Asking a frame at %d", __FUNCTION__, now_msec);
     /* Wait till FPS timeout expires, or thread exit message is received. */
+    int32_t wait_usec = ((1000000 / mEmulatedFPS) <= ((now_msec - mLastFrame) * 1000)  ?
+                       1 /* don't wait (0 == NULL == endless wait)*/:
+                      ((1000000 / mEmulatedFPS) - ((now_msec - mLastFrame) * 1000))
+                      );
+    LOG_LAT("%s: Will wait %d ms", __FUNCTION__, wait_usec);
+
     WorkerThread::SelectRes res =
-        getWorkerThread()->Select(-1, 1000000 / mEmulatedFPS);
+        getWorkerThread()->Select(-1, wait_usec);
     if (res == WorkerThread::EXIT_THREAD) {
         ALOGV("%s: Worker thread has been terminated.", __FUNCTION__);
         return false;
     }
 
+    /* Remember when we decided to take this frame */
+    mLastFrame = systemTime() / 1000000L;
+    LOG_LAT("%s: Ask for the frame at %d", __FUNCTION__, mLastFrame);
     /* Query frames from the service. */
     status_t query_res = mGenyClient.queryFrame(mCurrentFrame, mPreviewFrame,
                                                  mFrameBufferSize,
@@ -271,10 +292,19 @@ bool EmulatedGenyCameraDevice::inWorkerThread()
                                                  mWhiteBalanceScale[1],
                                                  mWhiteBalanceScale[2],
                                                  mExposureCompensation);
+
+    now_msec = systemTime() / 1000000L;
+    LOG_LAT("%s: Reply received at %d", __FUNCTION__, now_msec);
     if (query_res == NO_ERROR) {
         /* Timestamp the current frame, and notify the camera HAL. */
         mCurFrameTimestamp = systemTime(SYSTEM_TIME_MONOTONIC);
+        now_msec = systemTime() / 1000000L;
+        LOG_LAT("%s: Notify HAL at %d", __FUNCTION__, now_msec);
         mCameraHAL->onNextFrameAvailable(mCurrentFrame, mCurFrameTimestamp, this);
+        now_msec = systemTime() / 1000000L;
+        LOG_LAT("%s: Finished at %d , (total:%d ms)", __FUNCTION__,
+              now_msec,
+              now_msec - mLastFrame);
         return true;
     } else {
         ALOGE("%s: Unable to get current video frame: %s",
@@ -282,6 +312,7 @@ bool EmulatedGenyCameraDevice::inWorkerThread()
         mCameraHAL->onCameraDeviceError(CAMERA_ERROR_SERVER_DIED);
         return false;
     }
+
 }
 
 }; /* namespace android */
