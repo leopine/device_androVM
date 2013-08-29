@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <strings.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include "buffer.h"
 #include "server.h"
@@ -65,6 +66,10 @@ int main(int argc, char *argv[])
         return -1;
     }
     LOGD("Hw connected fd:%d", hw_fd);
+    /* Enable TCP NO DELAY */
+    int opt_nodelay;
+    opt_nodelay = 1;
+    setsockopt(hw_fd, IPPROTO_TCP, TCP_NODELAY, &opt_nodelay, sizeof(opt_nodelay));
 
     /* now that Android is connected, listen for the player connection */
     player_sock = create_listening_socket(player_port, INADDR_ANY);
@@ -101,6 +106,9 @@ int main(int argc, char *argv[])
             return -1;
         }
         LOGD("Player connected fd:%d", player_fd);
+
+        /* Enable TCP NO DELAY */
+        setsockopt(player_fd, IPPROTO_TCP, TCP_NODELAY, &opt_nodelay, sizeof(opt_nodelay));
 
         fd_set rfds, wfds;
         char read_buffer[READ_BUFFER_SIZE + 1];
