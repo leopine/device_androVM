@@ -227,7 +227,7 @@ status_t EmulatedGenyCameraDevice::stopDevice()
     /* Stop the actual camera device. */
     status_t res = mGenyClient.queryStop();
     if (res == NO_ERROR) {
-        if (mPreviewFrame == NULL) {
+        if (mPreviewFrame != NULL) {
             delete[] mPreviewFrame;
             mPreviewFrame = NULL;
         }
