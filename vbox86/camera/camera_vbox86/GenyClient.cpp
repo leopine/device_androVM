@@ -91,7 +91,7 @@ status_t GenyClient::connectClient(const int local_srv_port)
 
     /* Add timeout to read and write operations */
     struct timeval tv;
-    tv.tv_sec = 2;  /* 2 Secs Timeout */
+    tv.tv_sec = 10;  /* 10 Secs Timeout */
     tv.tv_usec = 0;
     setsockopt(mSocketFD, SOL_SOCKET, SO_RCVTIMEO, (char *)&tv,
                sizeof(struct timeval));
