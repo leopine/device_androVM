@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
                     /* TODO */
                     SLOGE("We have a problem with the player connection %d (%s)",
                            errno, strerror(errno));
-                    return -1;
+                    break;
                 }
 
                 /* we need to bufferize data */
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
                 if (read_len <= 0) {
                     SLOGE("We have a problem with the hw connection %d (%s)",
                            errno, strerror(errno));
-                    break;
+                    return 1;
                 }
 
                 /* we need to bufferize data */
