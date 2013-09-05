@@ -103,7 +103,7 @@ public:
     /* Gets qemu camera orientation. */
     int getQemuCameraOrientation() {
         /* TODO: Have a boot property that controls that. */
-        return 270;
+        return 0;
     }
 
     /* Gets number of emulated cameras.
