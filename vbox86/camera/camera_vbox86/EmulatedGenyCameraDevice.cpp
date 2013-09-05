@@ -37,16 +37,12 @@ namespace android {
 EmulatedGenyCameraDevice::EmulatedGenyCameraDevice(EmulatedGenyCamera* camera_hal)
     : EmulatedCameraDevice(camera_hal),
       mGenyClient(),
-      mPreviewFrame(NULL),
       mLastFrame(0)
 {
 }
 
 EmulatedGenyCameraDevice::~EmulatedGenyCameraDevice()
 {
-    if (mPreviewFrame != NULL) {
-        delete[] mPreviewFrame;
-    }
 }
 
 /****************************************************************************
@@ -90,8 +86,8 @@ status_t EmulatedGenyCameraDevice::getDeviceInfo(char **p_info_str)
         ALOGV("%s: Geny camera device infos :'%s'",
              __FUNCTION__, *p_info_str);
     } else {
-        ALOGE("%s: Unable to get device info '%s'",
-             __FUNCTION__, (const char*)mDeviceName);
+        ALOGE("%s: Unable to get device info '%s' (%d)",
+              __FUNCTION__, (const char*)mDeviceName), res;
     }
 
     return res;
@@ -186,16 +182,6 @@ status_t EmulatedGenyCameraDevice::startDevice(int width,
         return res;
     }
 
-    /* Allocate preview frame buffer. */
-    /* TODO: Watch out for preview format changes! At this point we implement
-     * RGB32 only.*/
-    mPreviewFrame = new uint32_t[mTotalPixels];
-    if (mPreviewFrame == NULL) {
-        ALOGE("%s: Unable to allocate %d bytes for preview frame",
-             __FUNCTION__, mTotalPixels);
-        return ENOMEM;
-    }
-
     /* Start the actual camera device. */
     res = mGenyClient.queryStart(mPixelFormat, mFrameWidth, mFrameHeight);
     if (res == NO_ERROR) {
@@ -227,10 +213,6 @@ status_t EmulatedGenyCameraDevice::stopDevice()
     /* Stop the actual camera device. */
     status_t res = mGenyClient.queryStop();
     if (res == NO_ERROR) {
-        if (mPreviewFrame != NULL) {
-            delete[] mPreviewFrame;
-            mPreviewFrame = NULL;
-        }
         EmulatedCameraDevice::commonStopDevice();
         mState = ECDS_CONNECTED;
         ALOGV("%s: Geny camera device '%s' is stopped",
@@ -250,13 +232,7 @@ status_t EmulatedGenyCameraDevice::stopDevice()
 
 status_t EmulatedGenyCameraDevice::getCurrentPreviewFrame(void* buffer)
 {
-    ALOGW_IF(mPreviewFrame == NULL, "%s: No preview frame", __FUNCTION__);
-    if (mPreviewFrame != NULL) {
-        memcpy(buffer, mPreviewFrame, mTotalPixels * 4);
-        return 0;
-    } else {
-        return EmulatedCameraDevice::getCurrentPreviewFrame(buffer);
-    }
+    return EmulatedCameraDevice::getCurrentPreviewFrame(buffer);
 }
 
 /****************************************************************************
@@ -287,9 +263,9 @@ bool EmulatedGenyCameraDevice::inWorkerThread()
     mLastFrame = systemTime() / 1000000L;
     LOG_LAT("%s: Ask for the frame at %d", __FUNCTION__, mLastFrame);
     /* Query frames from the service. */
-    status_t query_res = mGenyClient.queryFrame(mCurrentFrame, mPreviewFrame,
+    status_t query_res = mGenyClient.queryFrame(mCurrentFrame, NULL,
                                                  mFrameBufferSize,
-                                                 mTotalPixels * 4,
+                                                 0,
                                                  mWhiteBalanceScale[0],
                                                  mWhiteBalanceScale[1],
                                                  mWhiteBalanceScale[2],

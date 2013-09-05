@@ -114,9 +114,6 @@ private:
     /* Name of the camera device connected to the host. */
     String8             mDeviceName;
 
-    /* Current preview framebuffer. */
-    uint32_t*           mPreviewFrame;
-
     /* Emulated FPS (frames per second).
      * We will emulate 50 FPS. */
     static const int    mEmulatedFPS = 25;//50;
