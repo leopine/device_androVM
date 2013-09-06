@@ -116,12 +116,11 @@ int main(int argc, char *argv[])
                 /* read data coming from the player */
                 read_len = read(player_fd, read_buffer, sizeof(read_buffer));
 
-                if (read_len < 0) {
-                    /* TODO */
+                if (read_len <= 0) {
                     SLOGE("We have a problem with the player connection %d (%s)",
                            errno, strerror(errno));
                     break;
-                } else if (read_len > 0) {
+                } else {
                     /* write hw msg to the player */
                     LOGD("Writing msg to hw: (%.*s)", read_buffer, read_len);
 
@@ -129,7 +128,7 @@ int main(int argc, char *argv[])
                     if (wr <= 0) {
                         SLOGE("Failed to write data to hw cnx %d (%s)",
                               errno, strerror(errno));
-                        break;
+                        return -1;;
                     }
                 }
             }
@@ -138,11 +137,11 @@ int main(int argc, char *argv[])
                 /* read data coming from the hw */
                 read_len = read(hw_fd, read_buffer, sizeof(read_buffer));
 
-                if (read_len < 0) {
+                if (read_len <= 0) {
                     SLOGE("We have a problem with the hw connection %d (%s)",
                            errno, strerror(errno));
                     return 1;
-                } else if (read_len > 0) {
+                } else {
                     LOGD("Writing msg to player: (%.*s)", read_buffer, read_len);
 
                     int wr = send(player_fd, read_buffer, read_len, MSG_NOSIGNAL);
