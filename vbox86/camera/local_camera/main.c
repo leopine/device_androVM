@@ -78,19 +78,6 @@ int main(int argc, char *argv[])
         return -1;
     }
 
-    /* handle our 2 reception buffers */
-    buffer_t player_buffer;
-    buffer_t hw_buffer;
-
-    if (init_buffer(&player_buffer, "player buffer")) {
-        SLOGE("Failed to initialize player buffer");
-        return 1;
-    }
-    if (init_buffer(&hw_buffer, "android hw buffer")) {
-        SLOGE("Failed to initialize player buffer");
-        return 1;
-    }
-
     /* Now wait for the hw to connect/disconnect/reconnect etc. */
     while (1) {
         struct sockaddr_in player_cli_addr;
@@ -110,128 +97,71 @@ int main(int argc, char *argv[])
         /* Enable TCP NO DELAY */
         setsockopt(player_fd, IPPROTO_TCP, TCP_NODELAY, &opt_nodelay, sizeof(opt_nodelay));
 
-        fd_set rfds, wfds;
+        fd_set rfds;
         char read_buffer[READ_BUFFER_SIZE + 1];
-        int read_len;
+        int read_len = 0;
 
         /* the two sides are connected, forward every request from A to B and
            from B to A */
         max_fd = (player_fd > hw_fd ? player_fd : hw_fd) + 1;
         FD_ZERO(&rfds);
-        FD_ZERO(&wfds);
 
         /* add the two socket to the read monitoring */
         FD_SET(player_fd, &rfds);
         FD_SET(hw_fd, &rfds);
 
-        while (select(max_fd, &rfds, &wfds, NULL, NULL) > -1) {
-            /* if we have to write data from the player to the hw,
-               check that the socket is writable */
-            if ((player_buffer.len > 0) && FD_ISSET(hw_fd, &wfds)) {
-                /* write hw msg to the player */
-                LOGD("Writing msg to hw: (%.*s)", player_buffer.len,
-                       player_buffer.p_start);
-
-                int wr = send(hw_fd, player_buffer.p_start,
-                              player_buffer.len, MSG_NOSIGNAL);
-                if (wr <= 0) {
-                    SLOGE("Failed to write data to hw cnx %d (%s)",
-                           errno, strerror(errno));
-                    /* TODO: we might reset the connection in this case */
-                } else if (wr < player_buffer.len) {
-                    /* remove data sent from buffer */
-                    remove_from_buffer(&player_buffer, wr);
-                    LOGD("Data pending for player: %d bytes",
-                           player_buffer.len);
-                } else {
-                    /* reset buffer now every thing has been read */
-                    empty_buffer(&player_buffer);
-                }
-            }
-            /* if we have to write data from hw to the player,
-               check that the socket is writable */
-            if ((hw_buffer.len > 0) && FD_ISSET(player_fd, &wfds)) {
-                /* write hw msg to the player */
-                LOGD("Writing msg to player: (%.*s)", hw_buffer.len,
-                       hw_buffer.p_start);
-                int wr = send(player_fd, hw_buffer.p_start, hw_buffer.len,
-                              MSG_NOSIGNAL);
-                if (wr <= 0) {
-                    SLOGE("Failed to write data to player cnx %d (%s)",
-                           errno, strerror(errno));
-                    /* TODO: we might reset the connection in this case */
-                } else if (wr < hw_buffer.len) {
-                    /* remove data sent from buffer */
-                    remove_from_buffer(&hw_buffer, wr);
-                    LOGD("Data pending for hw (%d bytes)",
-                           hw_buffer.len);
-                } else {
-                    /* TODO resize buffer in this case */
-                    /* reset buffer now every thing has been read */
-                    empty_buffer(&hw_buffer);
-                }
-            }
-
+        while (select(max_fd, &rfds, NULL, NULL, NULL) > -1) {
             if (FD_ISSET(player_fd, &rfds)) {
+                LOGD("Data from player");
                 /* read data coming from the player */
                 read_len = read(player_fd, read_buffer, sizeof(read_buffer));
 
-                if (read_len <= 0) {
+                if (read_len < 0) {
                     /* TODO */
                     SLOGE("We have a problem with the player connection %d (%s)",
                            errno, strerror(errno));
                     break;
-                }
+                } else if (read_len > 0) {
+                    /* write hw msg to the player */
+                    LOGD("Writing msg to hw: (%.*s)", read_buffer, read_len);
 
-                /* we need to bufferize data */
-                if (add_to_buffer(&player_buffer, read_buffer, read_len)) {
-                    SLOGE("Failed to bufferize data on player socket");
-                    /* TODO */
-                    return 1;
+                    int wr = send(hw_fd, read_buffer, read_len, MSG_NOSIGNAL);
+                    if (wr <= 0) {
+                        SLOGE("Failed to write data to hw cnx %d (%s)",
+                              errno, strerror(errno));
+                        break;
+                    }
                 }
-
-                LOGD("We have bufferized (player side): (%.*s)",
-                      player_buffer.len, player_buffer.p_start);
             }
             if (FD_ISSET(hw_fd, &rfds)) {
+                LOGD("Data from hw");
                 /* read data coming from the hw */
                 read_len = read(hw_fd, read_buffer, sizeof(read_buffer));
 
-                if (read_len <= 0) {
+                if (read_len < 0) {
                     SLOGE("We have a problem with the hw connection %d (%s)",
                            errno, strerror(errno));
                     return 1;
-                }
+                } else if (read_len > 0) {
+                    LOGD("Writing msg to player: (%.*s)", read_buffer, read_len);
 
-                /* we need to bufferize data */
-                if (add_to_buffer(&hw_buffer, read_buffer, read_len)) {
-                    SLOGE("Failed to bufferize data on player socket");
-                    /* TODO */
-                    return 1;
+                    int wr = send(player_fd, read_buffer, read_len, MSG_NOSIGNAL);
+                    if (wr <= 0) {
+                        SLOGE("Failed to write data to player cnx %d (%s)",
+                              errno, strerror(errno));
+                        return -1;
+                    }
                 }
-
-                LOGD("We have bufferized (hw side): (%.*s)",
-                      hw_buffer.len, hw_buffer.p_start);
             }
 
             /* continue to monitor socket on reading */
             FD_ZERO(&rfds);
             FD_SET(player_fd, &rfds);
             FD_SET(hw_fd, &rfds);
-
-            /* monitor write fd_set if one of the buffer has data */
-            FD_ZERO(&wfds);
-            /* player needs to talk to hw */
-            if (player_buffer.len > 0) FD_SET(hw_fd, &wfds);
-            /* hw needs to talk to player */
-            if (hw_buffer.len > 0) FD_SET(player_fd, &wfds);
         }
         close(player_fd);
     }
     close(hw_fd);
-
-    delete_buffer(&player_buffer);
-    delete_buffer(&hw_buffer);
 
     return 0;
 }
