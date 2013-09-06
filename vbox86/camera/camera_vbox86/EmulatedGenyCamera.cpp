@@ -73,6 +73,10 @@ status_t EmulatedGenyCamera::Initialize(const char* device_name, const int local
     /*
      * Set customizable parameters that overload EmulatedCamera ones
      */
+
+    mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES,
+                    "30,25,24,20,15,10,5");
+
     mParameters.set(EmulatedCamera::FACING_KEY,
                     (strcmp(device_name, EmulatedCamera::FACING_FRONT) == 0) ?
                     EmulatedCamera::FACING_FRONT :
