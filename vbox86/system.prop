@@ -10,9 +10,6 @@ ro.secure=0
 ro.opengles.version=131072
 ro.genymotion.version=1.2.0
 
-# Temporarily activate fake camera
-qemu.sf.fake_camera=both
-
 #
 # Capabilities
 #
