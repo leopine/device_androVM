@@ -8,7 +8,6 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
-#include "buffer.h"
 #include "server.h"
 #include "global.h"
 

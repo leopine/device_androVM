@@ -11,4 +11,5 @@
 #define LOGD(...)    ((void)0)
 #endif /* DEBUG_CAMERA */
 
+#define READ_BUFFER_SIZE (640*480*12)
 #endif /* LOCAL_SERVER_GLOBAL_H */
