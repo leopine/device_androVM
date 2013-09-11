@@ -21,7 +21,7 @@ PRODUCT_PROPERTY_OVERRIDES := \
     ro.ril.hsxpa=1 \
     ro.ril.gprsclass=10 \
     wifi.interface=eth1
-  
+
 LOCAL_KERNEL := device/androVM/vbox86/kernel-vbox86
 
 PRODUCT_COPY_FILES := \
@@ -79,8 +79,9 @@ PRODUCT_PACKAGES += \
     mount.vboxsf \
     hwcomposer.default  \
     AstroFileManager \
-    Camera \
-    camera.default \
+    LegacyCamera \
+    camera.vbox86 \
+    local_camera \
     busybox \
     v86d \
     tinyplay \
