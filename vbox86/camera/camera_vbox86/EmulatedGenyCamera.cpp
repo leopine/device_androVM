@@ -81,8 +81,7 @@ status_t EmulatedGenyCamera::Initialize(const char* device_name, const int local
                     (strcmp(device_name, EmulatedCamera::FACING_FRONT) == 0) ?
                     EmulatedCamera::FACING_FRONT :
                     EmulatedCamera::FACING_BACK);
-    mParameters.set(EmulatedCamera::ORIENTATION_KEY,
-                    gEmulatedCameraFactory.getQemuCameraOrientation());
+    mParameters.set(EmulatedCamera::ORIENTATION_KEY, getCameraOrientation());
     mParameters.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, dim_list);
     mParameters.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, dim_list);
     mParameters.setPreviewSize(x, y);
@@ -120,6 +119,25 @@ status_t EmulatedGenyCamera::startPreview()
 
     /* Call parent method */
     return EmulatedCamera::startPreview();
+}
+
+int EmulatedGenyCamera::getCameraOrientation()
+{
+    // Set Camera orientation according to device resolution:
+    // If in landscape resolution, camera should have an orientation of 0°
+    // and an orientation of 270° in portrait resolution
+    char prop[PROPERTY_VALUE_MAX];
+    int height, width, depth, orientation = 0;
+
+    if ((property_get("androVM.vbox_graph_mode", prop, NULL) > 0) &&
+        sscanf(prop, "%dx%d-%d", &width, &height, &depth) == 3) {
+        // If portrait resolution change camera orientation
+        if (height > width) {
+            orientation = 270;
+        }
+    }
+    ALOGV("%s: camera orientation set to %d", __FUNCTION__, orientation);
+    return orientation;
 }
 
 /* Function useful for debugging */
