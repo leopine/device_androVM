@@ -55,6 +55,9 @@ protected:
      */
     EmulatedCameraDevice* getCameraDevice();
 
+    /* Get camera orientation according to device resolution ratio */
+    int getCameraOrientation();
+
     /* Tool function to parse resolution X Y from a resolution list. */
     status_t parseXYFromList(const char *dims_list, int &x, int &y);
 
