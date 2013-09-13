@@ -18,3 +18,4 @@ ro.genyd.caps.bat=on
 ro.genyd.caps.gps=on
 ro.genyd.caps.acc=on
 ro.genyd.caps.cam=on
+ro.genyd.caps.scr=on
