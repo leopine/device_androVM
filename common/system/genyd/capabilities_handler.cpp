@@ -15,9 +15,10 @@ static std::string getCapabilitiesJSON(void)
     std::string capabilities;
 
     capabilities += "{";
-    capabilities += "\"battery\" : \"" + getcapability(CAPABILITY_BATTERY) + "\", ";
-    capabilities += "\"gps\" : \"" + getcapability(CAPABILITY_GPS) + "\", ";
+    capabilities += "\"battery\" : \""       + getcapability(CAPABILITY_BATTERY)       + "\", ";
+    capabilities += "\"gps\" : \""           + getcapability(CAPABILITY_GPS)           + "\", ";
     capabilities += "\"accelerometer\" : \"" + getcapability(CAPABILITY_ACCELEROMETER) + "\", ";
+    capabilities += "\"camera\" : \""        + getcapability(CAPABILITY_CAMERA)        + "\", ";
     capabilities += "}";
 
     return capabilities;

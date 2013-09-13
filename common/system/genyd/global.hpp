@@ -67,5 +67,6 @@ using Genymotion::Value;
 #define CAPABILITY_BATTERY       CAPABILITY_PREFIX "bat"
 #define CAPABILITY_GPS           CAPABILITY_PREFIX "gps"
 #define CAPABILITY_ACCELEROMETER CAPABILITY_PREFIX "acc"
+#define CAPABILITY_CAMERA        CAPABILITY_PREFIX "cam"
 
 #endif
