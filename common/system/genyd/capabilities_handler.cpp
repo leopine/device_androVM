@@ -19,6 +19,7 @@ static std::string getCapabilitiesJSON(void)
     capabilities += "\"gps\" : \""           + getcapability(CAPABILITY_GPS)           + "\", ";
     capabilities += "\"accelerometer\" : \"" + getcapability(CAPABILITY_ACCELEROMETER) + "\", ";
     capabilities += "\"camera\" : \""        + getcapability(CAPABILITY_CAMERA)        + "\", ";
+    capabilities += "\"screencast\" : \""    + getcapability(CAPABILITY_SCREENCAST)    + "\", ";
     capabilities += "}";
 
     return capabilities;
