@@ -126,6 +126,7 @@ int EmulatedGenyCamera::getCameraOrientation()
     // Set Camera orientation according to device resolution:
     // If in landscape resolution, camera should have an orientation of 0°
     // and an orientation of 270° in portrait resolution
+    // see hardware/libhardware/include/camera/camera_common.h
     char prop[PROPERTY_VALUE_MAX];
     int height, width, depth, orientation = 0;
 
