@@ -214,6 +214,7 @@ void CallbackNotifier::onNextFrameAvailable(const void* frame,
             memcpy(cam_buff->data, frame, camera_dev->getFrameBufferSize());
             mDataCBTimestamp(timestamp, CAMERA_MSG_VIDEO_FRAME,
                                cam_buff, 0, mCBOpaque);
+            cam_buff->release(cam_buff);
         } else {
             ALOGE("%s: Memory failure in CAMERA_MSG_VIDEO_FRAME", __FUNCTION__);
         }
