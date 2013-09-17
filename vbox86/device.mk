@@ -79,7 +79,6 @@ PRODUCT_PACKAGES += \
     mount.vboxsf \
     hwcomposer.default  \
     AstroFileManager \
-    LegacyCamera \
     camera.vbox86 \
     local_camera \
     busybox \
