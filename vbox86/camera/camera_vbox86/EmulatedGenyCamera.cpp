@@ -125,7 +125,7 @@ int EmulatedGenyCamera::getCameraOrientation()
 {
     // Set Camera orientation according to device resolution:
     // If in landscape resolution, camera should have an orientation of 0°
-    // and an orientation of 270° in portrait resolution
+    // and an orientation of 90° in portrait resolution
     // see hardware/libhardware/include/camera/camera_common.h
     char prop[PROPERTY_VALUE_MAX];
     int height, width, depth, orientation = 0;
@@ -134,7 +134,8 @@ int EmulatedGenyCamera::getCameraOrientation()
         sscanf(prop, "%dx%d-%d", &width, &height, &depth) == 3) {
         // If portrait resolution change camera orientation
         if (height > width) {
-            orientation = 270;
+            orientation = 90;
+            //  90° because the device will rotate 90° anticlockwise
         }
     }
     ALOGV("%s: camera orientation set to %d", __FUNCTION__, orientation);
