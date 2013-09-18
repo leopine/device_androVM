@@ -77,7 +77,6 @@ PRODUCT_PACKAGES += \
     libaudioutils \
     mount.vboxsf \
     AstroFileManager \
-    LegacyCamera \
     camera.vbox86 \
     local_camera \
     busybox \
