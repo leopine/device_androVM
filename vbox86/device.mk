@@ -79,6 +79,7 @@ PRODUCT_PACKAGES += \
     AstroFileManager \
     camera.vbox86 \
     local_camera \
+    LegacyCamera \
     busybox \
     v86d \
     tinyplay \
@@ -107,7 +108,6 @@ PRODUCT_PACKAGES += \
     genyd \
     gps.vbox86 \
     local_gps \
-#    hwcomposer.default  \
 
 
 $(call inherit-product-if-exists,frameworks/base/build/tablet-dalvik-heap.mk)
