@@ -23,8 +23,8 @@ AccelerometerSensor::AccelerometerSensor(void)
     baseEvent.type = SENSOR_TYPE_ACCELEROMETER;
     baseEvent.timestamp = getTimestamp();
     baseEvent.acceleration.x = 0.;
-    baseEvent.acceleration.y = 0.;
-    baseEvent.acceleration.z = 0.;
+    baseEvent.acceleration.y = 9.776219;
+    baseEvent.acceleration.z = 0.813417;
 
     memcpy(&lastEvent, &baseEvent, sizeof(lastEvent));
 }
