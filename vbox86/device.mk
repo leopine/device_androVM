@@ -81,6 +81,7 @@ PRODUCT_PACKAGES += \
     AstroFileManager \
     camera.vbox86 \
     local_camera \
+    LegacyCamera \
     busybox \
     v86d \
     tinyplay \
