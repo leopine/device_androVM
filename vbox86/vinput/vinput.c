@@ -25,12 +25,79 @@
 #define MULTITOUCH_MODE_ZOOM         1
 #define MULTITOUCH_MODE_ROTATION     2
 
-int main(int argc, char *argv[]) {
-    int uinp_fd;
+// Android MotionEvent action type
+#define ACTION_DOWN         0
+#define ACTION_UP           1
+#define ACTION_MOVE         2
+#define ACTION_POINTER_DOWN 5
+#define ACTION_POINTER_UP   6
+
+#define BUFSIZE         256
+#define MAX_NB_INPUT    22
+
+static void input_mt_sync(int uinp_fd, struct input_event *event)
+{
+    event->type = EV_SYN;
+    event->code = SYN_MT_REPORT;
+    event->value = 0;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+static void input_sync(int uinp_fd, struct input_event *event)
+{
+    event->type = EV_SYN;
+    event->code = SYN_REPORT;
+    event->value = 0;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+static void abs_mt_position_x(int uinp_fd, struct input_event *event, int value)
+{
+    event->type = EV_ABS;
+    event->code = ABS_MT_POSITION_X;
+    event->value = value;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+static void abs_mt_position_y(int uinp_fd, struct input_event *event, int value)
+{
+    event->type = EV_ABS;
+    event->code = ABS_MT_POSITION_Y;
+    event->value = value;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+static void btn_touch(int uinp_fd, struct input_event *event, int value)
+{
+    event->type = EV_KEY;
+    event->code = BTN_TOUCH;
+    event->value = value;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+static void abs_mt_pressure(int uinp_fd, struct input_event *event, int value)
+{
+    event->type = EV_ABS;
+    event->code = ABS_MT_PRESSURE;
+    event->value = value;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+static void wheel_event(int uinp_fd, struct input_event *event, int code, int value)
+{
+    event->type = EV_REL;
+    event->code = code;
+    event->value = value;
+    write(uinp_fd, event, sizeof(*event));
+}
+
+int main(int argc, char **argv)
+{
+    int uinp_fd = -1;
     struct uinput_user_dev uinp;
     struct input_event event;
-    int csocket;
-    int i;
+    int csocket = -1;
+    int i = 0;
 
     int keyboard_disabled = 0;
     char keyboard_prop[PROPERTY_VALUE_MAX];
@@ -48,10 +115,10 @@ int main(int argc, char *argv[]) {
     mouse_state_t mouse_state = MOUSE_STATE_NO_CLICK;
 
     /* These are specifics to pinch to zoom feature */
-    int last_fixed_xpos; /* the coordinate that should be fixed when pinching on this axis */
-    int last_fixed_ypos; /* the coordinate that should be fixed when pinching on this axis */
-    int centeroffset; /* the offset between the cursor position and each fingers */
-    int orientation; /* the current orientation of the device */
+    int last_fixed_xpos = 0; /* the coordinate that should be fixed when pinching on this axis */
+    int last_fixed_ypos = 0; /* the coordinate that should be fixed when pinching on this axis */
+    int centeroffset = 0; /* the offset between the cursor position and each fingers */
+    int orientation = 0; /* the current orientation of the device */
 
     if (!strcmp(keyboard_prop, "1")) {
         keyboard_disabled = 1;
@@ -59,7 +126,6 @@ int main(int argc, char *argv[]) {
 
     while (1) {
         FILE *f_sock;
-#define BUFSIZE 256
         char mbuf[BUFSIZE];
 
         int ssocket;
@@ -85,35 +151,30 @@ int main(int argc, char *argv[]) {
         }
 
         while (fgets(mbuf, BUFSIZE, f_sock)) {
-            char *pcmd, *p1, *p2, *p3, *p4, *pb, *pe;
+            char *pcmd, *pb, *pe;
+            int parameters[MAX_NB_INPUT];
+            int nbInput = 0;
 
-            pcmd = p1 = p2 = p3 = p4 = NULL;
-            if (pe=strchr(mbuf,'\n'))
-                *pe='\0';
             pcmd=pb=mbuf;
-            if (pb && (pe=strchr(pb,':'))) {
+
+            if ((pe=strchr(mbuf,'\n')))
                 *pe='\0';
-                p1=pb=++pe;
-            }
-            if (pb && (pe=strchr(pb,':'))) {
+
+            while(pb && (pe=strchr(pb,':'))) {
                 *pe='\0';
-                p2=pb=++pe;
+                pb=++pe;
+                parameters[nbInput++] = atoi(pb);
             }
-            if (pb && (pe=strchr(pb,':'))) {
-                *pe='\0';
-                p3=pb=++pe;
-            }
-            if (pb && (pe=strchr(pb,':'))) {
-                *pe='\0';
-                p4=pb=++pe;
-            }
-            if (!pcmd)
+
+            if (!pcmd) {
                 continue;
+            }
+
             memset(&event, 0, sizeof(event));
             gettimeofday(&event.time, NULL);
 
             if (!strcmp(pcmd,"CONFIG")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
 
                 // Create ABS input device
@@ -128,9 +189,9 @@ int main(int argc, char *argv[]) {
                 uinp.id.product=1;
                 uinp.id.version=1;
                 uinp.absmin[ABS_MT_POSITION_X]=0;
-                uinp.absmax[ABS_MT_POSITION_X]=atoi(p1);
+                uinp.absmax[ABS_MT_POSITION_X]=parameters[0];
                 uinp.absmin[ABS_MT_POSITION_Y]=0;
-                uinp.absmax[ABS_MT_POSITION_Y]=atoi(p2);
+                uinp.absmax[ABS_MT_POSITION_Y]=parameters[1];
                 ioctl(uinp_fd, UI_SET_EVBIT, EV_KEY);
                 ioctl(uinp_fd, UI_SET_EVBIT, EV_ABS);
                 ioctl(uinp_fd, UI_SET_ABSBIT, ABS_MT_POSITION_X);
@@ -153,36 +214,24 @@ int main(int argc, char *argv[]) {
                 }
             }
             else if (!strcmp(pcmd,"MOUSE")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
 
                 if (mouse_state == MOUSE_STATE_CLICKED) {
-                    event.type = EV_ABS;
-                    event.code = ABS_MT_POSITION_X;
-                    event.value = atoi(p1);
-                    write(uinp_fd, &event, sizeof(event));
-                    event.type = EV_ABS;
-                    event.code = ABS_MT_POSITION_Y;
-                    event.value = atoi(p2);
-                    write(uinp_fd, &event, sizeof(event));
+                    abs_mt_position_x(uinp_fd, &event, parameters[0]);
+                    abs_mt_position_y(uinp_fd, &event, parameters[1]);
 
-                    event.type = EV_SYN;
-                    event.code = SYN_MT_REPORT;
-                    event.value = 0;
-                    write(uinp_fd, &event, sizeof(event));
+                    input_mt_sync(uinp_fd, &event);
 
-                    event.type = EV_SYN;
-                    event.code = SYN_REPORT;
-                    event.value = 0;
-                    write(uinp_fd, &event, sizeof(event));
+                    input_sync(uinp_fd, &event);
                 } else if (mouse_state == MOUSE_STATE_ROTATION || mouse_state == MOUSE_STATE_PINCH_TO_ZOOM) {
                     int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, delta = 0;
 #if DEBUG_MT
                     SLOGD("MOUSE: multitouch mode %d orientation:%d x:%s y:%s saved x:%d saved y:%d",
-                          mouse_state, orientation, p1, p2, last_fixed_xpos, last_fixed_ypos);
+                          mouse_state, orientation, p[0], p[1], last_fixed_xpos, last_fixed_ypos);
 #endif /* DEBUG_MT */
-                    xpos = atoi(p1);
-                    ypos = atoi(p2);
+                    xpos = parameters[0];
+                    ypos = parameters[1];
 
                     // Compute fingers new position
                     if (mouse_state == MOUSE_STATE_PINCH_TO_ZOOM) {
@@ -289,134 +338,66 @@ int main(int argc, char *argv[]) {
 #endif /* DEBUG_MT */
 
                     // First finger
-                    event.type = EV_ABS;
-                    event.code = ABS_MT_POSITION_X;
-                    event.value = l_finger_x;
-                    write(uinp_fd, &event, sizeof(event));
-                    event.type = EV_ABS;
-                    event.code = ABS_MT_POSITION_Y;
-                    event.value = l_finger_y;
-                    write(uinp_fd, &event, sizeof(event));
-                    event.type = EV_SYN;
-                    event.code = SYN_MT_REPORT;
-                    event.value = 0;
-                    write(uinp_fd, &event, sizeof(event));
+                    abs_mt_position_x(uinp_fd, &event, l_finger_x);
+                    abs_mt_position_y(uinp_fd, &event, l_finger_y);
+                    input_mt_sync(uinp_fd, &event);
 
                     // Second finger
-                    event.type = EV_ABS;
-                    event.code = ABS_MT_POSITION_X;
-                    event.value = r_finger_x;
-                    write(uinp_fd, &event, sizeof(event));
-                    event.type = EV_ABS;
-                    event.code = ABS_MT_POSITION_Y;
-                    event.value = r_finger_y;
-                    write(uinp_fd, &event, sizeof(event));
-                    event.type = EV_SYN;
-                    event.code = SYN_MT_REPORT;
-                    event.value = 0;
-                    write(uinp_fd, &event, sizeof(event));
+                    abs_mt_position_x(uinp_fd, &event, r_finger_x);
+                    abs_mt_position_y(uinp_fd, &event, r_finger_y);
+                    input_mt_sync(uinp_fd, &event);
 
-                    event.type = EV_SYN;
-                    event.code = SYN_REPORT;
-                    event.value = 0;
-                    write(uinp_fd, &event, sizeof(event));
+                    input_sync(uinp_fd, &event);
                 }
             }
             else if (!strcmp(pcmd,"WHEEL")) {
-                if (!p1 || !p2 || !p3 || !p4)
+                if (nbInput < 4)
                     continue;
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_X;
-                event.value = atoi(p1);
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_Y;
-                event.value = atoi(p2);
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_REL;
-                event.code = REL_WHEEL;
-                event.value = atoi(p3);
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_REL;
-                event.code = REL_HWHEEL;
-                event.value = atoi(p4);
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                abs_mt_position_x(uinp_fd, &event, parameters[0]);
+                abs_mt_position_y(uinp_fd, &event, parameters[1]);
+                wheel_event(uinp_fd, &event, REL_WHEEL, parameters[2]);
+                wheel_event(uinp_fd, &event, REL_HWHEEL, parameters[3]);
+                input_sync(uinp_fd, &event);
             }
             else if (!strcmp(pcmd,"MSBPR")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
                 mouse_state = MOUSE_STATE_CLICKED;
 
-                event.type = EV_KEY;
-                event.code = BTN_TOUCH;
-                event.value = 1;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_PRESSURE;
-                event.value = 1;
-                write(uinp_fd, &event, sizeof(event));
+                btn_touch(uinp_fd, &event, 1);
+                abs_mt_pressure(uinp_fd, &event, 1);
 
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_X;
-                event.value = atoi(p1);
-                write(uinp_fd, &event, sizeof(event));
+                abs_mt_position_x(uinp_fd, &event, parameters[0]);
+                abs_mt_position_y(uinp_fd, &event, parameters[1]);
 
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_Y;
-                event.value = atoi(p2);
-                write(uinp_fd, &event, sizeof(event));
-
-                event.type = EV_SYN;
-                event.code = SYN_MT_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
-
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                input_mt_sync(uinp_fd, &event);
+                input_sync(uinp_fd, &event);
             }
             else if (!strcmp(pcmd,"MSBRL")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
                 // reset mouse state on release
                 mouse_state = MOUSE_STATE_NO_CLICK;
 
-                event.type = EV_KEY;
-                event.code = BTN_TOUCH;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_PRESSURE;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                btn_touch(uinp_fd, &event, 0);
+                abs_mt_pressure(uinp_fd, &event, 0);
 
-                event.type = EV_SYN;
-                event.code = SYN_MT_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                input_mt_sync(uinp_fd, &event);
+                input_sync(uinp_fd, &event);
             }
             /**** MOUSE MULTITOUCH PRESSED ****/
             else if (!strcmp(pcmd,"MSMTPR")) {
-		int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, mode;
-                if (!p1 || !p2 || !p3 || !p4)
+                int xpos, ypos, r_finger_x, r_finger_y, l_finger_x, l_finger_y, mode;
+                if (nbInput < 4)
                     continue;
 #if DEBUG_MT
-                SLOGD("MSMTPR:%s:%s:%s:%s", p1, p2, p3, p4);
+                SLOGD("MSMTPR:%s:%s:%s:%s", p[0], p[1], p[2], p[3]);
 #endif /* DEBUG_MT */
 
-                xpos = atoi(p1);
-                ypos = atoi(p2);
-                orientation = atoi(p3);
-                mode = atoi(p4);
+                xpos = parameters[0];
+                ypos = parameters[1];
+                orientation = parameters[2];
+                mode = parameters[3];
 
                 /* Save current X and Y values to compute finger spacing in MOUSE event
                    handler, without altering pointer position */
@@ -475,101 +456,94 @@ int main(int argc, char *argv[]) {
                     break;
                 }
 
-                event.type = EV_KEY;
-                event.code = BTN_TOUCH;
-                event.value = 1;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_PRESSURE;
-                event.value = 1;
-                write(uinp_fd, &event, sizeof(event));
+                btn_touch(uinp_fd, &event, 1);
+                abs_mt_pressure(uinp_fd, &event, 1);
 
                 // First finger
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_X;
-                event.value = r_finger_x;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_Y;
-                event.value = r_finger_y;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_MT_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                abs_mt_position_x(uinp_fd, &event, r_finger_x);
+                abs_mt_position_y(uinp_fd, &event, r_finger_y);
+                input_mt_sync(uinp_fd, &event);
 
                 // Second finger
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_X;
-                event.value = l_finger_x;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_POSITION_Y;
-                event.value = l_finger_y;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_MT_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                abs_mt_position_x(uinp_fd, &event, l_finger_x);
+                abs_mt_position_y(uinp_fd, &event, l_finger_y);
+                input_mt_sync(uinp_fd, &event);
 
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                input_sync(uinp_fd, &event);
             }
             /**** MOUSE MULTITOUCH RELEASED ****/
             else if (!strcmp(pcmd,"MSMTRL")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
 #if DEBUG_MT
-                SLOGD("MSMTRL:%s:%s", p1, p2);
+                SLOGD("MSMTRL:%s:%s", p[0], p[1]);
 #endif /* DEBUG_MT */
 
                 // reset mouse state on release
                 mouse_state = MOUSE_STATE_NO_CLICK;
 
                 // We just need to send an empty report
-                event.type = EV_KEY;
-                event.code = BTN_TOUCH;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_ABS;
-                event.code = ABS_MT_PRESSURE;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                btn_touch(uinp_fd, &event, 0);
+                abs_mt_pressure(uinp_fd, &event, 0);
 
-                event.type = EV_SYN;
-                event.code = SYN_MT_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                input_mt_sync(uinp_fd, &event);
+                input_sync(uinp_fd, &event);
             }
             else if (!strcmp(pcmd,"KBDPR")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
                 event.type = EV_KEY;
-                event.code = atoi(p1);
+                event.code = parameters[0];
                 event.value = 1;
                 write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                input_sync(uinp_fd, &event);
             }
             else if (!strcmp(pcmd,"KBDRL")) {
-                if (!p1 || !p2)
+                if (nbInput < 2)
                     continue;
                 event.type = EV_KEY;
-                event.code = atoi(p1);
+                event.code = parameters[0];
                 event.value = 0;
                 write(uinp_fd, &event, sizeof(event));
-                event.type = EV_SYN;
-                event.code = SYN_REPORT;
-                event.value = 0;
-                write(uinp_fd, &event, sizeof(event));
+                input_sync(uinp_fd, &event);
+            }
+            else if (!strcmp(pcmd,"MULTI")) {
+                int i;
+
+                // p[0] -> nb pointers
+                // p[1] -> action type
+                // p[2*i+2] -> x[i]
+                // p[2*i+3] -> y[i]
+
+                // assertion !
+                if (nbInput != (2*parameters[0]+2))
+                    continue;
+
+                switch(parameters[1]) {
+                case ACTION_MOVE:
+                case ACTION_POINTER_UP:
+                    for(i=0; i<parameters[0]; i++) {
+                        abs_mt_position_x(uinp_fd, &event, parameters[2*i+2]);
+                        abs_mt_position_y(uinp_fd, &event, parameters[2*i+3]);
+                        input_mt_sync(uinp_fd, &event);
+                    }
+                    input_sync(uinp_fd, &event);
+                    break;
+                case ACTION_DOWN:
+                case ACTION_POINTER_DOWN:
+                    for(i=0; i<parameters[0]; i++) {
+                        btn_touch(uinp_fd, &event, 1);
+                        abs_mt_pressure(uinp_fd, &event, 1);
+                        abs_mt_position_x(uinp_fd, &event, parameters[2*i+2]);
+                        abs_mt_position_y(uinp_fd, &event, parameters[2*i+3]);
+                        input_mt_sync(uinp_fd, &event);
+                    }
+                    input_sync(uinp_fd, &event);
+                    break;
+                case ACTION_UP:
+                    input_mt_sync(uinp_fd, &event);
+                    input_sync(uinp_fd, &event);
+                }
             }
         }
 
