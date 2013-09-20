@@ -35,7 +35,7 @@
 #define BUFSIZE         256
 #define MAX_NB_INPUT    22
 
-void input_mt_sync(int uinp_fd, struct input_event *event)
+static void input_mt_sync(int uinp_fd, struct input_event *event)
 {
     event->type = EV_SYN;
     event->code = SYN_MT_REPORT;
@@ -43,7 +43,7 @@ void input_mt_sync(int uinp_fd, struct input_event *event)
     write(uinp_fd, event, sizeof(*event));
 }
 
-void input_sync(int uinp_fd, struct input_event *event)
+static void input_sync(int uinp_fd, struct input_event *event)
 {
     event->type = EV_SYN;
     event->code = SYN_REPORT;
@@ -51,7 +51,7 @@ void input_sync(int uinp_fd, struct input_event *event)
     write(uinp_fd, event, sizeof(*event));
 }
 
-void abs_mt_position_x(int uinp_fd, struct input_event *event, int value)
+static void abs_mt_position_x(int uinp_fd, struct input_event *event, int value)
 {
     event->type = EV_ABS;
     event->code = ABS_MT_POSITION_X;
@@ -59,7 +59,7 @@ void abs_mt_position_x(int uinp_fd, struct input_event *event, int value)
     write(uinp_fd, event, sizeof(*event));
 }
 
-void abs_mt_position_y(int uinp_fd, struct input_event *event, int value)
+static void abs_mt_position_y(int uinp_fd, struct input_event *event, int value)
 {
     event->type = EV_ABS;
     event->code = ABS_MT_POSITION_Y;
@@ -67,7 +67,7 @@ void abs_mt_position_y(int uinp_fd, struct input_event *event, int value)
     write(uinp_fd, event, sizeof(*event));
 }
 
-void btn_touch(int uinp_fd, struct input_event *event, int value)
+static void btn_touch(int uinp_fd, struct input_event *event, int value)
 {
     event->type = EV_KEY;
     event->code = BTN_TOUCH;
@@ -75,7 +75,7 @@ void btn_touch(int uinp_fd, struct input_event *event, int value)
     write(uinp_fd, event, sizeof(*event));
 }
 
-void abs_mt_pressure(int uinp_fd, struct input_event *event, int value)
+static void abs_mt_pressure(int uinp_fd, struct input_event *event, int value)
 {
     event->type = EV_ABS;
     event->code = ABS_MT_PRESSURE;
@@ -83,6 +83,13 @@ void abs_mt_pressure(int uinp_fd, struct input_event *event, int value)
     write(uinp_fd, event, sizeof(*event));
 }
 
+static void wheel_event(int uinp_fd, struct input_event *event, int code, int value)
+{
+    event->type = EV_REL;
+    event->code = code;
+    event->value = value;
+    write(uinp_fd, event, sizeof(*event));
+}
 
 int main(int argc, char **argv)
 {
@@ -348,14 +355,8 @@ int main(int argc, char **argv)
                     continue;
                 abs_mt_position_x(uinp_fd, &event, parameters[0]);
                 abs_mt_position_y(uinp_fd, &event, parameters[1]);
-                event.type = EV_REL;
-                event.code = REL_WHEEL;
-                event.value = parameters[2];
-                write(uinp_fd, &event, sizeof(event));
-                event.type = EV_REL;
-                event.code = REL_HWHEEL;
-                event.value = parameters[3];
-                write(uinp_fd, &event, sizeof(event));
+                wheel_event(uinp_fd, &event, REL_WHEEL, parameters[2]);
+                wheel_event(uinp_fd, &event, REL_HWHEEL, parameters[3]);
                 input_sync(uinp_fd, &event);
             }
             else if (!strcmp(pcmd,"MSBPR")) {
