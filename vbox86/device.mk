@@ -76,7 +76,7 @@ PRODUCT_PACKAGES += \
     audio.primary.vbox86 \
     libaudioutils \
     mount.vboxsf \
-    AstroFileManager \
+    CMFileManager \
     camera.vbox86 \
     local_camera \
     LegacyCamera \
